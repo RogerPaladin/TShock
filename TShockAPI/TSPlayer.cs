@@ -43,11 +43,14 @@ namespace TShockAPI
         public bool AwaitingTemp2 { get; set; }
         public DateTime LastExplosive { get; set; }
         public DateTime LastTileChangeNotify { get; set; }
+        public DateTime LoginTime { get; set; }
+        public DateTime Interval { get; set; }
         public bool InitSpawn;
         public bool DisplayLogs = true;
         public Vector2 oldSpawn = Vector2.Zero;
         public TSPlayer LastWhisper;
         public int LoginAttempts { get; set; }
+        public int Dispenser { get; set; }
         public Vector2 TeleportCoords = new Vector2(-1, -1);
         public string UserAccountName { get; set; }
         public bool HasBeenSpammedWithBuildMessage;
@@ -136,7 +139,23 @@ namespace TShockAPI
                 return flag;
             }
         }
+        public bool StackCheat(out string item, out int itemcount)
+        {
+            item = string.Empty;
+            itemcount = 0;
+            for (int i = 0; i < 40; i++)
+            {
+                if (TPlayer.inventory[i].stack > TPlayer.inventory[i].maxStack)
+                {
+                    item = TPlayer.inventory[i].name;
+                    itemcount = TPlayer.inventory[i].stack;
+                    return true;
+                }
+            }
 
+            return false;
+        }
+        
         public TSPlayer(int index)
         {
             TilesDestroyed = new Dictionary<Vector2, Tile>();

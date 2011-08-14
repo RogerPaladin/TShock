@@ -52,6 +52,7 @@ namespace TShockAPI
 
         public static string SavePath = "tshock";
 
+        public static int id = Process.GetCurrentProcess().Id;
         public static TSPlayer[] Players = new TSPlayer[Main.maxPlayers];
         public static BanManager Bans;
         public static WarpManager Warps;
@@ -65,8 +66,12 @@ namespace TShockAPI
         public static IDbConnection DB;
         public static bool OverridePort;
         PacketBufferer bufferer;
-
-
+        public static int disptime = 1000 * 60 * 15;
+        public static List<string> DispenserTime = new List<string>();
+        public static DateTime Spawner = new DateTime();
+        public static DateTime StackCheatChecker = new DateTime();
+        public static RestartManager Restart;
+        
         public override Version Version
         {
             get { return VersionNum; }
@@ -165,6 +170,7 @@ namespace TShockAPI
                 Regions = new RegionManager(DB);
                 Itembans = new ItemManager(DB);
                 RememberedPos = new RemeberedPosManager(DB);
+                Restart = new RestartManager();
 
                 Log.ConsoleInfo(string.Format("TShock Version {0} ({1}) now running.", Version, VersionCodename));
 
@@ -185,10 +191,17 @@ namespace TShockAPI
                 if (Config.BufferPackets)
                     bufferer = new PacketBufferer();
 
+                do
+                {
+                    Users.DeletePlayersAfterMinutes(TShock.Config.DeleteUserAfterMinutes);
+                }
+                while (Users.DeletePlayersAfterMinutes(TShock.Config.DeleteUserAfterMinutes) != true);
+                
                 Log.ConsoleInfo("AutoSave " + (Config.AutoSave ? "Enabled" : "Disabled"));
                 Log.ConsoleInfo("Backups " + (Backups.Interval > 0 ? "Enabled" : "Disabled"));
 
             }
+            
             catch (Exception ex)
             {
                 Log.Error("Fatal Startup Exception");
@@ -246,9 +259,11 @@ namespace TShockAPI
             {
                 if (Main.worldPathName != null)
                 {
-                    Main.worldPathName += ".crash";
+                    //Main.worldPathName += ".crash";
                     WorldGen.saveWorld();
                 }
+                Restart.DoRestart();
+                DeInitialize();
             }
         }
 
@@ -346,11 +361,24 @@ namespace TShockAPI
 
         private void OnUpdate(GameTime time)
         {
+            string item;
+            int itemcount;
+
             UpdateManager.UpdateProcedureCheck();
 
             if (Backups.IsBackupTime)
                 Backups.Backup();
+            
+            if (Restart.PrepareToRestart)
+            {
+                Console.WriteLine("The server will be restarted in 5 minutes");
+                Tools.Broadcast("The server will be restarted in 5 minutes");
+                Log.Info("The server will be restarted in 5 minutes");
+            }
 
+            if (Restart.IsRestartTime)
+                Restart.Restart();
+            
             //call these every second, not every update
             if ((DateTime.UtcNow - LastCheck).TotalSeconds >= 1)
             {
@@ -375,6 +403,17 @@ namespace TShockAPI
                             }
                         }
 
+                        if ((DateTime.UtcNow - StackCheatChecker).TotalMilliseconds > 5000)
+                        {
+                            StackCheatChecker = DateTime.UtcNow;
+                            if (player.StackCheat(out item, out itemcount))
+                            {
+                                Tools.Broadcast(string.Format("{0} cheater!!! {1} x {2}", player.Name, item, itemcount), Color.Yellow);
+                                //Tools.Ban(player, "Stack Cheat.", "Server", Convert.ToString(DateTime.Now));
+                                Tools.ForceKick(player, string.Format("Stack Cheat. {0} x {1}", item, itemcount));
+                            }
+                        }
+                        
                         if (!player.Group.HasPermission("usebanneditem"))
                         {
                             var inv = player.TPlayer.inventory;
@@ -388,11 +427,23 @@ namespace TShockAPI
                                 }
                             }
                         }
+                        if (!player.IsLoggedIn)
+                        {
+                            if ((DateTime.UtcNow - player.Interval).TotalMilliseconds > 5000)
+                            {
+                                player.SendMessage(string.Format("Login in {0} seconds", TShock.Config.TimeToLogin * 60 - Math.Round((DateTime.UtcNow - player.LoginTime).TotalSeconds, 0)), Color.Red);
+                                player.Interval = DateTime.UtcNow;
+                            }
+                            if ((DateTime.UtcNow - player.LoginTime).TotalMinutes >= TShock.Config.TimeToLogin)
+                            {
+                                Tools.Broadcast(player.Name + " Not logged in.", Color.Yellow);
+                                Tools.ForceKick(player, "Not logged in.");
+                            }
+                        }
                     }
                 }
             }
         }
-
         private void OnJoin(int ply, HandledEventArgs handler)
         {
             var player = new TSPlayer(ply);
@@ -419,7 +470,15 @@ namespace TShockAPI
                 handler.Handled = true;
                 return;
             }
-
+            
+            /*  if (!Tools.Ping(player.IP))
+             {
+            Tools.ForceKick(player, "Bad ping");
+            handler.Handled = true;
+            return;
+            }
+            */ 
+            
             if (!FileTools.OnWhitelist(player.IP))
             {
                 Tools.ForceKick(player, "Not on whitelist.");
@@ -428,6 +487,7 @@ namespace TShockAPI
             }
 
             Players[ply] = player;
+            player.LoginTime = DateTime.UtcNow;
         }
 
         private void OnLeave(int ply)
@@ -494,11 +554,11 @@ namespace TShockAPI
             }
             else
             {
-                Tools.Broadcast("{2}<{0}> {1}".SFormat(tsplr.Name, text, Config.ChatDisplayGroup ? "[{0}] ".SFormat(tsplr.Group.Name) : ""),
-                                tsplr.Group.R, tsplr.Group.G,
-                                tsplr.Group.B);
-                //Log.Info(string.Format("{0} said: {1}", tsplr.Name, text));
-                e.Handled = true;
+                //Tools.Broadcast("{2}<{0}> {1}".SFormat(tsplr.Name, text, Config.ChatDisplayGroup ? "[{0}] ".SFormat(tsplr.Group.Name) : ""));
+                                //tsplr.Group.R, tsplr.Group.G,
+                                //tsplr.Group.B);
+                Log.Info(string.Format("{0} said: {1}", tsplr.Name, text));
+                //e.Handled = true;
             }
         }
 
@@ -634,6 +694,10 @@ namespace TShockAPI
             {
                 StartInvasion();
             }
+            if (!DispenserTime.Contains(player.Name))
+            {
+                DispenserTime.Add(player.Name + ";" + Convert.ToString(DateTime.UtcNow.AddMilliseconds(-disptime)));
+            }
             if (Config.RememberLeavePos)
             {
                 var pos = RememberedPos.GetLeavePos(player.Name, player.IP);
@@ -749,6 +813,12 @@ namespace TShockAPI
                 Backups.KeepFor = file.BackupKeepFor;
                 Backups.Interval = file.BackupInterval;
             }
+
+            if (Restart != null)
+            {
+                Restart.Interval = file.AutoRestart;
+            }
+            
             if (!OverridePort)
             {
                 Netplay.serverPort = file.ServerPort;

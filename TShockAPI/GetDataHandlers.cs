@@ -257,6 +257,11 @@ namespace TShockAPI
             int x = args.Data.ReadInt32();
             int y = args.Data.ReadInt32();
             byte tiletype = args.Data.ReadInt8();
+            string Owner = string.Empty;
+            string RegionName = string.Empty;
+            Item heart = Tools.GetItemById(58);
+            Item star = Tools.GetItemById(184);
+            Random Rand = new Random();
 
             if (args.Player.AwaitingTemp1)
             {
@@ -321,12 +326,130 @@ namespace TShockAPI
                     args.Player.SendTileSquare(x, y);
                     return true;
                 }
+                if (tiletype == 37 && !args.Player.Group.HasPermission("canmeteor"))
+                {
+                    args.Player.SendMessage("You do not have permission to place meteorite.", Color.Red);
+                    Tools.SendLogs(string.Format("{0} tried to place meteorite", args.Player.Name), Color.Red);
+                    args.Player.SendTileSquare(x, y);
+                    return true;
+                }
             }
-            if (!args.Player.Group.HasPermission("editspawn") && !TShock.Regions.CanBuild(x, y, args.Player) && TShock.Regions.InArea(x, y))
+            if (!args.Player.Group.HasPermission("editspawn") && !args.Player.IsLoggedIn)
             {
                 if ((DateTime.UtcNow - args.Player.LastTileChangeNotify).TotalMilliseconds > 1000)
                 {
-                    args.Player.SendMessage("Region protected from changes.", Color.Red);
+                    args.Player.SendMessage("Login to change this region", Color.Red);
+                    args.Player.LastTileChangeNotify = DateTime.UtcNow;
+                }
+                args.Player.SendTileSquare(x, y);
+                return true;
+            }
+            #region AltarDispenser
+            if (Tools.Altar(x, y, 45, 39, 41) && !args.Player.Group.HasPermission("altaredit"))
+            {
+                args.Player.SendTileSquare(x, y);
+                if ((DateTime.UtcNow - args.Player.LastTileChangeNotify).TotalMilliseconds > 1000)
+                {
+                    args.Player.LastTileChangeNotify = DateTime.UtcNow;
+                    if ((DateTime.UtcNow - Convert.ToDateTime(Tools.DispencerTime(args.Player.Name))).TotalMilliseconds > TShock.disptime)
+                    {
+                        TShock.DispenserTime.Remove(args.Player.Name + ";" + Convert.ToString(Tools.DispencerTime(args.Player.Name)));
+                        TShock.DispenserTime.Add(args.Player.Name + ";" + Convert.ToString(DateTime.UtcNow));
+                        args.Player.Dispenser++;
+                        if (args.Player.Dispenser >= 2)
+                        {
+                            return true;
+                        }
+                        int rand = Rand.Next(1, 327);
+                        do
+                            rand = Rand.Next(1, 327);
+
+                        while (rand == 2 || rand == 3 || rand == 9 || rand == 11 || rand == 12 || rand == 13 || rand == 14 ||
+                            rand == 19 || rand == 20 || rand == 21 || rand == 22 || rand == 26 || rand == 30 || rand == 56 ||
+                            rand == 57 || rand == 59 || rand == 61 || rand == 93 || rand == 94 || rand == 116 || rand == 117 ||
+                            rand == 126 || rand == 129 || rand == 130 || rand == 131 || rand == 132 || rand == 133 || rand == 134 ||
+                            rand == 135 || rand == 137 || rand == 138 || rand == 139 || rand == 140 || rand == 141 || rand == 142 ||
+                            rand == 143 || rand == 144 || rand == 145 || rand == 146 || rand == 166 || rand == 167 || rand == 172 ||
+                            rand == 173 || rand == 174 || rand == 175 || rand == 176 || rand == 197 || rand == 205 || rand == 207 ||
+                            rand == 222 || rand == 235 || rand == 266 || rand == 297);
+
+                        Item Prize = Tools.GetItemById(rand);
+                        if (Prize.maxStack == 1)
+                        {
+                            args.Player.GiveItem(Prize.type, Prize.name, Prize.width, Prize.height, 1);
+                        }
+                        else
+                        {
+                            args.Player.GiveItem(Prize.type, Prize.name, Prize.width, Prize.height, 10);
+                        }
+                        Tools.Broadcast(string.Format("WINNER! {0} win a prize - {1}.", args.Player.Name, Prize.name), Color.LightCoral);
+                        args.Player.SendMessage("You win " + Prize.name);
+                        return true;
+                    }
+                    args.Player.Dispenser = 0;
+                    double minutes = Math.Round(15 - (DateTime.UtcNow - Convert.ToDateTime(Tools.DispencerTime(args.Player.Name))).TotalMinutes, 0);
+                    double seconds = Math.Round(900 - (DateTime.UtcNow - Convert.ToDateTime(Tools.DispencerTime(args.Player.Name))).TotalSeconds, 0) - (minutes * 60 - 30);
+                    args.Player.SendMessage(string.Format("Please wait for {0} minutes {1} seconds", minutes, seconds), Color.Orchid);
+                    return true;
+                }
+                return true;
+            }
+            #endregion
+            #region HardcoreSpawner
+            if (Tools.Altar(x, y, 58, 8, 1) && !args.Player.Group.HasPermission("altaredit"))
+            {
+                args.Player.SendTileSquare(x, y);
+                if ((DateTime.UtcNow - args.Player.LastTileChangeNotify).TotalMilliseconds > 1000)
+                {
+                    if ((DateTime.UtcNow - TShock.Spawner).TotalMilliseconds > 1000 * 60 * 30)
+                    {
+                        args.Player.DamagePlayer(100);
+                        NPC skeletron = Tools.GetNPCById(35);
+                        NPC slime = Tools.GetNPCById(50);
+                        NPC eye = Tools.GetNPCById(4);
+                        NPC eater = Tools.GetNPCById(13);
+                        TSPlayer.Server.SetTime(false, 0.0);
+                        TSPlayer.Server.SpawnNPC(skeletron.type, skeletron.name, 3, (int)args.Player.TileX, (int)args.Player.TileY);
+                        TSPlayer.Server.SpawnNPC(slime.type, slime.name, 3, (int)args.Player.TileX, (int)args.Player.TileY + 20);
+                        TSPlayer.Server.SpawnNPC(eye.type, eye.name, 3, (int)args.Player.TileX, (int)args.Player.TileY);
+                        TSPlayer.Server.SpawnNPC(eater.type, eater.name, 3, (int)args.Player.TileX, (int)args.Player.TileY);
+                        Tools.Broadcast(string.Format("{0} awakened an ancient evil in PVP arena!", args.Player.Name), Color.Moccasin);
+                        TShock.Spawner = DateTime.UtcNow;
+                        args.Player.LastTileChangeNotify = DateTime.UtcNow;
+                        return true;
+                    }
+                    args.Player.LastTileChangeNotify = DateTime.UtcNow;
+                    double minutes = Math.Round(30 - (DateTime.UtcNow - TShock.Spawner).TotalMinutes, 0);
+                    double seconds = Math.Round(1800 - (DateTime.UtcNow - TShock.Spawner).TotalSeconds, 0) - (minutes * 60 - 30);
+                    args.Player.SendMessage(string.Format("Please wait for {0} minutes {1} seconds", minutes, seconds), Color.Orchid);
+                    return true;
+                }
+                return true;
+            }
+            #endregion
+            #region Healstone
+            if (Main.tile[x, y].type == 0x55 && !args.Player.Group.HasPermission("altaredit"))
+            {
+                args.Player.SendTileSquare(x, y);
+                if ((DateTime.UtcNow - args.Player.LastTileChangeNotify).TotalMilliseconds > 1000)
+                {
+                    for (int i = 0; i < 20; i++)
+                        args.Player.GiveItem(heart.type, heart.name, heart.width, heart.height, heart.maxStack);
+                    for (int i = 0; i < 10; i++)
+                        args.Player.GiveItem(star.type, star.name, star.width, star.height, star.maxStack);
+                    args.Player.SendMessage("You healed by Black Roger's soul :D");
+                    args.Player.LastTileChangeNotify = DateTime.UtcNow;
+                    return true;
+                }
+                return true;
+            }
+            #endregion
+            
+            if (!args.Player.Group.HasPermission("editspawn") && !TShock.Regions.CanBuild(x, y, args.Player, out Owner) && TShock.Regions.InArea(x, y, out RegionName))
+            {
+                if ((DateTime.UtcNow - args.Player.LastTileChangeNotify).TotalMilliseconds > 1000)
+                {
+                    args.Player.SendMessage("This region <" + RegionName + "> is protected by" + Owner, Color.Red);
                     args.Player.LastTileChangeNotify = DateTime.UtcNow;
                 }
                 args.Player.SendTileSquare(x, y);
@@ -576,6 +699,8 @@ namespace TShockAPI
         {
             int tilex = args.Data.ReadInt32();
             int tiley = args.Data.ReadInt32();
+            string Owner = string.Empty;
+            string RegionName = string.Empty;
             if (tilex < 0 || tilex >= Main.maxTilesX || tiley < 0 || tiley >= Main.maxTilesY)
                 return false;
 
@@ -622,7 +747,7 @@ namespace TShockAPI
                 args.Player.SendTileSquare(tilex, tiley);
                 return true;
             }
-            if (!args.Player.Group.HasPermission("editspawn") && !TShock.Regions.CanBuild(tilex, tiley, args.Player) && TShock.Regions.InArea(tilex, tiley))
+            if (!args.Player.Group.HasPermission("editspawn") && !TShock.Regions.CanBuild(tilex, tiley, args.Player, out Owner) && TShock.Regions.InArea(tilex, tiley, out RegionName))
             {
                 args.Player.SendMessage("Region protected from changes.", Color.Red);
                 args.Player.SendTileSquare(tilex, tiley);

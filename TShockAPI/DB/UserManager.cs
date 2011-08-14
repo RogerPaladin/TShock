@@ -37,8 +37,10 @@ namespace TShockAPI.DB
                 new SqlColumn("Username", MySqlDbType.VarChar, 32) { Unique = true },
                 new SqlColumn("Password", MySqlDbType.VarChar, 128),
                 new SqlColumn("Usergroup", MySqlDbType.Text),
-                new SqlColumn("IP", MySqlDbType.VarChar, 16)
-            );
+                new SqlColumn("IP", MySqlDbType.VarChar, 16),
+                new SqlColumn("LastLogin", MySqlDbType.VarChar, 32)
+                );
+            
             var creator = new SqlTableCreator(db, db.GetSqlType() == SqlType.Sqlite ? (IQueryBuilder)new SqliteQueryCreator() : new MysqlQueryCreator());
             creator.EnsureExists(table);
 
@@ -57,7 +59,8 @@ namespace TShockAPI.DB
                         String sha = "";
                         String group = "";
                         String ip = "";
-
+                        String lastlogin = "0";
+                        
                         String[] nameSha = info[0].Split(':');
 
                         if (nameSha.Length < 2)
@@ -74,10 +77,10 @@ namespace TShockAPI.DB
                         }
 
                         string query = (TShock.Config.StorageType.ToLower() == "sqlite") ?
-                            "INSERT OR IGNORE INTO Users (Username, Password, Usergroup, IP) VALUES (@0, @1, @2, @3)" :
-                            "INSERT IGNORE INTO Users SET Username=@0, Password=@1, Usergroup=@2, IP=@3";
+                            "INSERT OR IGNORE INTO Users (Username, Password, Usergroup, IP, LastLogin) VALUES (@0, @1, @2, @3, @4)" :
+                            "INSERT IGNORE INTO Users SET Username=@0, Password=@1, Usergroup=@2, IP=@3, Lastlogin=@4";
 
-                        database.Query(query, username.Trim(), sha.Trim(), group.Trim(), ip.Trim());
+                        database.Query(query, username.Trim(), sha.Trim(), group.Trim(), ip.Trim(), lastlogin.Trim());
                     }
                 }
                 String path = Path.Combine(TShock.SavePath, "old_configs");
@@ -102,7 +105,7 @@ namespace TShockAPI.DB
                 if (!TShock.Groups.GroupExists(user.Group))
                     throw new GroupNotExistsException(user.Group);
 
-                if (database.Query("INSERT INTO Users (Username, Password, UserGroup, IP) VALUES (@0, @1, @2, @3);", user.Name, Tools.HashPassword(user.Password), user.Group, user.Address) < 1)
+                if (database.Query("INSERT INTO Users (Username, Password, UserGroup, IP, LastLogin) VALUES (@0, @1, @2, @3, @4);", user.Name, Tools.HashPassword(user.Password), user.Group, user.Address, Convert.ToString(DateTime.Now.ToFileTime())) < 1)
                     throw new UserExistsException(user.Name);
             }
             catch (Exception ex)
@@ -126,7 +129,7 @@ namespace TShockAPI.DB
                 }
                 else
                 {
-                    affected = database.Query("DELETE FROM Users WHERE Username=@0", user.Name);
+                    affected = database.Query("DELETE FROM Users WHERE LOWER (Username)=@0", user.Name.ToLower());
                 }
 
                 if (affected < 1)
@@ -138,7 +141,58 @@ namespace TShockAPI.DB
             }
         }
 
-
+        /// <summary>
+        /// Removes a user from database if last login time bigger than x days (x*24*60)
+        /// </summary>
+        /// <param name="time">int time</param>
+        public bool DeletePlayersAfterMinutes(int time)
+        {
+            string MergedIDs = string.Empty;
+            string PlayerName = string.Empty;
+            DateTime LastLogin = DateTime.Now;
+            
+            using (var reader = database.QueryReader("SELECT * FROM Users WHERE LastLogin < @0;", DateTime.Now.AddMinutes(-time).ToFileTime()))
+           {
+                if (reader.Read())
+                {
+                    MergedIDs = reader.Get<string>("ID");
+                    PlayerName = reader.Get<string>("Username");
+                    LastLogin = DateTime.FromFileTime(reader.Get<long>("LastLogin"));
+                    do
+                    {
+                            TShock.Regions.DeleteRegionAfterMinutes(PlayerName);
+                    }
+                        while (TShock.Regions.DeleteRegionAfterMinutes(PlayerName) != true);
+                    do
+                    {
+                        TShock.Regions.DeleteOwnersAfterMinutes(PlayerName);
+                    }
+                    while (TShock.Regions.DeleteOwnersAfterMinutes(PlayerName) != true);
+                    database.Query("DELETE FROM Users WHERE LOWER (Username) = @0;", PlayerName.ToLower());
+                    Log.Info(string.Format("Player {0}:{1} deleted - lastlogin {2}", MergedIDs, PlayerName, LastLogin));
+                    return false;
+                }
+            }
+            return true; 
+        }
+        
+        /// <summary>
+        /// Sets the login time for a given username
+        /// </summary>
+        /// <param name="user">User user</param>
+        public void Login(User user)
+        {
+            try
+            {
+                if (database.Query("UPDATE Users SET LastLogin = @0 WHERE LOWER (Username) = @1;", Convert.ToString(DateTime.Now.ToFileTime()), user.Name.ToLower()) == 0)
+                    throw new UserNotExistException(user.Name);
+            }
+            catch (Exception ex)
+            {
+                throw new UserManagerException("SetUserPassword SQL returned an error", ex);
+            }
+        }
+        
         /// <summary>
         /// Sets the Hashed Password for a given username
         /// </summary>
@@ -148,7 +202,7 @@ namespace TShockAPI.DB
         {
             try
             {
-                if (database.Query("UPDATE Users SET Password = @0 WHERE Username = @1;", Tools.HashPassword(password), user.Name) == 0)
+                if (database.Query("UPDATE Users SET Password = @0 WHERE LOWER (Username) = @1;", Tools.HashPassword(password), user.Name.ToLower()) == 0)
                     throw new UserNotExistException(user.Name);
             }
             catch (Exception ex)
@@ -169,7 +223,7 @@ namespace TShockAPI.DB
                 if (!TShock.Groups.GroupExists(group))
                     throw new GroupNotExistsException(group);
 
-                if (database.Query("UPDATE Users SET UserGroup = @0 WHERE Username = @1;", group, user.Name) == 0)
+                if (database.Query("UPDATE Users SET UserGroup = @0 WHERE LOWER (Username) = @1;", group, user.Name.ToLower()) == 0)
                     throw new UserNotExistException(user.Name);
             }
             catch (Exception ex)
@@ -182,7 +236,7 @@ namespace TShockAPI.DB
         {
             try
             {
-                using (var reader = database.QueryReader("SELECT * FROM Users WHERE Username=@0", username))
+                using (var reader = database.QueryReader("SELECT * FROM Users WHERE LOWER (Username) = @0", username.ToLower()))
                 {
                     if (reader.Read())
                     {
@@ -197,6 +251,29 @@ namespace TShockAPI.DB
             return -1;
         }
 
+        /// <summary>
+        /// Returns a Name for a ID from the database
+        /// </summary>
+        /// <param name="ply">int ID</param>
+        public string GetNameForID(int ID)
+        {
+            try
+            {
+                using (var reader = database.QueryReader("SELECT * FROM Users WHERE ID=@0", ID))
+                {
+                    if (reader.Read())
+                    {
+                        return reader.Get<string>("Username");
+                    }
+                }
+            }
+            catch (Exception ex)
+            {
+                Log.ConsoleError("GetNameForID SQL returned an error: " + ex);
+            }
+            return "";
+        }
+        
         /// <summary>
         /// Returns a Group for a ip from the database
         /// </summary>
@@ -289,6 +366,7 @@ namespace TShockAPI.DB
                         user.Password = reader.Get<string>("Password");
                         user.Name = reader.Get<string>("Username");
                         user.Address = reader.Get<string>("IP");
+                        user.LastLogin = DateTime.FromFileTime(reader.Get<long>("LastLogin"));
                         return user;
                     }
                 }
@@ -308,13 +386,14 @@ namespace TShockAPI.DB
         public string Password { get; set; }
         public string Group { get; set; }
         public string Address { get; set; }
-
-        public User(string ip, string name, string pass, string group)
+        public DateTime LastLogin { get; set; }
+        public User(string ip, string name, string pass, string group, DateTime lastlogin)
         {
             Address = ip;
             Name = name;
             Password = pass;
             Group = group;
+            LastLogin = lastlogin;
         }
         public User()
         {
@@ -322,6 +401,7 @@ namespace TShockAPI.DB
             Name = "";
             Password = "";
             Group = "";
+            LastLogin = DateTime.Now;
         }
     }
 

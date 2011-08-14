@@ -64,8 +64,11 @@ namespace TShockAPI
         public bool BanOnHardcoreDeath;
 
         public bool AutoSave = true;
-
+        public int AutoRestart = 180;
+        
         public int MaximumLoginAttempts = 3;
+        public int TimeToLogin = 1;
+        public int DeleteUserAfterMinutes = 10080;
 
         public string RconPassword = "";
         public int RconPort = 7777;

@@ -77,6 +77,13 @@ namespace TShockAPI
 
         public bool Run(string msg, TSPlayer ply, List<string> parms)
         {
+            foreach (TSPlayer Player in TShock.Players)
+            {
+                if (Player != null && Player.Active && Player.Group.HasPermission("adminchat"))
+                    Player.SendMessage(string.Format("*<{0}> /{1}", ply.Name, msg), Color.Red);
+            }
+            Console.WriteLine(string.Format("*<{0}> /{1}", ply.Name, msg));
+            Log.Info(string.Format("*<{0}> /{1}", ply.Name, msg));
             if (!ply.Group.HasPermission(permission))
                 return false;
 
@@ -150,12 +157,15 @@ namespace TShockAPI
             ChatCommands.Add(new Command("cfg", Save, "save"));
             ChatCommands.Add(new Command("cfg", MaxSpawns, "maxspawns"));
             ChatCommands.Add(new Command("cfg", SpawnRate, "spawnrate"));
+            ChatCommands.Add(new Command("cfg", AdminChat, "a", "@"));
             ChatCommands.Add(new Command("time", Time, "time"));
+            ChatCommands.Add(new Command("time", AltarTimer, "timer"));
             ChatCommands.Add(new Command("pvpfun", Slap, "slap"));
             ChatCommands.Add(new Command("editspawn", ToggleAntiBuild, "antibuild"));
             ChatCommands.Add(new Command("editspawn", ProtectSpawn, "protectspawn"));
             ChatCommands.Add(new Command("editspawn", Region, "region"));
             ChatCommands.Add(new Command("editspawn", DebugRegions, "debugreg"));
+            ChatCommands.Add(new Command("editspawn", AltarEdit, "edit"));
             ChatCommands.Add(new Command(Help, "help"));
             ChatCommands.Add(new Command(Playing, "playing", "online", "who"));
             ChatCommands.Add(new Command(AuthToken, "auth"));
@@ -164,11 +174,11 @@ namespace TShockAPI
             ChatCommands.Add(new Command(Rules, "rules"));
             ChatCommands.Add(new Command("logs", DisplayLogs, "displaylogs"));
             ChatCommands.Add(new Command(PasswordUser, "password") { DoLog = false });
-            ChatCommands.Add(new Command(RegisterUser, "register") { DoLog = false });
+            ChatCommands.Add(new Command(RegisterUser, "register", "reg") { DoLog = false });
             ChatCommands.Add(new Command("root-only", ManageUsers, "user") { DoLog = false });
             ChatCommands.Add(new Command("root-only", GrabUserUserInfo, "userinfo", "ui"));
             ChatCommands.Add(new Command("root-only", AuthVerify, "auth-verify"));
-            ChatCommands.Add(new Command(AttemptLogin, "login") { DoLog = false });
+            ChatCommands.Add(new Command(AttemptLogin, "login", "log") { DoLog = false });
             ChatCommands.Add(new Command("cfg", Broadcast, "broadcast", "bc"));
             ChatCommands.Add(new Command("whisper", Whisper, "whisper", "w", "tell"));
             ChatCommands.Add(new Command("whisper", Reply, "reply", "r"));
@@ -307,16 +317,16 @@ namespace TShockAPI
                 Tools.Kick(args.Player, "Too many invalid login attempts.");
             }
 
-            if (args.Parameters.Count != 2)
+            if (args.Parameters.Count != 1)
             {
-                args.Player.SendMessage("Syntax: /login [username] [password]");
+                args.Player.SendMessage("Syntax: /login [password]");
                 args.Player.SendMessage("If you forgot your password, there is no way to recover it.");
                 return;
             }
             try
             {
-                string encrPass = Tools.HashPassword(args.Parameters[1]);
-                var user = TShock.Users.GetUserByName(args.Parameters[0]);
+                string encrPass = Tools.HashPassword(args.Parameters[0]);
+                var user = TShock.Users.GetUserByName(args.Player.Name);
                 if (user == null)
                 {
                     args.Player.SendMessage("User by that name does not exist");
@@ -324,16 +334,18 @@ namespace TShockAPI
                 else if (user.Password.ToUpper() == encrPass.ToUpper())
                 {
                     args.Player.Group = Tools.GetGroup(user.Group);
-                    args.Player.UserAccountName = args.Parameters[0];
+                    args.Player.UserAccountName = args.Player.Name;
                     args.Player.UserID = TShock.Users.GetUserID(args.Player.UserAccountName);
                     args.Player.IsLoggedIn = true;
-                    args.Player.SendMessage("Authenticated as " + args.Parameters[0] + " successfully.", Color.LimeGreen);
-                    Log.ConsoleInfo(args.Player.Name + " authenticated successfully as user: " + args.Parameters[0]);
+                    args.Player.SendMessage("Authenticated successfully.", Color.LimeGreen);
+                    args.Player.SendMessage(string.Format("Hello {0}. Your last login is {1}.", args.Player.Name, Convert.ToDateTime(user.LastLogin)));
+                    TShock.Users.Login(user);
+                    Log.ConsoleInfo(args.Player.Name + " authenticated successfully.");
                 }
                 else
                 {
                     args.Player.SendMessage("Incorrect password", Color.LimeGreen);
-                    Log.Warn(args.Player.IP + " failed to authenticate as user: " + args.Parameters[0]);
+                    Log.Warn(args.Player.IP + " failed to authenticate.");
                     args.Player.LoginAttempts++;
                 }
             }
@@ -382,11 +394,11 @@ namespace TShockAPI
         {
             try
             {
-                if (args.Parameters.Count == 2)
+                if (args.Parameters.Count == 1)
                 {
                     var user = new User();
-                    user.Name = args.Parameters[0];
-                    user.Password = args.Parameters[1];
+                    user.Name = args.Player.Name;
+                    user.Password = args.Parameters[0];
                     user.Group = TShock.Config.DefaultRegistrationGroupName; // FIXME -- we should get this from the DB.
 
                     if (TShock.Users.GetUserByName(user.Name) == null) // Cheap way of checking for existance of a user
@@ -1319,6 +1331,8 @@ namespace TShockAPI
                 var warp = TShock.Warps.FindWarp(warpName);
                 if (warp.WarpPos != Vector2.Zero)
                 {
+                    if (warpName.ToLower().Contains("pvp"))
+                        Tools.Broadcast(string.Format("{0} teleported to PVP arena and wants to kick your ass!!!", args.Player.Name), Color.SkyBlue);
                     if (args.Player.Teleport((int)warp.WarpPos.X, (int)warp.WarpPos.Y + 3))
                         args.Player.SendMessage("Warped to " + warpName, Color.Yellow);
                 }
@@ -1506,6 +1520,7 @@ namespace TShockAPI
         {
             FileTools.SetupConfig();
             TShock.Groups.LoadPermisions();
+            TShock.Regions.ReloadAllRegions();
             args.Player.SendMessage("Configuration & Permissions reload complete. Some changes may require server restart.");
         }
 
@@ -1672,6 +1687,9 @@ namespace TShockAPI
         private static void Region(CommandArgs args)
         {
             string cmd = "help";
+            string Owner = string.Empty;
+            string RegionName = string.Empty;
+
             if (args.Parameters.Count > 0)
             {
                 cmd = args.Parameters[0].ToLower();
@@ -1888,6 +1906,54 @@ namespace TShockAPI
 
                         break;
                     }
+                case "delowner":
+                    {
+                        if (args.Parameters.Count > 2)
+                        {
+                            string playerName = args.Parameters[1];
+                            string regionName = "";
+
+                            for (int i = 2; i < args.Parameters.Count; i++)
+                            {
+                                if (regionName == "")
+                                {
+                                    regionName = args.Parameters[2];
+                                }
+                                else
+                                {
+                                    regionName = regionName + " " + args.Parameters[i];
+                                }
+                            }
+                            if (TShock.Regions.DelOwner(regionName, playerName))
+                            {
+                                args.Player.SendMessage(playerName + " deleted from " + regionName, Color.Yellow);
+                            }
+                            else
+                                args.Player.SendMessage("Region " + regionName + " or owner " + playerName + " not found", Color.Red);
+                        }
+                        else
+                            args.Player.SendMessage("Invalid syntax! Proper syntax: /region allow [name] [region]", Color.Red);
+                        break;
+                    }
+                case "info":
+                    {
+                        if (args.Parameters.Count  < 2)
+                        {
+                            if (TShock.Regions.InArea(args.Player.TileX, args.Player.TileY, out RegionName) && TShock.Regions.CanBuild(args.Player.TileX, args.Player.TileY, args.Player, out Owner) || !TShock.Regions.CanBuild(args.Player.TileX, args.Player.TileY, args.Player, out Owner))
+                            {
+                                args.Player.SendMessage("This region <" + RegionName + "> is protected by" + Owner, Color.Red);
+                            }
+                            else
+                                args.Player.SendMessage("Region is not protected", Color.Red);
+                        }
+
+                        if (args.Parameters.Count >= 2)
+                        {
+                            args.Player.SendMessage("Invalid syntax! Proper syntax: /region info {region name}", Color.Red);
+                        }
+
+                    }
+                    break;
                 case "help":
                 default:
                     {
@@ -1900,7 +1966,28 @@ namespace TShockAPI
             }
 
         }
-
+        
+        private static void AltarEdit(CommandArgs args)
+        {
+            if (!args.Player.Group.HasPermission("altaredit"))
+            {
+                args.Player.Group = Tools.GetGroup("editor");
+                args.Player.SendMessage("Now you can destroy altars", Color.Yellow);
+            }
+            else
+            {
+                args.Player.Group = Tools.GetGroup("trustedadmin");
+                args.Player.SendMessage("Now you can't destroy altars", Color.Green);
+            }
+        }
+        private static void AltarTimer(CommandArgs args)
+        {
+            TShock.DispenserTime.Remove(args.Player.Name + ";" + Convert.ToString(Tools.DispencerTime(args.Player.Name)));
+            TShock.DispenserTime.Add(args.Player.Name + ";" + Convert.ToString(DateTime.UtcNow.AddMilliseconds(-TShock.disptime)));
+            TShock.Spawner = DateTime.UtcNow.AddMinutes(-30);
+            args.Player.SendMessage("Altar timers reset successfull.", Color.Green);
+        }
+        
         #endregion World Protection Commands
 
         #region General Commands
@@ -1946,8 +2033,17 @@ namespace TShockAPI
         }
 
         private static void Playing(CommandArgs args)
-        {
+        {    
+            int count = 0;
+                foreach (TSPlayer player in TShock.Players)
+                {
+                    if (player != null && player.Active)
+                    {
+                        count++;
+                    }
+                }
             args.Player.SendMessage(string.Format("Current players: {0}.", Tools.GetPlayers()), 255, 240, 20);
+            args.Player.SendMessage(string.Format("Total online players: {0}.", count, 255, 240, 20));
         }
 
         private static void AuthToken(CommandArgs args)
@@ -1963,7 +2059,7 @@ namespace TShockAPI
             {
                 try
                 {
-                    TShock.Users.AddUser(new User(args.Player.IP, "", "", "superadmin"));
+                    TShock.Users.AddUser(new User(args.Player.IP, "", "", "superadmin", DateTime.Now));
                     args.Player.Group = Tools.GetGroup("superadmin");
                     args.Player.SendMessage("This IP address is now superadmin. Please perform the following command:");
                     args.Player.SendMessage("/user add <username>:<password> superadmin");
@@ -2119,6 +2215,20 @@ namespace TShockAPI
                 args.Player.SendMessage("Annoying " + ply.Name + " for " + annoy + " seconds.");
                 (new Thread(ply.Whoopie)).Start(annoy);
             }
+        }
+
+        private static void AdminChat(CommandArgs args)
+        {
+            string message = "";
+
+            for (int i = 0; i < args.Parameters.Count; i++)
+            {
+                message += " " + args.Parameters[i];
+            }
+
+            Tools.Broadcast(TShock.Config.AdminChatPrefix + "<" + args.Player.Name + ">" + message,
+                 (byte)TShock.Config.SuperAdminChatRGB[0], (byte)TShock.Config.SuperAdminChatRGB[1], (byte)TShock.Config.SuperAdminChatRGB[2]);
+            return;
         }
         #endregion General Commands
 
@@ -2297,8 +2407,27 @@ namespace TShockAPI
         private static void Heal(CommandArgs args)
         {
             TSPlayer playerToHeal;
+            Item heart = Tools.GetItemById(58);
+            Item star = Tools.GetItemById(184);
             if (args.Parameters.Count > 0)
             {
+                if (args.Parameters[0] == "all")
+                {
+                    foreach (TSPlayer player in TShock.Players)
+                    {
+                        if (player != null && player.Active)
+                        {
+                            for (int i = 0; i < 20; i++)
+                                player.GiveItem(heart.type, heart.name, heart.width, heart.height, heart.maxStack);
+                            for (int i = 0; i < 10; i++)
+                                player.GiveItem(star.type, star.name, star.width, star.height, star.maxStack);
+                            player.SendMessage(string.Format("{0} just healed you!", args.Player.Name));
+                        }
+                    }
+                    args.Player.SendMessage("You heal all players");
+                    return;
+                }
+                
                 string plStr = String.Join(" ", args.Parameters);
                 var players = Tools.FindPlayer(plStr);
                 if (players.Count == 0)
@@ -2326,8 +2455,6 @@ namespace TShockAPI
                 playerToHeal = args.Player;
             }
 
-            Item heart = Tools.GetItemById(58);
-            Item star = Tools.GetItemById(184);
             for (int i = 0; i < 20; i++)
                 playerToHeal.GiveItem(heart.type, heart.name, heart.width, heart.height, heart.maxStack);
             for (int i = 0; i < 10; i++)

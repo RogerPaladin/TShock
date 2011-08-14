@@ -26,6 +26,7 @@ using System.Text;
 using Microsoft.Xna.Framework;
 using Terraria;
 using TerrariaAPI;
+using System.Net.NetworkInformation;
 
 namespace TShockAPI
 {
@@ -549,6 +550,47 @@ namespace TShockAPI
                     return false;
             }
             return true;
+        }
+        
+        public static bool Altar(int x, int y, int center, int cross, int diagonal)
+        {
+            int[] X = new int[9] { x - 1, x, x + 1, x - 1, x, x + 1, x - 1, x, x + 1 };
+            int[] Y = new int[9] { y - 1, y - 1, y - 1, y, y, y, y + 1, y + 1, y + 1 };
+            for (int i = 0; i <= 8; i++)
+            {
+                if (Main.tile[X[i], Y[i]].type == center && Main.tile[X[i], Y[i] - 1].type == cross && Main.tile[X[i], Y[i] + 1].type == cross && Main.tile[X[i] - 1, Y[i]].type == cross && Main.tile[X[i] + 1, Y[i]].type == cross && Main.tile[X[i] - 1, Y[i] - 1].type == diagonal && Main.tile[X[i] + 1, Y[i] - 1].type == diagonal && Main.tile[X[i] - 1, Y[i] + 1].type == diagonal && Main.tile[X[i] + 1, Y[i] + 1].type == diagonal)
+                {
+                    return true;
+                }
+                //Altar Debug       Console.WriteLine(Main.tile[X[i], Y[i]].type);
+            }
+
+            return false;
+        }
+        /// <summary>
+        /// Return true if player ping < 150.
+        /// </summary>
+        /// <param name="ip">string ip</param>
+
+        public static bool Ping(string ip)
+        {
+            Ping ping = new Ping();
+            PingReply pingReply = ping.Send(ip);
+            if (pingReply.RoundtripTime < 150)
+            {
+                return true;
+            }
+            return false;
+        }
+        /// <summary>
+        /// Return a time for a Player
+        /// </summary>
+        /// <param name="name">string name</param>
+        public static string DispencerTime(string name)
+        {
+            string result = TShock.DispenserTime.Find(item => item.Contains(name));
+            string[] time = result.Split(';');
+            return time[1];
         }
     }
 }

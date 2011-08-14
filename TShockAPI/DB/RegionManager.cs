@@ -271,8 +271,8 @@ namespace TShockAPI.DB
         {
             try
             {
-                database.Query("DELETE FROM Regions WHERE RegionName=@0 AND WorldID=@1", name, Main.worldID.ToString());
-                Regions.Remove(getRegion(name));
+                database.Query("DELETE FROM Regions WHERE LOWER (RegionName) = @0 AND WorldID = @1", name.ToLower(), Main.worldID.ToString());
+                Regions.Remove(getRegion(name.ToLower()));
                 return true;
             }
             catch (Exception ex)
@@ -281,7 +281,70 @@ namespace TShockAPI.DB
             }
             return false;
         }
+        
+        public bool DeleteRegionAfterMinutes(string name)
+        {
+            try
+            {
+                string RegionName = string.Empty;
+                string MergedIDs = string.Empty;
+                database.Query("DELETE FROM Regions WHERE LOWER (RegionName) = @0", name.ToLower());
+                Regions.Remove(getRegion(name.ToLower()));
+                Log.Info(string.Format("Region {0} automatically deleted", name));
+                return true;
+            }
+            catch (Exception ex)
+            {
+                Log.Error(ex.ToString());
+            }
+            
+        return true;
+        }
 
+        public bool DeleteOwnersAfterMinutes(string name)
+        {
+            try
+            {
+                string RegionName = string.Empty;
+                string MergedIDs = string.Empty;
+                string[] IDs;
+                using (var reader = database.QueryReader("SELECT * FROM Regions"))
+                {
+                    while (reader.Read())
+                    {
+                        MergedIDs = reader.Get<string>("UserIds");
+                        RegionName = reader.Get<string>("RegionName");
+                        if (MergedIDs.Contains(","))
+                        {
+                            IDs = MergedIDs.Split(',');
+                            foreach (string ID in IDs)
+                            {
+                                if (ID.Equals(Convert.ToString(TShock.Users.GetUserID(name))))
+                                {
+                                    if (DelOwner(RegionName, name))
+                                    {
+                                        Log.Info(string.Format("Player {0} automatically deleted from region {1}", name, RegionName));
+                                    }
+                                }
+                            }
+                        }
+                        else
+                        {
+                            if (MergedIDs.Equals(Convert.ToString(TShock.Users.GetUserID(name))))
+                            {
+                                DelOwner(RegionName, name);
+                            }
+                         }
+                    }
+                }
+           }
+            catch (Exception ex)
+            {
+                Log.Error(ex.ToString());
+            }
+            return true;
+        }
+        
         public bool SetRegionState(string name, bool state)
         {
             try
@@ -312,15 +375,16 @@ namespace TShockAPI.DB
             }
         }
 
-        public bool CanBuild(int x, int y, TSPlayer ply)
+        public bool CanBuild(int x, int y, TSPlayer ply, out string Owner)
         {
+            Owner = string.Empty;
             if (!ply.Group.HasPermission("canbuild"))
             {
                 return false;
             }
             for (int i = 0; i < Regions.Count; i++)
             {
-                if (Regions[i].InArea(new Rectangle(x, y, 0, 0)) && !Regions[i].HasPermissionToBuildInRegion(ply))
+                if (Regions[i].InArea(new Rectangle(x, y, 0, 0)) && !Regions[i].HasPermissionToBuildInRegion(ply, out Owner))
                 {
                     return false;
                 }
@@ -328,14 +392,16 @@ namespace TShockAPI.DB
             return true;
         }
 
-        public bool InArea(int x, int y)
+        public bool InArea(int x, int y, out string RegionName)
         {
+            RegionName = string.Empty;
             foreach (Region region in Regions)
             {
                 if (x >= region.Area.Left && x <= region.Area.Right &&
                     y >= region.Area.Top && y <= region.Area.Bottom &&
                     region.DisableBuild)
                 {
+                    RegionName = region.Name;
                     return true;
                 }
             }
@@ -347,12 +413,12 @@ namespace TShockAPI.DB
             return  MergedIDs.Split(new []{','}, StringSplitOptions.RemoveEmptyEntries).ToList();
         }
 
-        public bool AddNewUser(string regionName, String userName)
+        public bool AddNewUser(string regionName, string userName)
         {
             try
             {
                 string MergedIDs = string.Empty;
-                using (var reader = database.QueryReader("SELECT * FROM Regions WHERE RegionName=@0 AND WorldID=@1", regionName, Main.worldID.ToString()))
+                using (var reader = database.QueryReader("SELECT * FROM Regions WHERE LOWER (RegionName)=@0 AND WorldID=@1", regionName.ToLower(), Main.worldID.ToString()))
                 {
                     if (reader.Read())
                         MergedIDs = reader.Get<string>("UserIds");
@@ -363,7 +429,7 @@ namespace TShockAPI.DB
                 else
                     MergedIDs = MergedIDs + "," + Convert.ToString(TShock.Users.GetUserID(userName));
 
-                if (database.Query("UPDATE Regions SET UserIds=@0 WHERE RegionName=@1 AND WorldID=@2", MergedIDs, regionName, Main.worldID.ToString()) > 0)
+                if (database.Query("UPDATE Regions SET UserIds=@0 WHERE LOWER (RegionName)=@1 AND WorldID=@2", MergedIDs, regionName.ToLower(), Main.worldID.ToString()) > 0)
                 {
                     ReloadAllRegions();
                     return true;
@@ -376,6 +442,48 @@ namespace TShockAPI.DB
             return false;
         }
 
+        public bool DelOwner(string regionName, String userName)
+        {
+            try
+            {
+                string MergedIDs = string.Empty;
+                string IDstring = string.Empty;
+                string[] IDs;
+                using (var reader = database.QueryReader("SELECT * FROM Regions WHERE LOWER (RegionName)=@0", regionName.ToLower()))
+                {
+                    if (reader.Read())
+                        MergedIDs = reader.Get<string>("UserIds");
+                }
+
+                if (string.IsNullOrEmpty(MergedIDs))
+                    return false;
+                else
+                    if (MergedIDs.Contains(","))
+                    {
+                        IDs = MergedIDs.Split(',');
+                        foreach (string ID in IDs)
+                        {
+                            if (ID.Equals(Convert.ToString(TShock.Users.GetUserID(userName))))
+                            {
+                                continue;
+                           }
+                            IDstring = IDstring + "," + ID;
+                        }
+                    }
+                    else
+                    MergedIDs = MergedIDs.Replace(Convert.ToString(TShock.Users.GetUserID(userName)), "");
+                if (database.Query("UPDATE Regions SET UserIds=@0 WHERE LOWER (RegionName)=@1", IDstring.Remove(0, 1), regionName.ToLower()) > 0)
+                {
+                    ReloadAllRegions();
+                    return true;
+                }
+            }
+            catch (Exception ex)
+            {
+                Log.Error(ex.ToString());
+            }
+            return false;
+        }
         /// <summary>
         /// Gets all the regions names from world
         /// </summary>
@@ -403,7 +511,7 @@ namespace TShockAPI.DB
         {
             foreach (Region r in Regions)
             {
-                if (r.Name.Equals(name))
+                if (r.Name.ToLower().Equals(name.ToLower()))
                     return r;
             }
             return new Region();
@@ -445,15 +553,13 @@ namespace TShockAPI.DB
             return false;
         }
 
-        public bool HasPermissionToBuildInRegion(TSPlayer ply)
+        public bool HasPermissionToBuildInRegion(TSPlayer ply, out string Owner)
         {
+            Owner = string.Empty;
+            
             if (!ply.IsLoggedIn)
             {
-                if (!ply.HasBeenNaggedAboutLoggingIn)
-                {
                     ply.SendMessage("You must be logged in to take advantage of protected regions.", Color.Red);
-                    ply.HasBeenNaggedAboutLoggingIn = true;
-                }
                 return false;
             }
             if (!DisableBuild)
@@ -461,6 +567,11 @@ namespace TShockAPI.DB
                 return true;
             }
 
+            for (int i = 0; i < AllowedIDs.Count; i++)
+            {
+                Owner = string.Format("{0} {1}", Owner, TShock.Users.GetNameForID((int)AllowedIDs[i]));
+                
+            }
             for (int i = 0; i < AllowedIDs.Count; i++)
             {
                 if (AllowedIDs[i] == ply.UserID)
