@@ -30,6 +30,7 @@ using System.Data;
 using System.Diagnostics;
 using System.IO;
 using System.Net;
+using System.Net.Sockets;
 using System.Reflection;
 using System.Security.Cryptography;
 using System.Linq;
@@ -65,13 +66,13 @@ namespace TShockAPI
         public static ConfigFile Config { get; set; }
         public static IDbConnection DB;
         public static bool OverridePort;
-        PacketBufferer bufferer;
         public static int disptime = 1000 * 60 * 15;
         public static List<string> DispenserTime = new List<string>();
         public static DateTime Spawner = new DateTime();
         public static DateTime StackCheatChecker = new DateTime();
         public static RestartManager Restart;
-        
+        static PacketBufferer bufferer;
+
         public override Version Version
         {
             get { return VersionNum; }
@@ -717,6 +718,33 @@ namespace TShockAPI
                     Main.invasionSize = 20000000;
                 }
             }
+        }
+
+        /// <summary>
+        /// Send bytes to client using packetbuffering if available
+        /// </summary>
+        /// <param name="client">socket to send to</param>
+        /// <param name="bytes">bytes to send</param>
+        /// <returns>False on exception</returns>
+        public static bool SendBytes(ServerSock client, byte[] bytes)
+        {
+            if (bufferer != null)
+            {
+                bufferer.SendBytes(client, bytes);
+                return true;
+            }
+
+            try
+            {
+                if (client.tcpClient.Connected)
+                    client.networkStream.Write(bytes, 0, bytes.Length);
+                return true;
+            }
+            catch (Exception ex)
+            {
+                Log.Error(ex.ToString());
+            }
+            return false;
         }
 
         private void OnSaveWorld(bool resettime, HandledEventArgs e)
