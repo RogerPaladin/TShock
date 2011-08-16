@@ -52,6 +52,7 @@ namespace TShockAPI.DB
             creator.EnsureExists(table);
 
             ImportOld();
+            ReloadAllRegions();
 
         }
 
@@ -413,7 +414,7 @@ namespace TShockAPI.DB
             return  MergedIDs.Split(new []{','}, StringSplitOptions.RemoveEmptyEntries).ToList();
         }
 
-        public bool AddNewUser(string regionName, string userName)
+        public bool AddNewUser(string regionName, String userName)
         {
             try
             {

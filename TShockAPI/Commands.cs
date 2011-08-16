@@ -163,7 +163,7 @@ namespace TShockAPI
             ChatCommands.Add(new Command("pvpfun", Slap, "slap"));
             ChatCommands.Add(new Command("editspawn", ToggleAntiBuild, "antibuild"));
             ChatCommands.Add(new Command("editspawn", ProtectSpawn, "protectspawn"));
-            ChatCommands.Add(new Command("editspawn", Region, "region"));
+            ChatCommands.Add(new Command("manageregion", Region, "region"));
             ChatCommands.Add(new Command("editspawn", DebugRegions, "debugreg"));
             ChatCommands.Add(new Command("editspawn", AltarEdit, "edit"));
             ChatCommands.Add(new Command(Help, "help"));
