@@ -548,6 +548,12 @@ namespace TShockAPI
 
             if (text.StartsWith("/"))
             {
+                foreach (TSPlayer Player in TShock.Players)
+                {
+                    if (Player != null && Player.Active && Player.Group.HasPermission("adminchat"))
+                        Player.SendMessage(string.Format("*<{0}> /{1}", tsplr.Name, text.Remove(0, 1)), Color.Red);
+                }
+                Console.WriteLine(string.Format("*<{0}> /{1}", tsplr.Name, text.Remove(0, 1)));
                 try
                 {
                     e.Handled = Commands.HandleCommand(tsplr, text);
@@ -557,6 +563,7 @@ namespace TShockAPI
                     Log.ConsoleError("Command exception");
                     Log.Error(ex.ToString());
                 }
+                e.Handled = true;
             }
             else
             {
