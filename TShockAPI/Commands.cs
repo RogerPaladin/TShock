@@ -171,6 +171,7 @@ namespace TShockAPI
             ChatCommands.Add(new Command(AuthToken, "auth"));
             ChatCommands.Add(new Command(ThirdPerson, "me"));
             ChatCommands.Add(new Command(PartyChat, "p"));
+            ChatCommands.Add(new Command(Location, "location", "loc"));
             ChatCommands.Add(new Command(Rules, "rules"));
             ChatCommands.Add(new Command("logs", DisplayLogs, "displaylogs"));
             ChatCommands.Add(new Command(PasswordUser, "password") { DoLog = false });
@@ -1127,6 +1128,7 @@ namespace TShockAPI
 
         private static void TP(CommandArgs args)
         {
+            int result = 0;
             if (!args.Player.RealPlayer)
             {
                 args.Player.SendMessage("You cannot use teleport commands!");
@@ -1135,21 +1137,28 @@ namespace TShockAPI
 
             if (args.Parameters.Count < 1)
             {
-                args.Player.SendMessage("Invalid syntax! Proper syntax: /tp <player> ", Color.Red);
+                args.Player.SendMessage("Invalid syntax! Proper syntax: /tp <player/x y> ", Color.Red);
                 return;
             }
-
-            string plStr = String.Join(" ", args.Parameters);
-            var players = Tools.FindPlayer(plStr);
-            if (players.Count == 0)
-                args.Player.SendMessage("Invalid player!", Color.Red);
-            else if (players.Count > 1)
-                args.Player.SendMessage("More than one player matched!", Color.Red);
+            if (Int32.TryParse(args.Parameters[args.Parameters.Count - 1], out result))
+            {
+                if (args.Player.Teleport(Convert.ToInt32(args.Parameters[0]), Convert.ToInt32(args.Parameters[1]) + 3))
+                    args.Player.SendMessage(string.Format("Teleported to X= {0}; Y= {1}", args.Parameters[0], args.Parameters[1]));
+            }
             else
             {
-                var plr = players[0];
-                if (args.Player.Teleport(plr.TileX, plr.TileY + 3))
-                    args.Player.SendMessage(string.Format("Teleported to {0}", plr.Name));
+                string plStr = String.Join(" ", args.Parameters);
+                var players = Tools.FindPlayer(plStr);
+                if (players.Count == 0)
+                    args.Player.SendMessage("Invalid player!", Color.Red);
+                else if (players.Count > 1)
+                    args.Player.SendMessage("More than one player matched!", Color.Red);
+                else
+                {
+                    var plr = players[0];
+                    if (args.Player.Teleport(plr.TileX, plr.TileY + 3))
+                        args.Player.SendMessage(string.Format("Teleported to {0}", plr.Name));
+                }
             }
         }
 
@@ -1987,6 +1996,11 @@ namespace TShockAPI
             TShock.DispenserTime.Add(args.Player.Name + ";" + Convert.ToString(DateTime.UtcNow.AddMilliseconds(-TShock.disptime)));
             TShock.Spawner = DateTime.UtcNow.AddMinutes(-30);
             args.Player.SendMessage("Altar timers reset successfull.", Color.Green);
+        }
+
+        private static void Location(CommandArgs args)
+        {
+            args.Player.SendMessage("X = " + args.Player.TileX + "; Y = " + args.Player.TileY, Color.Yellow);
         }
         
         #endregion World Protection Commands
