@@ -859,10 +859,21 @@ namespace TShockAPI
         {
             var x = args.Data.ReadInt32();
             var y = args.Data.ReadInt32();
+            string Owner = string.Empty;
+            string RegionName = string.Empty;
+            
             if (TShock.Config.RangeChecks && ((Math.Abs(args.Player.TileX - x) > 32) || (Math.Abs(args.Player.TileY - y) > 32)))
             {
                 return Tools.HandleGriefer(args.Player, TShock.Config.RangeCheckBanReason);
             }
+
+            if (!args.Player.Group.HasPermission("editspawn") && !TShock.Regions.CanBuild(x, y, args.Player, out Owner) && TShock.Regions.InArea(x, y, out RegionName))
+            {
+                args.Player.SendMessage("Chest protected from changes by " + Owner, Color.Red);
+                args.Player.SendMessage("Log in to use it", Color.Red);
+                return true;
+            }
+            
             return false;
         }
 
@@ -871,10 +882,21 @@ namespace TShockAPI
             var id = args.Data.ReadInt16();
             var x = args.Data.ReadInt32();
             var y = args.Data.ReadInt32();
+            string Owner = string.Empty;
+            string RegionName = string.Empty;
+            
             if (TShock.Config.RangeChecks && ((Math.Abs(args.Player.TileX - x) > 32) || (Math.Abs(args.Player.TileY - y) > 32)))
             {
                 return Tools.HandleGriefer(args.Player, TShock.Config.RangeCheckBanReason);
             }
+            
+            if (!args.Player.Group.HasPermission("editspawn") && !TShock.Regions.CanBuild(x, y, args.Player, out Owner) && TShock.Regions.InArea(x, y, out RegionName))
+            {
+                args.Player.SendMessage("Sign protected from changes by " + Owner, Color.Red);
+                args.Player.SendMessage("Log in to use it", Color.Red);
+                return true;
+            }
+            
             return false;
         }
     }
