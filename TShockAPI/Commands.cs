@@ -77,12 +77,6 @@ namespace TShockAPI
 
         public bool Run(string msg, TSPlayer ply, List<string> parms)
         {
-            foreach (TSPlayer Player in TShock.Players)
-            {
-                if (Player != null && Player.Active && Player.Group.HasPermission("adminchat"))
-                    Player.SendMessage(string.Format("*<{0}> /{1}", ply.Name, msg), Color.Red);
-            }
-            Console.WriteLine(string.Format("*<{0}> /{1}", ply.Name, msg));
             Log.Info(string.Format("*<{0}> /{1}", ply.Name, msg));
             if (!ply.Group.HasPermission(permission))
                 return false;
@@ -1950,7 +1944,7 @@ namespace TShockAPI
                         {
                             if (TShock.Regions.InArea(args.Player.TileX, args.Player.TileY, out RegionName) && TShock.Regions.CanBuild(args.Player.TileX, args.Player.TileY, args.Player, out Owner) || !TShock.Regions.CanBuild(args.Player.TileX, args.Player.TileY, args.Player, out Owner))
                             {
-                                args.Player.SendMessage("This region <" + RegionName + "> is protected by" + Owner, Color.Red);
+                                args.Player.SendMessage("This region <" + RegionName + "> is protected by " + Owner, Color.Red);
                             }
                             else
                                 args.Player.SendMessage("Region is not protected", Color.Red);

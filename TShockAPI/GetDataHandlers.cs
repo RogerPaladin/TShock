@@ -289,7 +289,7 @@ namespace TShockAPI
             if (args.Player.AwaitingName)
             {
                 if (TShock.Regions.InArea(args.Player.TileX, args.Player.TileY, out RegionName) && TShock.Regions.CanBuild(args.Player.TileX, args.Player.TileY, args.Player, out Owner) || !TShock.Regions.CanBuild(args.Player.TileX, args.Player.TileY, args.Player, out Owner))
-                args.Player.SendMessage("This region <" + RegionName + "> is protected by" + Owner, Color.Yellow);
+                args.Player.SendMessage("This region <" + RegionName + "> is protected by " + Owner, Color.Yellow);
                 args.Player.SendTileSquare(x, y);
                 args.Player.AwaitingName = false;
                 return true;
@@ -744,7 +744,7 @@ namespace TShockAPI
             if (args.Player.AwaitingName)
             {
                 if (TShock.Regions.InArea(args.Player.TileX, args.Player.TileY, out RegionName) && TShock.Regions.CanBuild(args.Player.TileX, args.Player.TileY, args.Player, out Owner) || !TShock.Regions.CanBuild(args.Player.TileX, args.Player.TileY, args.Player, out Owner))
-                args.Player.SendMessage("This region <" + RegionName + "> is protected by" + Owner, Color.Yellow);
+                args.Player.SendMessage("This region <" + RegionName + "> is protected by " + Owner, Color.Yellow);
                 args.Player.SendTileSquare(tilex, tiley);
                 args.Player.AwaitingName = false;
                 return true;
