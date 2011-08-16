@@ -573,6 +573,7 @@ namespace TShockAPI.DB
                 Owner = string.Format("{0} {1}", Owner, TShock.Users.GetNameForID((int)AllowedIDs[i]));
                 
             }
+            Owner = Owner.Remove(0, 1);
             for (int i = 0; i < AllowedIDs.Count; i++)
             {
                 if (AllowedIDs[i] == ply.UserID)
