@@ -69,7 +69,7 @@ namespace TShockAPI
         public static DateTime Spawner = new DateTime();
         public static DateTime StackCheatChecker = new DateTime();
         public static RestartManager Restart;
-        static PacketBufferer bufferer;
+        public static PacketBufferer PacketBuffer;
 
         /// <summary>
         /// Called after TShock is initialized. Useful for plugins that needs hooks before tshock but also depend on tshock being loaded.
@@ -184,7 +184,7 @@ namespace TShockAPI
                 ServerHooks.Leave += OnLeave;
                 ServerHooks.Chat += OnChat;
                 ServerHooks.Command += ServerHooks_OnCommand;
-                NetHooks.GetData += GetData;
+                NetHooks.GetData += OnGetData;
                 NetHooks.GreetPlayer += OnGreetPlayer;
                 NpcHooks.StrikeNpc += NpcHooks_OnStrikeNpc;
 
@@ -193,7 +193,7 @@ namespace TShockAPI
                 //RconHandler.StartThread();
 
                 if (Config.BufferPackets)
-                    bufferer = new PacketBufferer();
+                    PacketBuffer = new PacketBufferer();
 
                 do
                 {
@@ -224,7 +224,7 @@ namespace TShockAPI
             ServerHooks.Leave -= OnLeave;
             ServerHooks.Chat -= OnChat;
             ServerHooks.Command -= ServerHooks_OnCommand;
-            NetHooks.GetData -= GetData;
+            NetHooks.GetData -= OnGetData;
             NetHooks.GreetPlayer -= OnGreetPlayer;
             NpcHooks.StrikeNpc -= NpcHooks_OnStrikeNpc;
             if (File.Exists(Path.Combine(SavePath, "tshock.pid")))
@@ -263,7 +263,7 @@ namespace TShockAPI
 
             if (e.IsTerminating)
             {
-                if (Main.worldPathName != null)
+                if (Main.worldPathName != null && Config.SaveWorldOnCrash)
                 {
                     //Main.worldPathName += ".crash";
                     WorldGen.saveWorld();
@@ -631,7 +631,7 @@ namespace TShockAPI
             }
         }
 
-        private void GetData(GetDataEventArgs e)
+        private void OnGetData(GetDataEventArgs e)
         {
             if (e.Handled)
                 return;
@@ -650,8 +650,7 @@ namespace TShockAPI
                 return;
             }
 
-            //if (type == PacketTypes.SyncPlayers)
-            //Debug.WriteLine("Recv: {0:X} ({2}): {3} ({1:XX})", player.Index, (byte)type, player.TPlayer.dead ? "dead " : "alive", type.ToString());
+            //Debug.WriteLine("Recv: {0:X} ({2}): {3} ({1:XX})", player.Index, (byte)type, player.TPlayer.dead ? "dead " : "alive", type);
 
             // Stop accepting updates from player as this player is going to be kicked/banned during OnUpdate (different thread so can produce race conditions)
             if ((Config.BanKillTileAbusers || Config.KickKillTileAbusers) &&
@@ -740,9 +739,9 @@ namespace TShockAPI
         /// <returns>False on exception</returns>
         public static bool SendBytes(ServerSock client, byte[] bytes)
         {
-            if (bufferer != null)
+            if (PacketBuffer != null)
             {
-                bufferer.SendBytes(client, bytes);
+                PacketBuffer.SendBytes(client, bytes);
                 return true;
             }
 
@@ -754,7 +753,7 @@ namespace TShockAPI
             }
             catch (Exception ex)
             {
-                Log.Error(ex.ToString());
+                Log.Warn(ex.ToString());
             }
             return false;
         }
