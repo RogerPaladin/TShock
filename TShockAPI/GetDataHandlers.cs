@@ -486,7 +486,7 @@ namespace TShockAPI
             {
                 if ((DateTime.UtcNow - args.Player.LastTileChangeNotify).TotalMilliseconds > 1000)
                 {
-                    args.Player.SendMessage("This region <" + RegionName + "> is protected by" + Owner, Color.Red);
+                    args.Player.SendMessage("This region <" + RegionName + "> is protected by " + Owner, Color.Red);
                     args.Player.LastTileChangeNotify = DateTime.UtcNow;
                 }
                 args.Player.SendTileSquare(x, y);
