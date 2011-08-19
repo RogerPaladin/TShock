@@ -2023,16 +2023,31 @@ namespace TShockAPI
 
         private static void Playing(CommandArgs args)
         {    
-            int count = 0;
-                foreach (TSPlayer player in TShock.Players)
+            int count = 0;  
+            string Admins = String.Empty;
+            string Players = String.Empty;
+            foreach (TSPlayer player in TShock.Players)
                 {
                     if (player != null && player.Active)
                     {
                         count++;
+                        if (player.Group.HasPermission("adminstatus"))
+                        {
+                            Admins = string.Format("{0}, {1}", Admins, player.Name);
+                        }
+                        else
+                        Players = string.Format("{0}, {1}", Players, player.Name);
                     }
                 }
-            args.Player.SendMessage(string.Format("Current players: {0}.", Tools.GetPlayers()), 255, 240, 20);
-            args.Player.SendMessage(string.Format("Total online players: {0}.", count, 255, 240, 20));
+            if (Players.Length > 1)
+            args.Player.SendMessage(string.Format("Current players: {0}.", Players.Remove(0,1)), 255, 240, 20);
+            else
+                args.Player.SendMessage(string.Format("Current players: "), 255, 240, 20);
+            if (Admins.Length > 1)
+            args.Player.SendMessage(string.Format("Current admins: {0}.", Admins.Remove(0,1)), 0, 192, 255);
+            else
+                args.Player.SendMessage(string.Format("Current admins: "), 0, 192, 255);
+            args.Player.SendMessage(string.Format("Total online players: {0}.", count), 255, 240, 20);
         }
 
         private static void AuthToken(CommandArgs args)
