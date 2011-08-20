@@ -182,12 +182,12 @@ namespace TShockAPI.DB
         /// <summary>
         /// Sets the login time for a given username
         /// </summary>
-        /// <param name="user">User user</param>
-        public void Login(User user)
+        /// <param name="user">TSplayer user</param>
+        public void Login(TSPlayer user)
         {
             try
             {
-                if (database.Query("UPDATE Users SET LastLogin = @0 WHERE LOWER (Username) = @1;", Convert.ToString(DateTime.Now.ToFileTime()), user.Name.ToLower()) == 0)
+                if (database.Query("UPDATE Users SET LastLogin = @0, IP = @1 WHERE LOWER (Username) = @2;", Convert.ToString(DateTime.Now.ToFileTime()), user.IP, user.Name.ToLower()) == 0)
                     throw new UserNotExistException(user.Name);
             }
             catch (Exception ex)
