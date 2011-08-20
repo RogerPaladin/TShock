@@ -150,7 +150,7 @@ namespace TShockAPI
             {
                 string itemname = Encoding.ASCII.GetString(args.Data.ReadBytes(namelength));
 
-                if (!args.Player.Group.HasPermission("usebanneditem") && TShock.Itembans.ItemIsBanned(itemname))
+                if (!args.Player.Group.HasPermission(Permissions.usebanneditem) && TShock.Itembans.ItemIsBanned(itemname))
                 {
                     args.Player.Disconnect("Using banned item: " + itemname + ", remove it and rejoin");
                 }
@@ -305,7 +305,7 @@ namespace TShockAPI
                 return true;
             }
 
-            if (!args.Player.Group.HasPermission("canbuild"))
+            if (!args.Player.Group.HasPermission(Permissions.canbuild))
             {
                 if (!args.Player.HasBeenSpammedWithBuildMessage)
                 {
@@ -336,14 +336,14 @@ namespace TShockAPI
                         return Tools.HandleGriefer(args.Player, TShock.Config.RangeCheckBanReason);
                     }
                 }
-                if (tiletype == 48 && !args.Player.Group.HasPermission("canspike"))
+                if (tiletype == 48 && !args.Player.Group.HasPermission(Permissions.canspike))
                 {
                     args.Player.SendMessage("You do not have permission to place spikes.", Color.Red);
                     Tools.SendLogs(string.Format("{0} tried to place spikes", args.Player.Name), Color.Red);
                     args.Player.SendTileSquare(x, y);
                     return true;
                 }
-                if (tiletype == 37 && !args.Player.Group.HasPermission("canmeteor"))
+                if (tiletype == 37 && !args.Player.Group.HasPermission(Permissions.canmeteor))
                 {
                     args.Player.SendMessage("You do not have permission to place meteorite.", Color.Red);
                     Tools.SendLogs(string.Format("{0} tried to place meteorite", args.Player.Name), Color.Red);
@@ -351,7 +351,7 @@ namespace TShockAPI
                     return true;
                 }
             }
-            if (!args.Player.Group.HasPermission("editspawn") && !args.Player.IsLoggedIn)
+            if (!args.Player.Group.HasPermission(Permissions.manageregion) && !args.Player.IsLoggedIn)
             {
                 if ((DateTime.UtcNow - args.Player.LastTileChangeNotify).TotalMilliseconds > 1000)
                 {
@@ -362,7 +362,7 @@ namespace TShockAPI
                 return true;
             }
             #region AltarDispenser
-            if (Tools.Altar(x, y, 45, 39, 41) && !args.Player.Group.HasPermission("altaredit"))
+            if (Tools.Altar(x, y, 45, 39, 41) && !args.Player.Group.HasPermission(Permissions.altaredit))
             {
                 args.Player.SendTileSquare(x, y);
                 if ((DateTime.UtcNow - args.Player.LastTileChangeNotify).TotalMilliseconds > 1000)
@@ -413,7 +413,7 @@ namespace TShockAPI
             }
             #endregion
             #region HardcoreSpawner
-            if (Tools.Altar(x, y, 58, 8, 1) && !args.Player.Group.HasPermission("altaredit"))
+            if (Tools.Altar(x, y, 58, 8, 1) && !args.Player.Group.HasPermission(Permissions.altaredit))
             {
                 args.Player.SendTileSquare(x, y);
                 if ((DateTime.UtcNow - args.Player.LastTileChangeNotify).TotalMilliseconds > 1000)
@@ -445,7 +445,7 @@ namespace TShockAPI
             }
             #endregion
             #region Healstone
-            if (Main.tile[x, y].type == 0x55 && !args.Player.Group.HasPermission("altaredit"))
+            if (Main.tile[x, y].type == 0x55 && !args.Player.Group.HasPermission(Permissions.altaredit))
             {
                 args.Player.SendTileSquare(x, y);
                 if ((DateTime.UtcNow - args.Player.LastTileChangeNotify).TotalMilliseconds > 1000)
@@ -462,7 +462,7 @@ namespace TShockAPI
             }
             #endregion
             
-            if (!args.Player.Group.HasPermission("editspawn") && !TShock.Regions.CanBuild(x, y, args.Player, out Owner) && TShock.Regions.InArea(x, y, out RegionName))
+            if (!args.Player.Group.HasPermission(Permissions.editspawn) && !TShock.Regions.CanBuild(x, y, args.Player, out Owner) && TShock.Regions.InArea(x, y, out RegionName))
             {
                 if ((DateTime.UtcNow - args.Player.LastTileChangeNotify).TotalMilliseconds > 1000)
                 {
@@ -474,7 +474,7 @@ namespace TShockAPI
             }
             if (TShock.Config.DisableBuild)
             {
-                if (!args.Player.Group.HasPermission("editspawn"))
+                if (!args.Player.Group.HasPermission(Permissions.editspawn))
                 {
                     if ((DateTime.UtcNow - args.Player.LastTileChangeNotify).TotalMilliseconds > 1000)
                     {
@@ -487,7 +487,7 @@ namespace TShockAPI
             }
             if (TShock.Config.SpawnProtection)
             {
-                if (!args.Player.Group.HasPermission("editspawn"))
+                if (!args.Player.Group.HasPermission(Permissions.editspawn))
                 {
                     var flag = TShock.CheckSpawn(x, y);
                     if (flag)
@@ -601,7 +601,7 @@ namespace TShockAPI
             if (type == 29 || type == 28 || type == 37)
             {
                 Log.Debug(string.Format("Explosive(PlyXY:{0}_{1}, Type:{2})", args.Player.TileX, args.Player.TileY, type));
-                if (TShock.Config.DisableExplosives && (!args.Player.Group.HasPermission("useexplosives") || !args.Player.Group.HasPermission("ignoregriefdetection")))
+                if (TShock.Config.DisableExplosives && (!args.Player.Group.HasPermission(Permissions.useexplosives) || !args.Player.Group.HasPermission(Permissions.ignoregriefdetection)))
                 {
                     Main.projectile[ident].type = 0;
                     args.Player.SendData(PacketTypes.ProjectileNew, "", ident);
@@ -660,21 +660,21 @@ namespace TShockAPI
                 }
             }
 
-            if (!args.Player.Group.HasPermission("canbuild"))
+            if (!args.Player.Group.HasPermission(Permissions.canbuild))
             {
                 args.Player.SendMessage("You do not have permission to build!", Color.Red);
                 args.Player.SendTileSquare(x, y);
                 return true;
             }
 
-            if (lava && !args.Player.Group.HasPermission("canlava"))
+            if (lava && !args.Player.Group.HasPermission(Permissions.canlava))
             {
                 args.Player.SendMessage("You do not have permission to use lava", Color.Red);
                 Tools.SendLogs(string.Format("{0} tried using lava", args.Player.Name), Color.Red);
                 args.Player.SendTileSquare(x, y);
                 return true;
             }
-            if (!lava && !args.Player.Group.HasPermission("canwater"))
+            if (!lava && !args.Player.Group.HasPermission(Permissions.canwater))
             {
                 args.Player.SendMessage("You do not have permission to use water", Color.Red);
                 Tools.SendLogs(string.Format("{0} tried using water", args.Player.Name), Color.Red);
@@ -698,7 +698,7 @@ namespace TShockAPI
 
             if (TShock.Config.SpawnProtection)
             {
-                if (!args.Player.Group.HasPermission("editspawn"))
+                if (!args.Player.Group.HasPermission(Permissions.editspawn))
                 {
                     var flag = TShock.CheckSpawn(x, y);
                     if (flag)
@@ -728,13 +728,13 @@ namespace TShockAPI
                 Tools.ForceKick(args.Player, string.Format(TShock.Config.TileKillAbuseReason, Main.tile[tilex, tiley].type));
                 return true;
             }
-            if (!args.Player.Group.HasPermission("canbuild"))
+            if (!args.Player.Group.HasPermission(Permissions.canbuild))
             {
                 args.Player.SendMessage("You do not have permission to build!", Color.Red);
                 args.Player.SendTileSquare(tilex, tiley);
                 return true;
             }
-            if (!args.Player.Group.HasPermission("editspawn") && !TShock.Regions.CanBuild(tilex, tiley, args.Player, out Owner) && TShock.Regions.InArea(tilex, tiley, out RegionName))
+            if (!args.Player.Group.HasPermission(Permissions.editspawn) && !TShock.Regions.CanBuild(tilex, tiley, args.Player, out Owner) && TShock.Regions.InArea(tilex, tiley, out RegionName))
             {
                 args.Player.SendMessage("Region protected from changes.", Color.Red);
                 args.Player.SendTileSquare(tilex, tiley);
@@ -742,7 +742,7 @@ namespace TShockAPI
             }
             if (TShock.Config.DisableBuild)
             {
-                if (!args.Player.Group.HasPermission("editspawn"))
+                if (!args.Player.Group.HasPermission(Permissions.editspawn))
                 {
                     args.Player.SendMessage("World protected from changes.", Color.Red);
                     args.Player.SendTileSquare(tilex, tiley);
@@ -751,7 +751,7 @@ namespace TShockAPI
             }
             if (TShock.Config.SpawnProtection)
             {
-                if (!args.Player.Group.HasPermission("editspawn"))
+                if (!args.Player.Group.HasPermission(Permissions.editspawn))
                 {
                     var flag = TShock.CheckSpawn(tilex, tiley);
                     if (flag)
@@ -808,7 +808,7 @@ namespace TShockAPI
                 return Tools.HandleGriefer(args.Player, TShock.Config.RangeCheckBanReason);
             }
 
-            if (!args.Player.Group.HasPermission("editspawn") && !TShock.Regions.CanBuild(x, y, args.Player, out Owner) && TShock.Regions.InArea(x, y, out RegionName))
+            if (!args.Player.Group.HasPermission(Permissions.manageregion) && !TShock.Regions.CanBuild(x, y, args.Player, out Owner) && TShock.Regions.InArea(x, y, out RegionName))
             {
                 args.Player.SendMessage("Chest protected from changes by " + Owner, Color.Red);
                 args.Player.SendMessage("Log in to use it", Color.Red);
@@ -831,7 +831,7 @@ namespace TShockAPI
                 return Tools.HandleGriefer(args.Player, TShock.Config.RangeCheckBanReason);
             }
             
-            if (!args.Player.Group.HasPermission("editspawn") && !TShock.Regions.CanBuild(x, y, args.Player, out Owner) && TShock.Regions.InArea(x, y, out RegionName))
+            if (!args.Player.Group.HasPermission(Permissions.manageregion) && !TShock.Regions.CanBuild(x, y, args.Player, out Owner) && TShock.Regions.InArea(x, y, out RegionName))
             {
                 args.Player.SendMessage("Sign protected from changes by " + Owner, Color.Red);
                 args.Player.SendMessage("Log in to use it", Color.Red);

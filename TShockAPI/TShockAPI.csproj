@@ -113,11 +113,13 @@
     <Compile Include="Extensions\LinqExt.cs" />
     <Compile Include="Log.cs" />
     <Compile Include="Net\BaseMsg.cs" />
+    <Compile Include="Net\DisconnectMsg.cs" />
     <Compile Include="Net\NetTile.cs" />
     <Compile Include="Net\SpawnMsg.cs" />
     <Compile Include="Net\WorldInfoMsg.cs" />
     <Compile Include="DB\RegionManager.cs" />
     <Compile Include="PacketBufferer.cs" />
+    <Compile Include="Permissions.cs" />
     <Compile Include="RconHandler.cs" />
     <Compile Include="DB\RememberPosManager.cs" />
     <Compile Include="Resources.Designer.cs">

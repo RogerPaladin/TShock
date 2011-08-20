@@ -40,6 +40,7 @@ using Terraria;
 using TerrariaAPI;
 using TerrariaAPI.Hooks;
 using TShockAPI.DB;
+using TShockAPI.Net;
 
 namespace TShockAPI
 {
@@ -185,6 +186,7 @@ namespace TShockAPI
                 ServerHooks.Chat += OnChat;
                 ServerHooks.Command += ServerHooks_OnCommand;
                 NetHooks.GetData += OnGetData;
+                NetHooks.SendData += NetHooks_SendData;
                 NetHooks.GreetPlayer += OnGreetPlayer;
                 NpcHooks.StrikeNpc += NpcHooks_OnStrikeNpc;
 
@@ -225,6 +227,7 @@ namespace TShockAPI
             ServerHooks.Chat -= OnChat;
             ServerHooks.Command -= ServerHooks_OnCommand;
             NetHooks.GetData -= OnGetData;
+            NetHooks.SendData -= NetHooks_SendData;
             NetHooks.GreetPlayer -= OnGreetPlayer;
             NpcHooks.StrikeNpc -= NpcHooks_OnStrikeNpc;
             if (File.Exists(Path.Combine(SavePath, "tshock.pid")))
@@ -420,7 +423,7 @@ namespace TShockAPI
                             }
                         }
                         
-                        if (!player.Group.HasPermission("usebanneditem"))
+                        if (!player.Group.HasPermission(Permissions.usebanneditem))
                         {
                             var inv = player.TPlayer.inventory;
 
@@ -462,7 +465,7 @@ namespace TShockAPI
                 player.Group = Users.GetGroupForIP(player.IP);
             }
 
-            if (Tools.ActivePlayers() + 1 > Config.MaxSlots && !player.Group.HasPermission("reservedslot"))
+            if (Tools.ActivePlayers() + 1 > Config.MaxSlots && !player.Group.HasPermission(Permissions.reservedslot))
             {
                 Tools.ForceKick(player, Config.ServerFullReason);
                 handler.Handled = true;
@@ -537,7 +540,7 @@ namespace TShockAPI
                 return;
             }
 
-            if (tsplr.Group.HasPermission("adminchat") && !text.StartsWith("/") && Config.AdminChatEnabled)
+            if (tsplr.Group.HasPermission(Permissions.adminchat) && !text.StartsWith("/") && Config.AdminChatEnabled)
             {
                 Tools.Broadcast(Config.AdminChatPrefix + "<" + tsplr.Name + "> " + text,
                                 tsplr.Group.R, tsplr.Group.G,
@@ -550,7 +553,7 @@ namespace TShockAPI
             {
                 foreach (TSPlayer Player in TShock.Players)
                 {
-                    if (Player != null && Player.Active && Player.Group.HasPermission("adminchat"))
+                    if (Player != null && Player.Active && Player.Group.HasPermission(Permissions.adminchat))
                         Player.SendMessage(string.Format("*<{0}> /{1}", tsplr.Name, text.Remove(0, 1)), Color.Red);
                 }
                 Console.WriteLine(string.Format("*<{0}> /{1}", tsplr.Name, text.Remove(0, 1)));
@@ -637,6 +640,9 @@ namespace TShockAPI
                 return;
 
             PacketTypes type = e.MsgID;
+
+            Debug.WriteLine("Recv: {0:X}: {2} ({1:XX})", e.Msg.whoAmI, (byte)type, type);
+
             var player = Players[e.Msg.whoAmI];
             if (player == null)
             {
@@ -650,11 +656,11 @@ namespace TShockAPI
                 return;
             }
 
-            //Debug.WriteLine("Recv: {0:X} ({2}): {3} ({1:XX})", player.Index, (byte)type, player.TPlayer.dead ? "dead " : "alive", type);
+            
 
             // Stop accepting updates from player as this player is going to be kicked/banned during OnUpdate (different thread so can produce race conditions)
             if ((Config.BanKillTileAbusers || Config.KickKillTileAbusers) &&
-                player.TileThreshold >= Config.TileThreshold && !player.Group.HasPermission("ignoregriefdetection"))
+                player.TileThreshold >= Config.TileThreshold && !player.Group.HasPermission(Permissions.ignoregriefdetection))
             {
                 Log.Debug("Rejecting " + type + " from " + player.Name + " as this player is about to be kicked");
                 e.Handled = true;
@@ -702,7 +708,7 @@ namespace TShockAPI
                     "PvP is forced! Enable PvP else you can't deal damage to other people. (People can kill you)",
                     Color.Red);
             }
-            if (player.Group.HasPermission("causeevents") && Config.InfiniteInvasion)
+            if (player.Group.HasPermission(Permissions.causeevents) && Config.InfiniteInvasion)
             {
                 StartInvasion();
             }
@@ -741,10 +747,20 @@ namespace TShockAPI
         {
             if (PacketBuffer != null)
             {
-                PacketBuffer.SendBytes(client, bytes);
+                PacketBuffer.BufferBytes(client, bytes);
                 return true;
             }
 
+            return SendBytesBufferless(client,bytes);
+        }
+        /// <summary>
+        /// Send bytes to a client ignoring the packet buffer
+        /// </summary>
+        /// <param name="client">socket to send to</param>
+        /// <param name="bytes">bytes to send</param>
+        /// <returns>False on exception</returns>
+        public static bool SendBytesBufferless(ServerSock client, byte[] bytes)
+        {
             try
             {
                 if (client.tcpClient.Connected)
@@ -753,9 +769,43 @@ namespace TShockAPI
             }
             catch (Exception ex)
             {
+                Log.Warn("This is a normal exception");
                 Log.Warn(ex.ToString());
             }
             return false;
+        }
+
+        void NetHooks_SendData(SendDataEventArgs e)
+        {
+            if (e.MsgID == PacketTypes.Disconnect)
+            {
+                Action<ServerSock,string> senddisconnect = (sock, str) =>
+                {
+                    if (sock == null || !sock.active)
+                        return;
+                    using (var ms = new MemoryStream())
+                    {
+                        new DisconnectMsg {Reason = str}.PackFull(ms);
+                        SendBytesBufferless(sock, ms.ToArray());
+                    }
+                };
+
+                if (e.remoteClient != -1)
+                {
+                    senddisconnect(Netplay.serverSock[e.remoteClient], e.text);
+                }
+                else
+                {
+                    for (int i = 0; i < Netplay.serverSock.Length; i++)
+                    {
+                        if (e.ignoreClient != -1 && e.ignoreClient == i)
+                            continue;
+
+                        senddisconnect(Netplay.serverSock[i], e.text);
+                    }
+                }
+                e.Handled = true;
+            }
         }
 
         private void OnSaveWorld(bool resettime, HandledEventArgs e)

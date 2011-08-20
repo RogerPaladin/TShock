@@ -175,7 +175,6 @@ namespace TShockAPI
         public virtual void Disconnect(string reason)
         {
             SendData(PacketTypes.Disconnect, reason);
-            Flush();
         }
 
         public virtual void Flush()
@@ -355,6 +354,11 @@ namespace TShockAPI
             }
             Main.player[player].inventory[0] = oriinv;
             SendData(PacketTypes.PlayerSlot, oriinv.name, player, 0f);
+        }
+
+        public virtual void SetBuff(int type, int time = 3600)
+        {
+            SendData(PacketTypes.PlayerAddBuff, number: Index, number2: (float)type, number3: (float)time);
         }
 
         //Todo: Separate this into a few functions. SendTo, SendToAll, etc
