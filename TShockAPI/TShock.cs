@@ -452,7 +452,7 @@ namespace TShockAPI
 
                         }
                         if (CheckPlayerCollision(player.TileX, player.TileY))
-                            player.SendMessage("You are currently nocliping!", Color.Red);
+                            //player.SendMessage("You are currently nocliping!", Color.Red);
                         if (player.LastDeath != null && player.ForceSpawn && (DateTime.Now - player.LastDeath).Seconds >= 3)
                         {
                             player.Spawn();
@@ -516,8 +516,8 @@ namespace TShockAPI
             if (tsplr != null && tsplr.ReceivedInfo)
             {
                 Log.Info(string.Format("{0} left.", tsplr.Name));
-                TShock.Users.PlayingTime(tsplr.Name, Convert.ToInt32((DateTime.UtcNow - tsplr.LoginTime).TotalMinutes));
-                
+                if (tsplr.IsLoggedIn)
+                    TShock.Users.PlayingTime(tsplr.Name, Convert.ToInt32((DateTime.UtcNow - tsplr.LoginTime).TotalMinutes));
                 if (Config.RememberLeavePos)
                 {
                     RememberedPos.InsertLeavePos(tsplr.Name, tsplr.IP, (int)(tsplr.X / 16), (int)(tsplr.Y / 16));

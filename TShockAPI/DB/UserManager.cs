@@ -200,11 +200,11 @@ namespace TShockAPI.DB
         /// Sets the total played time for a given username
         /// </summary>
         /// <param name="user">String user</param>
-        public void PlayingTime(String Name, int PlayingTime)
+        public void PlayingTime(string Name, int PlayingTime)
         {
-            var user = TShock.Users.GetUserByName(Name);
             try
             {
+                var user = TShock.Users.GetUserByName(Name);
                 if (database.Query("UPDATE Users SET PlayingTime = @0 WHERE LOWER (Username) = @1;", (Convert.ToInt32(user.PlayingTime) + PlayingTime), user.Name.ToLower()) == 0)
                     throw new UserNotExistException(user.Name);
             }

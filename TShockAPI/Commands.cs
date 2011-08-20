@@ -406,7 +406,7 @@ namespace TShockAPI
                     }
                     else
                     {
-                        args.Player.SendMessage("Account " + user.Name + " has already been registered.", Color.Green);
+                        args.Player.SendMessage("Account " + user.Name + " has already been registered.", Color.Red);
                         Log.ConsoleInfo(args.Player.Name + " failed to register an existing Account: " + user.Name);
                     }
 
@@ -2249,7 +2249,14 @@ namespace TShockAPI
 
         private static void Top(CommandArgs args)
         {
-            TShock.Users.Top(args.Player);
+            if (TShock.Users.GetUserByName(args.Player.Name) == null)
+            {
+                args.Player.SendMessage("To see a top you need to register.", Color.Red);
+            }
+            else
+            {
+                TShock.Users.Top(args.Player);
+            }
         }
         #endregion General Commands
 
