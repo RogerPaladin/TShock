@@ -436,6 +436,7 @@ namespace TShockAPI
                                 }
                             }
                         }
+
                         if (!player.IsLoggedIn)
                         {
                             if ((DateTime.UtcNow - player.Interval).TotalMilliseconds > 5000)
@@ -448,6 +449,14 @@ namespace TShockAPI
                                 Tools.Broadcast(player.Name + " Not logged in.", Color.Yellow);
                                 Tools.ForceKick(player, "Not logged in.");
                             }
+
+                        }
+                        if (CheckPlayerCollision(player.TileX, player.TileY))
+                            player.SendMessage("You are currently nocliping!", Color.Red);
+                        if (player.LastDeath != null && player.ForceSpawn && (DateTime.Now - player.LastDeath).Seconds >= 3)
+                        {
+                            player.Spawn();
+                            player.ForceSpawn = false;
                         }
                     }
                 }
@@ -890,6 +899,19 @@ namespace TShockAPI
                    (player.TPlayer.statMana > 400) ||
                    (player.TPlayer.statLifeMax > 400) ||
                    (player.TPlayer.statLife > 400);
+        }
+
+        public static bool CheckPlayerCollision(int x, int y)
+        {
+            for (int i = x; i < x + 2; i++)
+            {
+                for (int h = y; h < y + 4; h++)
+                {
+                    if (!Main.tile[i, h].active || Main.tile[i, h].type == 2)
+                        return false;
+                }
+            }
+            return true;
         }
 
         public void OnConfigRead(ConfigFile file)
