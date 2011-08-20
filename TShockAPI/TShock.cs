@@ -452,7 +452,7 @@ namespace TShockAPI
 
                         }
                         if (CheckPlayerCollision(player.TileX, player.TileY))
-                            //player.SendMessage("You are currently nocliping!", Color.Red);
+                            player.SendMessage("You are currently nocliping!", Color.Red);
                         if (player.LastDeath != null && player.ForceSpawn && (DateTime.Now - player.LastDeath).Seconds >= 3)
                         {
                             player.Spawn();
@@ -907,7 +907,7 @@ namespace TShockAPI
             {
                 for (int h = y; h < y + 4; h++)
                 {
-                    if (!Main.tile[i, h].active || Main.tile[i, h].type == 2)
+                    if (!Main.tile[i, h].active || !GetDataHandlers.BlacklistTiles[Main.tile[i, h].type])
                         return false;
                 }
             }
