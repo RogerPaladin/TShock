@@ -507,7 +507,8 @@ namespace TShockAPI
             if (tsplr != null && tsplr.ReceivedInfo)
             {
                 Log.Info(string.Format("{0} left.", tsplr.Name));
-
+                TShock.Users.PlayingTime(tsplr.Name, Convert.ToInt32((DateTime.UtcNow - tsplr.LoginTime).TotalMinutes));
+                
                 if (Config.RememberLeavePos)
                 {
                     RememberedPos.InsertLeavePos(tsplr.Name, tsplr.IP, (int)(tsplr.X / 16), (int)(tsplr.Y / 16));

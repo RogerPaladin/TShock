@@ -21,6 +21,7 @@ using System;
 using System.Data;
 using System.IO;
 using MySql.Data.MySqlClient;
+using Microsoft.Xna.Framework;
 
 namespace TShockAPI.DB
 {
@@ -38,7 +39,8 @@ namespace TShockAPI.DB
                 new SqlColumn("Password", MySqlDbType.VarChar, 128),
                 new SqlColumn("Usergroup", MySqlDbType.Text),
                 new SqlColumn("IP", MySqlDbType.VarChar, 16),
-                new SqlColumn("LastLogin", MySqlDbType.VarChar, 32)
+                new SqlColumn("LastLogin", MySqlDbType.VarChar, 32),
+                new SqlColumn("PlayingTime", MySqlDbType.Int32)
                 );
             
             var creator = new SqlTableCreator(db, db.GetSqlType() == SqlType.Sqlite ? (IQueryBuilder)new SqliteQueryCreator() : new MysqlQueryCreator());
@@ -60,6 +62,7 @@ namespace TShockAPI.DB
                         String group = "";
                         String ip = "";
                         String lastlogin = "0";
+                        int playingtime = 0;
                         
                         String[] nameSha = info[0].Split(':');
 
@@ -77,10 +80,10 @@ namespace TShockAPI.DB
                         }
 
                         string query = (TShock.Config.StorageType.ToLower() == "sqlite") ?
-                            "INSERT OR IGNORE INTO Users (Username, Password, Usergroup, IP, LastLogin) VALUES (@0, @1, @2, @3, @4)" :
-                            "INSERT IGNORE INTO Users SET Username=@0, Password=@1, Usergroup=@2, IP=@3, Lastlogin=@4";
+                            "INSERT OR IGNORE INTO Users (Username, Password, Usergroup, IP, LastLogin, PlayingTime) VALUES (@0, @1, @2, @3, @4, @5)" :
+                            "INSERT IGNORE INTO Users SET Username=@0, Password=@1, Usergroup=@2, IP=@3, Lastlogin=@4, PlayingTime=@5";
 
-                        database.Query(query, username.Trim(), sha.Trim(), group.Trim(), ip.Trim(), lastlogin.Trim());
+                        database.Query(query, username.Trim(), sha.Trim(), group.Trim(), ip.Trim(), lastlogin.Trim(), playingtime);
                     }
                 }
                 String path = Path.Combine(TShock.SavePath, "old_configs");
@@ -105,7 +108,7 @@ namespace TShockAPI.DB
                 if (!TShock.Groups.GroupExists(user.Group))
                     throw new GroupNotExistsException(user.Group);
 
-                if (database.Query("INSERT INTO Users (Username, Password, UserGroup, IP, LastLogin) VALUES (@0, @1, @2, @3, @4);", user.Name, Tools.HashPassword(user.Password), user.Group, user.Address, Convert.ToString(DateTime.Now.ToFileTime())) < 1)
+                if (database.Query("INSERT INTO Users (Username, Password, UserGroup, IP, LastLogin, PlayingTime) VALUES (@0, @1, @2, @3, @4, @5);", user.Name, Tools.HashPassword(user.Password), user.Group, user.Address, Convert.ToString(DateTime.Now.ToFileTime()), 0) < 1)
                     throw new UserExistsException(user.Name);
             }
             catch (Exception ex)
@@ -189,8 +192,61 @@ namespace TShockAPI.DB
             }
             catch (Exception ex)
             {
-                throw new UserManagerException("SetUserPassword SQL returned an error", ex);
+                throw new UserManagerException("Login SQL returned an error", ex);
             }
+        }
+
+        /// <summary>
+        /// Sets the total played time for a given username
+        /// </summary>
+        /// <param name="user">String user</param>
+        public void PlayingTime(String Name, int PlayingTime)
+        {
+            var user = TShock.Users.GetUserByName(Name);
+            try
+            {
+                if (database.Query("UPDATE Users SET PlayingTime = @0 WHERE LOWER (Username) = @1;", (Convert.ToInt32(user.PlayingTime) + PlayingTime), user.Name.ToLower()) == 0)
+                    throw new UserNotExistException(user.Name);
+            }
+            catch (Exception ex)
+            {
+                throw new UserManagerException("PlayingTime SQL returned an error", ex);
+            }
+        }
+
+        /// <summary>
+        /// Show the top of players
+        /// </summary>
+        /// <param name="player">Tsplayer player</param>
+        public void Top(TSPlayer player)
+        {
+            string playername = string.Empty;
+            int playingtime = 0;
+            int count = 0;
+            var user = TShock.Users.GetUserByName(player.Name);
+            try
+            {
+                using (var reader = database.QueryReader("SELECT * FROM Users ORDER BY PlayingTime DESC LIMIT 3"))
+                {
+                    while (reader.Read())
+                    {
+                        count++;
+                        playername = reader.Get<string>("Username");
+                        playingtime = reader.Get<int>("PlayingTime");
+                        if (count == 1)
+                            player.SendMessage(string.Format("{0} place - {1}. Total played time is {2} minutes", count, playername, playingtime), Color.LightPink);
+                        if (count == 2)
+                            player.SendMessage(string.Format("{0} place - {1}. Total played time is {2} minutes", count, playername, playingtime), Color.LightGreen);
+                        if (count == 3)
+                            player.SendMessage(string.Format("{0} place - {1}. Total played time is {2} minutes", count, playername, playingtime), Color.LightBlue);
+                    }
+                }
+            }
+            catch (Exception ex)
+            {
+                throw new UserManagerException("Top SQL returned an error", ex);
+            }
+            player.SendMessage("Your total played time is " + user.PlayingTime + " minutes", Color.Yellow);
         }
         
         /// <summary>
@@ -378,6 +434,7 @@ namespace TShockAPI.DB
                         user.Name = reader.Get<string>("Username");
                         user.Address = reader.Get<string>("IP");
                         user.LastLogin = DateTime.FromFileTime(reader.Get<long>("LastLogin"));
+                        user.PlayingTime = reader.Get<int>("PlayingTime");
                         return user;
                     }
                 }
@@ -398,13 +455,16 @@ namespace TShockAPI.DB
         public string Group { get; set; }
         public string Address { get; set; }
         public DateTime LastLogin { get; set; }
-        public User(string ip, string name, string pass, string group, DateTime lastlogin)
+        public int PlayingTime { get; set; }
+        
+        public User(string ip, string name, string pass, string group, DateTime lastlogin, int playingtime)
         {
             Address = ip;
             Name = name;
             Password = pass;
             Group = group;
             LastLogin = lastlogin;
+            PlayingTime = playingtime;
         }
         public User()
         {
@@ -413,6 +473,7 @@ namespace TShockAPI.DB
             Password = "";
             Group = "";
             LastLogin = DateTime.Now;
+            PlayingTime = 0;
         }
     }
 

@@ -188,7 +188,8 @@ namespace TShockAPI
 			add(Permissions.time, AltarTimer, "timer");
 			add(Permissions.altaredit, AltarEdit, "edit");
 			add(null, Location, "location", "loc");
-		}
+            add(null, Top, "top");
+        }
 
         public static bool HandleCommand(TSPlayer player, string text)
         {
@@ -2074,7 +2075,7 @@ namespace TShockAPI
             {
                 try
                 {
-                    TShock.Users.AddUser(new User(args.Player.IP, "", "", "superadmin", DateTime.Now));
+                    TShock.Users.AddUser(new User(args.Player.IP, "", "", "superadmin", DateTime.Now, 0));
                     args.Player.Group = Tools.GetGroup("superadmin");
                     args.Player.SendMessage("This IP address is now superadmin. Please perform the following command:");
                     args.Player.SendMessage("/user add <username>:<password> superadmin");
@@ -2244,6 +2245,11 @@ namespace TShockAPI
             Tools.Broadcast(TShock.Config.AdminChatPrefix + "<" + args.Player.Name + ">" + message,
                  (byte)TShock.Config.SuperAdminChatRGB[0], (byte)TShock.Config.SuperAdminChatRGB[1], (byte)TShock.Config.SuperAdminChatRGB[2]);
             return;
+        }
+
+        private static void Top(CommandArgs args)
+        {
+            TShock.Users.Top(args.Player);
         }
         #endregion General Commands
 
