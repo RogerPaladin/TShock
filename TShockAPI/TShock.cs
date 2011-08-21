@@ -451,9 +451,9 @@ namespace TShockAPI
                             }
 
                         }
-                        if (CheckPlayerCollision(player.TileX, player.TileY))
-                            player.SendMessage("You are currently nocliping!", Color.Red);
-                        if (player.LastDeath != null && player.ForceSpawn && (DateTime.Now - player.LastDeath).Seconds >= 3)
+                        /*if (CheckPlayerCollision(player.TileX, player.TileY))
+                            player.SendMessage("You are currently nocliping!", Color.Red);*/
+                        if (player.ForceSpawn && (DateTime.Now - player.LastDeath).Seconds >= 3)
                         {
                             player.Spawn();
                             player.ForceSpawn = false;
@@ -465,7 +465,7 @@ namespace TShockAPI
         private void OnJoin(int ply, HandledEventArgs handler)
         {
             var player = new TSPlayer(ply);
-            if (Config.EnableDNSHostResolution)
+            /*if (Config.EnableDNSHostResolution)
             {
                 player.Group = Users.GetGroupForIPExpensive(player.IP);
             }
@@ -473,7 +473,8 @@ namespace TShockAPI
             {
                 player.Group = Users.GetGroupForIP(player.IP);
             }
-
+            */
+            player.Group = Tools.GetGroup("default");
             if (Tools.ActivePlayers() + 1 > Config.MaxSlots && !player.Group.HasPermission(Permissions.reservedslot))
             {
                 Tools.ForceKick(player, Config.ServerFullReason);
@@ -580,11 +581,11 @@ namespace TShockAPI
             }
             else
             {
-                //Tools.Broadcast("{2}<{0}> {1}".SFormat(tsplr.Name, text, Config.ChatDisplayGroup ? "[{0}] ".SFormat(tsplr.Group.Name) : ""));
-                                //tsplr.Group.R, tsplr.Group.G,
-                                //tsplr.Group.B);
+                Tools.Broadcast("{2}<{0}> {1}".SFormat(tsplr.Name, text, Config.ChatDisplayGroup ? "[{0}] ".SFormat(tsplr.Group.Name) : ""),
+                                tsplr.Group.R, tsplr.Group.G,
+                                tsplr.Group.B);
                 Log.Info(string.Format("{0} said: {1}", tsplr.Name, text));
-                //e.Handled = true;
+                e.Handled = true;
             }
         }
 
@@ -903,14 +904,20 @@ namespace TShockAPI
 
         public static bool CheckPlayerCollision(int x, int y)
         {
-            for (int i = x; i < x + 2; i++)
+            if (x + 1 <= Main.maxTilesX && y + 3 <= Main.maxTilesY
+                && x >= 0 && y >= 0)
             {
-                for (int h = y; h < y + 4; h++)
+                for (int i = x; i < x + 2; i++)
                 {
-                    if (!Main.tile[i, h].active || !GetDataHandlers.BlacklistTiles[Main.tile[i, h].type])
-                        return false;
+                    for (int h = y; h < y + 4; h++)
+                    {
+                        if (!Main.tile[i, h].active || !GetDataHandlers.BlacklistTiles[Main.tile[i, h].type])
+                            return false;
+                    }
                 }
             }
+            else
+                return false;
             return true;
         }
 

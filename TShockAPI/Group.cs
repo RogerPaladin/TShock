@@ -80,9 +80,9 @@ namespace TShockAPI
         public SuperAdminGroup()
             : base("superadmin")
         {
-            R = (byte)TShock.Config.SuperAdminChatRGB[0];
-            G = (byte)TShock.Config.SuperAdminChatRGB[1];
-            B = (byte)TShock.Config.SuperAdminChatRGB[2];
+            R = (byte)255;
+            G = (byte)255;
+            B = (byte)255;
         }
 
         public override bool HasPermission(string permission)

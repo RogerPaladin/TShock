@@ -256,7 +256,7 @@ namespace TShockAPI.DB
 
         public bool AddRegion(int tx, int ty, int width, int height, string regionname, string worldid)
         {
-            if (TShock.Regions.getRegion(regionname) == null)
+            if (TShock.Regions.GetRegionByName(regionname) != null)
             {
                 return false;
             }
@@ -278,7 +278,7 @@ namespace TShockAPI.DB
             try
             {
                 database.Query("DELETE FROM Regions WHERE LOWER (RegionName) = @0 AND WorldID = @1", name.ToLower(), Main.worldID.ToString());
-                Regions.Remove(getRegion(name.ToLower()));
+                Regions.Remove(GetRegionByName(name.ToLower()));
                 return true;
             }
             catch (Exception ex)
@@ -295,7 +295,7 @@ namespace TShockAPI.DB
                 string RegionName = string.Empty;
                 string MergedIDs = string.Empty;
                 database.Query("DELETE FROM Regions WHERE LOWER (RegionName) = @0", name.ToLower());
-                Regions.Remove(getRegion(name.ToLower()));
+                Regions.Remove(GetRegionByName(name.ToLower()));
                 Log.Info(string.Format("Region {0} automatically deleted", name));
                 return true;
             }
@@ -356,7 +356,9 @@ namespace TShockAPI.DB
             try
             {
                 database.Query("UPDATE Regions SET Protected=@0 WHERE RegionName=@1 AND WorldID=@2", state ? 1 : 0, name, Main.worldID.ToString());
-                getRegion(name).DisableBuild = state;
+                var region = GetRegionByName(name);
+                if (region != null)
+                    region.DisableBuild = state;
                 return true;
             }
             catch (Exception ex)
@@ -371,7 +373,9 @@ namespace TShockAPI.DB
             try
             {
                 database.Query("UPDATE Regions SET Protected=@0 WHERE RegionName=@1 AND WorldID=@2", state ? 1 : 0, name, world);
-                getRegion(name).DisableBuild = state;
+                var region = GetRegionByName(name);
+                if (region != null)
+                    region.DisableBuild = state;
                 return true;
             }
             catch (Exception ex)
@@ -513,7 +517,7 @@ namespace TShockAPI.DB
             return regions;
         }
 
-        public Region getRegion(String name)
+        public Region GetRegionByName(String name)
         {
             foreach (Region r in Regions)
             {
