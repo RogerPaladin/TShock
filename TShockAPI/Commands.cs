@@ -168,11 +168,11 @@ namespace TShockAPI
             add(null, Rules, "rules");
             add(Permissions.logs, DisplayLogs, "displaylogs");
             ChatCommands.Add(new Command(PasswordUser, "password") { DoLog = false });
-            ChatCommands.Add(new Command(RegisterUser, "register") { DoLog = false });
+            ChatCommands.Add(new Command(RegisterUser, "register", "reg") { DoLog = false });
             ChatCommands.Add(new Command(Permissions.rootonly, ManageUsers, "user") { DoLog = false });
             add(Permissions.rootonly, GrabUserUserInfo, "userinfo", "ui");
             add(Permissions.rootonly, AuthVerify, "auth-verify");
-            ChatCommands.Add(new Command(AttemptLogin, "login") { DoLog = false });
+            ChatCommands.Add(new Command(AttemptLogin, "login" , "log") { DoLog = false });
             add(Permissions.cfg, Broadcast, "broadcast", "bc");
             add(Permissions.whisper, Whisper, "whisper", "w", "tell");
             add(Permissions.whisper, Reply, "reply", "r");
@@ -186,7 +186,7 @@ namespace TShockAPI
             add(Permissions.buff, Buff, "buff");
 			add(Permissions.adminchat, AdminChat, "a", "@");
 			add(Permissions.time, AltarTimer, "timer");
-			add(Permissions.altaredit, AltarEdit, "edit");
+			add(Permissions.manageregion, AltarEdit, "edit");
 			add(null, Location, "location", "loc");
             add(null, Top, "top");
         }
@@ -409,7 +409,7 @@ namespace TShockAPI
                         args.Player.SendMessage("Account " + user.Name + " has already been registered.", Color.Red);
                         Log.ConsoleInfo(args.Player.Name + " failed to register an existing Account: " + user.Name);
                     }
-
+                    
                 }
                 else
                 {
