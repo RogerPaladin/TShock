@@ -156,6 +156,9 @@ namespace TShockAPI
                 if (itemname == "KANNIBALE BLADE"
                     || itemname == "Super Gel")
                     return Tools.HandleCheater(args.Player, string.Format(TShock.Config.GriefClientReason, "KANNIBALE"));
+                if (Tools.GetItemByName(itemname).Count == 0 && !args.Player.Group.HasPermission(Permissions.ignorecheatdetection)
+                    && TShock.Config.KickCustomItems)
+                    args.Player.Disconnect("Using custom item: " + itemname + ", remove it and region");
             }
 
             return false;
@@ -850,9 +853,12 @@ namespace TShockAPI
             var x = args.Data.ReadInt32();
             var y = args.Data.ReadInt32();
 
-            if (args.Player.RequestedSections.Contains(new Vector2(x, y)))
+            if (args.Player.RequestedSection)
+            {
+                Tools.ForceKick(args.Player, "Requested sections more than once.");
                 return true;
-            args.Player.RequestedSections.Add(new Vector2(x, y));
+            }
+            args.Player.RequestedSection = true;
             return false;
         }
     }
