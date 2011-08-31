@@ -192,7 +192,7 @@ namespace TShockAPI
 
                 GetDataHandlers.InitGetDataHandler();
                 Commands.InitCommands();
-                RconHandler.StartThread();
+                //RconHandler.StartThread();
 
                 if (Config.BufferPackets)
                     PacketBuffer = new PacketBufferer();

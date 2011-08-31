@@ -2254,6 +2254,11 @@ namespace TShockAPI
             {
                 args.Player.SendMessage("To see a top you need to register.", Color.Red);
             }
+            if (args.Parameters.Count >= 1)
+            {
+                string plStr = String.Join(" ", args.Parameters);
+                TShock.Users.Top(args.Player, plStr);
+            }
             else
             {
                 TShock.Users.Top(args.Player);

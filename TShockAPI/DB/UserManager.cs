@@ -218,7 +218,7 @@ namespace TShockAPI.DB
         /// Show the top of players
         /// </summary>
         /// <param name="player">Tsplayer player</param>
-        public void Top(TSPlayer player)
+        public void Top(TSPlayer player, string name = "")
         {
             string playername = string.Empty;
             int playingtime = 0;
@@ -226,19 +226,39 @@ namespace TShockAPI.DB
             var user = TShock.Users.GetUserByName(player.Name);
             try
             {
-                using (var reader = database.QueryReader("SELECT * FROM Users ORDER BY PlayingTime DESC LIMIT 3"))
+                if (name == "")
                 {
-                    while (reader.Read())
+                    using (var reader = database.QueryReader("SELECT * FROM Users ORDER BY PlayingTime DESC LIMIT 3"))
                     {
-                        count++;
-                        playername = reader.Get<string>("Username");
-                        playingtime = reader.Get<int>("PlayingTime");
-                        if (count == 1)
-                            player.SendMessage(string.Format("{0} place - {1}. Total played time is {2} minutes", count, playername, playingtime), Color.LightPink);
-                        if (count == 2)
-                            player.SendMessage(string.Format("{0} place - {1}. Total played time is {2} minutes", count, playername, playingtime), Color.LightGreen);
-                        if (count == 3)
-                            player.SendMessage(string.Format("{0} place - {1}. Total played time is {2} minutes", count, playername, playingtime), Color.LightBlue);
+                        while (reader.Read())
+                        {
+                            count++;
+                            playername = reader.Get<string>("Username");
+                            playingtime = reader.Get<int>("PlayingTime");
+                            if (count == 1)
+                                player.SendMessage(string.Format("{0} place - {1}. Total played time is {2} minutes", count, playername, playingtime), Color.LightPink);
+                            if (count == 2)
+                                player.SendMessage(string.Format("{0} place - {1}. Total played time is {2} minutes", count, playername, playingtime), Color.LightGreen);
+                            if (count == 3)
+                                player.SendMessage(string.Format("{0} place - {1}. Total played time is {2} minutes", count, playername, playingtime), Color.LightBlue);
+                        }
+                    }
+                }
+                else
+                {
+                    using (var reader = database.QueryReader("SELECT * FROM Users WHERE LOWER (Username) = @0;", name.ToLower()))
+                     {
+                         if (reader.Read())
+                         {
+                             playername = reader.Get<string>("Username");
+                             playingtime = reader.Get<int>("PlayingTime");
+                             player.SendMessage(string.Format("Player <{0}> - played time is {1} minutes", playername, playingtime), Color.LightGreen);
+                         }
+                         else
+                         {
+                             player.SendMessage("No players found", Color.Red);
+                             return;
+                         }
                     }
                 }
             }
