@@ -288,26 +288,34 @@ namespace TShockAPI.DB
             return false;
         }
         
-        public bool DeleteRegionAfterMinutes(string name)
+        public void DeleteRegionAfterMinutes(string name)
         {
             try
             {
                 string RegionName = string.Empty;
                 string MergedIDs = string.Empty;
-                database.Query("DELETE FROM Regions WHERE LOWER (RegionName) = @0", name.ToLower());
-                Regions.Remove(GetRegionByName(name.ToLower()));
-                Log.Info(string.Format("Region {0} automatically deleted", name));
-                return true;
+                using (var reader = database.QueryReader("SELECT * FROM Regions WHERE LOWER (RegionName) = @0", name.ToLower()))
+                {
+                    while (reader.Read())
+                    {
+                        MergedIDs = reader.Get<string>("UserIds");
+                        if (!MergedIDs.Contains(","))
+                        {
+                            database.Query("DELETE FROM Regions WHERE LOWER (RegionName) = @0", name.ToLower());
+                            Regions.Remove(GetRegionByName(name.ToLower()));
+                            Log.ConsoleInfo(string.Format("Region {0} automatically deleted", name));
+                        }
+                    }
+                 }
             }
             catch (Exception ex)
             {
                 Log.Error(ex.ToString());
             }
             
-        return true;
         }
 
-        public bool DeleteOwnersAfterMinutes(string name)
+        public void DeleteOwnersAfterMinutes(string name)
         {
             try
             {
@@ -329,7 +337,7 @@ namespace TShockAPI.DB
                                 {
                                     if (DelOwner(RegionName, name))
                                     {
-                                        Log.Info(string.Format("Player {0} automatically deleted from region {1}", name, RegionName));
+                                        Log.ConsoleInfo(string.Format("Player {0} automatically deleted from region {1}", name, RegionName));
                                     }
                                 }
                             }
@@ -348,7 +356,6 @@ namespace TShockAPI.DB
             {
                 Log.Error(ex.ToString());
             }
-            return true;
         }
         
         public bool SetRegionState(string name, bool state)

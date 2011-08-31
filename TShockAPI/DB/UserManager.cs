@@ -148,35 +148,30 @@ namespace TShockAPI.DB
         /// Removes a user from database if last login time bigger than x days (x*24*60)
         /// </summary>
         /// <param name="time">int time</param>
-        public bool DeletePlayersAfterMinutes(int time)
+        public void DeletePlayersAfterMinutes(int time)
         {
             string MergedIDs = string.Empty;
             string PlayerName = string.Empty;
+            string PlayerGroup = string.Empty;
             DateTime LastLogin = DateTime.Now;
             
             using (var reader = database.QueryReader("SELECT * FROM Users WHERE LastLogin < @0;", DateTime.Now.AddMinutes(-time).ToFileTime()))
            {
-                if (reader.Read())
+                while (reader.Read())
                 {
                     MergedIDs = reader.Get<string>("ID");
                     PlayerName = reader.Get<string>("Username");
+                    PlayerGroup = reader.Get<string>("Usergroup");
                     LastLogin = DateTime.FromFileTime(reader.Get<long>("LastLogin"));
-                    do
+                    if (!PlayerGroup.Equals("admin") && !PlayerGroup.Equals("trustedadmin") && !PlayerGroup.Equals("superadmin"))
                     {
-                            TShock.Regions.DeleteRegionAfterMinutes(PlayerName);
-                    }
-                        while (TShock.Regions.DeleteRegionAfterMinutes(PlayerName) != true);
-                    do
-                    {
-                        TShock.Regions.DeleteOwnersAfterMinutes(PlayerName);
-                    }
-                    while (TShock.Regions.DeleteOwnersAfterMinutes(PlayerName) != true);
+                    TShock.Regions.DeleteRegionAfterMinutes(PlayerName);
+                    TShock.Regions.DeleteOwnersAfterMinutes(PlayerName);
                     database.Query("DELETE FROM Users WHERE LOWER (Username) = @0;", PlayerName.ToLower());
-                    Log.Info(string.Format("Player {0}:{1} deleted - lastlogin {2}", MergedIDs, PlayerName, LastLogin));
-                    return false;
-                }
+                    Log.ConsoleInfo(string.Format("Player {0}:{1} [{2}] deleted - lastlogin {3}", MergedIDs, PlayerName, PlayerGroup, LastLogin));
+                    }
+                 }
             }
-            return true; 
         }
         
         /// <summary>
@@ -268,6 +263,32 @@ namespace TShockAPI.DB
             }
             player.SendMessage("Your total played time is " + user.PlayingTime + " minutes", Color.Yellow);
         }
+
+        /// <summary>
+        /// Automatically sets vip group for users who played 1500 minutes.
+        /// </summary>
+        /// <param name="viptime">int viptime</param>
+        public void AutoVip(int viptime)
+        {
+            string playername = string.Empty;
+            try
+            {
+                using (var reader = database.QueryReader("SELECT * FROM Users WHERE PlayingTime > @0 AND Usergroup = @1;", viptime, "registered"))
+                {
+                    while (reader.Read())
+                    {
+                        playername = reader.Get<string>("Username");
+                        var user = GetUserByName(playername);
+                        SetUserGroup(user, "vip");
+                        Log.ConsoleInfo(string.Format("Player <{0}> vipped.", user.Name));
+                    }
+                }
+            }
+            catch (Exception ex)
+            {
+                throw new UserManagerException("AutoVip SQL returned an error", ex);
+            }
+        }
         
         /// <summary>
         /// Sets the Hashed Password for a given username
@@ -299,7 +320,7 @@ namespace TShockAPI.DB
                 if (!TShock.Groups.GroupExists(group))
                     throw new GroupNotExistsException(group);
 
-                if (database.Query("UPDATE Users SET UserGroup = @0 WHERE LOWER (Username) = @1;", group, user.Name.ToLower()) == 0)
+                if (database.Query("UPDATE Users SET Usergroup = @0 WHERE LOWER (Username) = @1;", group, user.Name.ToLower()) == 0)
                     throw new UserNotExistException(user.Name);
             }
             catch (Exception ex)

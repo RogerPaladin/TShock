@@ -108,7 +108,8 @@ namespace TShockAPI
         public int MaximumLoginAttempts = 3;
         public int TimeToLogin = 1;
         public int DeleteUserAfterMinutes = 10080;
-
+        public int AutoVIPAfterMinutes = 1500;
+        
         [Description("Not implemented")]
         public string RconPassword = "";
         [Description("Not implemented")]
