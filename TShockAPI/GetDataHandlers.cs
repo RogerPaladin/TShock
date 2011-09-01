@@ -355,6 +355,20 @@ namespace TShockAPI
                     args.Player.SendTileSquare(x, y);
                     return true;
                 }
+                if (tiletype == 53 && !args.Player.Group.HasPermission(Permissions.cansand) && TShock.Regions.CanBuild(x, y, args.Player, out Owner))
+                {
+                    if ((DateTime.UtcNow - args.Player.LastTileChangeNotify).TotalMilliseconds > 2000 || TShock.Regions.InArea(x, y, out RegionName))
+                    {
+                        //args.Player.SendMessage("You do not have permission to place sand.", Color.Red);
+                        //Tools.SendLogs(string.Format("{0} tried to place sand", args.Player.Name), Color.Red);
+                        args.Player.LastTileChangeNotify = DateTime.UtcNow;
+                        return true;
+                    }
+                    args.Player.SendMessage("Please wait another " + Math.Round(2 - ((DateTime.UtcNow - args.Player.LastTileChangeNotify).TotalSeconds), 1) + " seconds.", Color.Red);
+                    args.Player.SendTileSquare(x, y, 1);
+                    args.Player.LastTileChangeNotify = DateTime.UtcNow;
+                    return true;
+                }
             }
             if (!args.Player.Group.HasPermission(Permissions.manageregion) && !args.Player.IsLoggedIn)
             {

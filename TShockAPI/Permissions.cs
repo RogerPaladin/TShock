@@ -35,6 +35,9 @@ namespace TShockAPI
         [Description("Required to be able to place/pickup lava")]
         public static readonly string canlava;
 
+        [Description("Required to be able to place sand")]
+        public static readonly string cansand;
+        
         [Description("Allows you to edit the spawn")]
         public static readonly string editspawn;
 
