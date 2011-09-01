@@ -367,6 +367,7 @@ namespace TShockAPI
                     args.Player.SendMessage("Please wait another " + Math.Round(2 - ((DateTime.UtcNow - args.Player.LastTileChangeNotify).TotalSeconds), 1) + " seconds.", Color.Red);
                     args.Player.SendTileSquare(x, y, 1);
                     args.Player.LastTileChangeNotify = DateTime.UtcNow;
+                    Log.Info(string.Format("{0} tried to place sand in [{1};{2}]", args.Player.Name, x, y));
                     return true;
                 }
             }
