@@ -40,7 +40,8 @@ namespace TShockAPI.DB
                 new SqlColumn("Usergroup", MySqlDbType.Text),
                 new SqlColumn("IP", MySqlDbType.VarChar, 16),
                 new SqlColumn("LastLogin", MySqlDbType.VarChar, 32),
-                new SqlColumn("PlayingTime", MySqlDbType.Int32)
+                new SqlColumn("PlayingTime", MySqlDbType.Int32),
+                new SqlColumn("RCoins", MySqlDbType.Double)
                 );
             
             var creator = new SqlTableCreator(db, db.GetSqlType() == SqlType.Sqlite ? (IQueryBuilder)new SqliteQueryCreator() : new MysqlQueryCreator());
@@ -108,7 +109,7 @@ namespace TShockAPI.DB
                 if (!TShock.Groups.GroupExists(user.Group))
                     throw new GroupNotExistsException(user.Group);
 
-                if (database.Query("INSERT INTO Users (Username, Password, UserGroup, IP, LastLogin, PlayingTime) VALUES (@0, @1, @2, @3, @4, @5);", user.Name, Tools.HashPassword(user.Password), user.Group, user.Address, Convert.ToString(DateTime.Now.ToFileTime()), 0) < 1)
+                if (database.Query("INSERT INTO Users (Username, Password, UserGroup, IP, LastLogin, PlayingTime, RCoins) VALUES (@0, @1, @2, @3, @4, @5, @6);", user.Name, Tools.HashPassword(user.Password), user.Group, user.Address, Convert.ToString(DateTime.Now.ToFileTime()), 0, 0) < 1)
                     throw new UserExistsException(user.Name);
             }
             catch (Exception ex)
@@ -194,7 +195,8 @@ namespace TShockAPI.DB
         /// <summary>
         /// Sets the total played time for a given username
         /// </summary>
-        /// <param name="user">String user</param>
+        /// <param name="Name">String Name</param>
+        /// <param name="PlayingTime">integer PlayingTime</param>
         public void PlayingTime(string Name, int PlayingTime)
         {
             try
@@ -210,58 +212,142 @@ namespace TShockAPI.DB
         }
 
         /// <summary>
-        /// Show the top of players
+        /// Check the RCoins for a given username
         /// </summary>
-        /// <param name="player">Tsplayer player</param>
-        public void Top(TSPlayer player, string name = "")
+        /// <param name="Name">String Name</param>
+        /// <param name="RCoins">double RCoins</param>
+        public bool CheckRCoins(string Name, double RCoins)
         {
-            string playername = string.Empty;
-            int playingtime = 0;
-            int count = 0;
-            var user = TShock.Users.GetUserByName(player.Name);
+            double rcoins = 0;
             try
             {
-                if (name == "")
+                var user = TShock.Users.GetUserByName(Name);
+                using (var reader = database.QueryReader("SELECT * FROM Users WHERE LOWER (Username) = @0;", Name.ToLower()))
                 {
-                    using (var reader = database.QueryReader("SELECT * FROM Users ORDER BY PlayingTime DESC LIMIT 3"))
+                    if (reader.Read())
                     {
-                        while (reader.Read())
-                        {
-                            count++;
-                            playername = reader.Get<string>("Username");
-                            playingtime = reader.Get<int>("PlayingTime");
-                            if (count == 1)
-                                player.SendMessage(string.Format("{0} place - {1}. Total played time is {2} minutes", count, playername, playingtime), Color.LightPink);
-                            if (count == 2)
-                                player.SendMessage(string.Format("{0} place - {1}. Total played time is {2} minutes", count, playername, playingtime), Color.LightGreen);
-                            if (count == 3)
-                                player.SendMessage(string.Format("{0} place - {1}. Total played time is {2} minutes", count, playername, playingtime), Color.LightBlue);
-                        }
-                    }
-                }
-                else
-                {
-                    using (var reader = database.QueryReader("SELECT * FROM Users WHERE LOWER (Username) = @0;", name.ToLower()))
-                     {
-                         if (reader.Read())
-                         {
-                             playername = reader.Get<string>("Username");
-                             playingtime = reader.Get<int>("PlayingTime");
-                             player.SendMessage(string.Format("Player <{0}> - played time is {1} minutes", playername, playingtime), Color.LightGreen);
-                         }
-                         else
-                         {
-                             player.SendMessage("No players found", Color.Red);
-                             return;
-                         }
+                        rcoins = reader.Get<double>("RCoins");
+                        if (rcoins > RCoins)
+                            return true;
+                        return false;
                     }
                 }
             }
             catch (Exception ex)
             {
+                throw new UserManagerException("CheckRCoins SQL returned an error", ex);
+            }
+            return false;
+        }
+        
+        /// <summary>
+        /// Sets the RCoins for a given username
+        /// </summary>
+        /// <param name="Name">String Name</param>
+        /// <param name="RCoins">double RCoins</param>
+        public void SetRCoins(string Name, double RCoins)
+        {
+            try
+            {
+                var user = TShock.Users.GetUserByName(Name);
+                if (database.Query("UPDATE Users SET RCoins = @0 WHERE LOWER (Username) = @1;", ((user.RCoins) + RCoins), user.Name.ToLower()) == 0)
+                    throw new UserNotExistException(user.Name);
+            }
+            catch (Exception ex)
+            {
+                throw new UserManagerException("RCoins SQL returned an error", ex);
+            }
+        }
+
+        /// <summary>
+        /// Show the RCoins for a given username
+        /// </summary>
+        /// <param name="player">TSPlayer player</param>
+        public void Status(TSPlayer player, string name = "")
+        {
+            string playername = string.Empty;
+            int playingtime = 0;
+            double rcoins = 0;
+            var user = TShock.Users.GetUserByName(player.Name);
+            if (name != "")
+            {
+                using (var reader = database.QueryReader("SELECT * FROM Users WHERE LOWER (Username) = @0;", name.ToLower()))
+                {
+                    if (reader.Read())
+                    {
+                        playername = reader.Get<string>("Username");
+                        playingtime = reader.Get<int>("PlayingTime");
+                        rcoins = reader.Get<double>("RCoins");
+                        player.SendMessage(string.Format("Player <{0}> have {1} RCoins. Total played time is {2} minutes.", playername, rcoins, playingtime), Color.LightGreen);
+                        return;
+                    }
+                    else
+                    {
+                        player.SendMessage("No players found", Color.Red);
+                        return;
+                    }
+                }
+            }
+            player.SendMessage("You have " + user.RCoins + " RCoins.", Color.LightPink);
+            player.SendMessage("Your total played time is " + user.PlayingTime + " minutes.", Color.LightGreen);
+        }
+        
+        /// <summary>
+        /// Show the top of players
+        /// </summary>
+        /// <param name="player">Tsplayer player</param>
+        public void Top(TSPlayer player, bool rc = true)
+        {
+            string playername = string.Empty;
+            int playingtime = 0;
+            int count = 0;
+            double rcoins = 0;
+            var user = TShock.Users.GetUserByName(player.Name);
+            try
+            {
+                if (rc == true)
+                {
+                    using (var reader = database.QueryReader("SELECT * FROM Users ORDER BY RCoins DESC LIMIT 3"))
+                            while (reader.Read())
+                        {
+                            count++;
+                            playername = reader.Get<string>("Username");
+                            playingtime = reader.Get<int>("PlayingTime");
+                            rcoins = reader.Get<double>("RCoins");
+                            
+                            if (count == 1)
+                                player.SendMessage(string.Format("{0} place - <{1}>. Have {2} RCoins. Total played time is {3} minutes.", count, playername, rcoins, playingtime), Color.LightPink);
+                            if (count == 2)
+                                player.SendMessage(string.Format("{0} place - <{1}>. Have {2} RCoins. Total played time is {2} minutes.", count, playername, rcoins, playingtime), Color.LightGreen);
+                            if (count == 3)
+                                player.SendMessage(string.Format("{0} place - <{1}>. Have {2} RCoins. Total played time is {2} minutes.", count, playername, rcoins, playingtime), Color.LightBlue);
+                        }
+                }
+                else
+                {
+                    using (var reader = database.QueryReader("SELECT * FROM Users ORDER BY PlayingTime DESC LIMIT 3"))
+                        while (reader.Read())
+                        {
+                            count++;
+                            playername = reader.Get<string>("Username");
+                            playingtime = reader.Get<int>("PlayingTime");
+                            rcoins = reader.Get<double>("RCoins");
+
+                            if (count == 1)
+                                player.SendMessage(string.Format("{0} place - <{1}>. Have {2} RCoins. Total played time is {3} minutes.", count, playername, rcoins, playingtime), Color.LightPink);
+                            if (count == 2)
+                                player.SendMessage(string.Format("{0} place - <{1}>. Have {2} RCoins. Total played time is {2} minutes.", count, playername, rcoins, playingtime), Color.LightGreen);
+                            if (count == 3)
+                                player.SendMessage(string.Format("{0} place - <{1}>. Have {2} RCoins. Total played time is {2} minutes.", count, playername, rcoins, playingtime), Color.LightBlue);
+                        }
+                }
+
+            }
+            catch (Exception ex)
+            {
                 throw new UserManagerException("Top SQL returned an error", ex);
             }
-            player.SendMessage("Your total played time is " + user.PlayingTime + " minutes", Color.Yellow);
+            player.SendMessage("You have " + user.RCoins + " Rcoins. Total played time is " + user.PlayingTime + " minutes", Color.Yellow);
         }
 
         /// <summary>
@@ -458,7 +544,7 @@ namespace TShockAPI.DB
                 QueryResult result;
                 if (string.IsNullOrEmpty(user.Address))
                 {
-                    result = database.QueryReader("SELECT * FROM Users WHERE Username=@0", user.Name);
+                    result = database.QueryReader("SELECT * FROM Users WHERE LOWER (Username) = @0", user.Name.ToLower());
                 }
                 else
                 {
@@ -476,6 +562,7 @@ namespace TShockAPI.DB
                         user.Address = reader.Get<string>("IP");
                         user.LastLogin = DateTime.FromFileTime(reader.Get<long>("LastLogin"));
                         user.PlayingTime = reader.Get<int>("PlayingTime");
+                        user.RCoins = reader.Get<double>("RCoins");
                         return user;
                     }
                 }
@@ -497,8 +584,9 @@ namespace TShockAPI.DB
         public string Address { get; set; }
         public DateTime LastLogin { get; set; }
         public int PlayingTime { get; set; }
-        
-        public User(string ip, string name, string pass, string group, DateTime lastlogin, int playingtime)
+        public double RCoins { get; set; }
+
+        public User(string ip, string name, string pass, string group, DateTime lastlogin, int playingtime, double rcoins)
         {
             Address = ip;
             Name = name;
@@ -506,6 +594,7 @@ namespace TShockAPI.DB
             Group = group;
             LastLogin = lastlogin;
             PlayingTime = playingtime;
+            RCoins = rcoins;
         }
         public User()
         {
@@ -515,6 +604,7 @@ namespace TShockAPI.DB
             Group = "";
             LastLogin = DateTime.Now;
             PlayingTime = 0;
+            RCoins = 0;
         }
     }
 

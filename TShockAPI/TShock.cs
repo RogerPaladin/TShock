@@ -519,7 +519,11 @@ namespace TShockAPI
             {
                 Log.Info(string.Format("{0} left.", tsplr.Name));
                 if (tsplr.IsLoggedIn)
+                {
                     TShock.Users.PlayingTime(tsplr.Name, Convert.ToInt32((DateTime.UtcNow - tsplr.LoginTime).TotalMinutes));
+                    TShock.Users.SetRCoins(tsplr.Name, Math.Round(0.1 * (DateTime.UtcNow - tsplr.LoginTime).TotalMinutes, 2));
+                }
+                
                 if (Config.RememberLeavePos)
                 {
                     RememberedPos.InsertLeavePos(tsplr.Name, tsplr.IP, (int)(tsplr.X / 16), (int)(tsplr.Y / 16));

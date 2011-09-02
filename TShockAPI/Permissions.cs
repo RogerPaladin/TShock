@@ -147,6 +147,9 @@ namespace TShockAPI
         [Description("")]
         public static readonly string grow;
 
+        [Description("User can give unlimited RCoins")]
+        public static readonly string rich;
+
         static Permissions()
         {
             foreach (var field in typeof(Permissions).GetFields())

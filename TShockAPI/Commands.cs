@@ -190,7 +190,10 @@ namespace TShockAPI
 			add(Permissions.time, AltarTimer, "timer");
 			add(Permissions.manageregion, AltarEdit, "edit");
 			add(null, Location, "location", "loc");
-            add(null, Top, "top");
+            add(null, Status, "rc", "rcoins", "status", "check");
+            add(null, TopTime, "toptime");
+            add(null, TopRC, "toprc");
+            add(null, PayRC, "pay");
         }
 
         public static bool HandleCommand(TSPlayer player, string text)
@@ -2077,7 +2080,7 @@ namespace TShockAPI
             {
                 try
                 {
-                    TShock.Users.AddUser(new User(args.Player.IP, "", "", "superadmin", DateTime.Now, 0));
+                    TShock.Users.AddUser(new User(args.Player.IP, "", "", "superadmin", DateTime.Now, 0, 0));
                     args.Player.Group = Tools.GetGroup("superadmin");
                     args.Player.SendMessage("This IP address is now superadmin. Please perform the following command:");
                     args.Player.SendMessage("/user add <username>:<password> superadmin");
@@ -2249,22 +2252,110 @@ namespace TShockAPI
             return;
         }
 
-        private static void Top(CommandArgs args)
+        private static void TopRC(CommandArgs args)
         {
             if (TShock.Users.GetUserByName(args.Player.Name) == null)
             {
                 args.Player.SendMessage("To see a top you need to register.", Color.Red);
             }
-            if (args.Parameters.Count >= 1)
+            if (args.Parameters.Count == 0)
             {
-                string plStr = String.Join(" ", args.Parameters);
-                TShock.Users.Top(args.Player, plStr);
+                TShock.Users.Top(args.Player, true);
             }
             else
             {
-                TShock.Users.Top(args.Player);
+                args.Player.SendMessage("Invalid syntax! Proper syntax: /toprc", Color.Red);
             }
         }
+
+        private static void TopTime(CommandArgs args)
+        {
+            if (TShock.Users.GetUserByName(args.Player.Name) == null)
+            {
+                args.Player.SendMessage("To see a top you need to register.", Color.Red);
+            }
+            if (args.Parameters.Count >= 0)
+            {
+                TShock.Users.Top(args.Player, false);
+            }
+            else
+            {
+                args.Player.SendMessage("Invalid syntax! Proper syntax: /toptime", Color.Red);
+            }
+        }
+        
+        private static void Status(CommandArgs args)
+        {
+            if (TShock.Users.GetUserByName(args.Player.Name) == null)
+            {
+                args.Player.SendMessage("To see stats you need to register.", Color.Red);
+            }
+            if (args.Parameters.Count >= 0)
+            {
+                string plStr = String.Join(" ", args.Parameters);
+                TShock.Users.Status(args.Player, plStr);
+            }
+            else
+            {
+                TShock.Users.Status(args.Player);
+            }
+        }
+
+        private static void PayRC(CommandArgs args)
+        {
+            if (TShock.Users.GetUserByName(args.Player.Name) == null)
+            {
+                args.Player.SendMessage("To pay RCoins you need to register.", Color.Red);
+                return;
+            }
+            if (TShock.Users.GetUserByName(args.Parameters[0]) == null)
+            {
+                args.Player.SendMessage("No players found.", Color.Red);
+                return;
+            }
+            if (args.Parameters[1].Length == 0)
+            {
+                args.Player.SendMessage("You must write the amount of RCoins.", Color.Red);
+                return;
+            }
+            double rcoins = Convert.ToDouble(args.Parameters[1]);
+            if (args.Parameters.Count >= 1)
+            {
+                if (TShock.Users.CheckRCoins(args.Player.Name, rcoins) || args.Player.Group.HasPermission("rich"))
+                {
+                   if (!args.Player.Group.HasPermission("rich"))
+                        TShock.Users.SetRCoins(args.Player.Name, -rcoins);
+                    TShock.Users.SetRCoins(args.Parameters[0], rcoins);
+                    
+                    args.Player.SendMessage("You payed " + rcoins + " Rcoins to <" + args.Parameters[0] + "> successfully", Color.LightGreen);
+                    var players = Tools.FindPlayer(args.Parameters[0]);
+                    if (players.Count == 0)
+                    {
+                        //args.Player.SendMessage("Invalid player!", Color.Red);
+                    }
+                    else if (players.Count > 1)
+                    {
+                        args.Player.SendMessage("More than one player matched!", Color.Red);
+                    }
+                    else
+                    {
+                        var plr = players[0];
+                        plr.SendMessage("Player <" + args.Player.Name + "> give you " + rcoins + " RCoins.", Color.LightGreen);
+                    }
+                    Log.ConsoleInfo("[RCoins] " + args.Player.Name + " payed " + rcoins + " Rcoins to " + args.Parameters[0] + " successfully");
+                }
+                else
+                {
+                    args.Player.SendMessage("Not enough RCoins.", Color.Red);
+                    Log.ConsoleInfo("[RCoins] " + args.Player.Name + " - not enough RCoins.");
+                }
+            }
+            else
+            {
+                args.Player.SendMessage("Invalid syntax! Proper syntax: /pay <player> <amount>", Color.Red);
+            }
+        }
+        
         #endregion General Commands
 
         #region Cheat Commands
