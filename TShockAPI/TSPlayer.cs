@@ -63,6 +63,7 @@ namespace TShockAPI
         public bool RequestedSection = false;
         public DateTime LastDeath { get; set; }
         public bool ForceSpawn = false;
+        public string Country = "??";
 
         public bool RealPlayer
         {
