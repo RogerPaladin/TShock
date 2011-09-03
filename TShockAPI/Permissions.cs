@@ -135,8 +135,11 @@ namespace TShockAPI
         [Description("User can buff self")]
         public static readonly string buff;
 
-        [Description("Color nick in /who command")]
+        [Description("Color nick in /who command for admins")]
         public static readonly string adminstatus;
+
+        [Description("Color nick in /who command for vips")]
+        public static readonly string vipstatus;
         
         [Description("User can destroy altars")]
         public static readonly string altaredit;

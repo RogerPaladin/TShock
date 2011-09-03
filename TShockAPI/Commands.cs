@@ -2055,25 +2055,28 @@ namespace TShockAPI
                         {
                             Admins = string.Format("{0}, {1}", Admins, player.Name);
                         }
-                        if (player.Group.Name.Equals("vip"))
-                        {
-                            Vips = string.Format("{0}, {1}", Vips, player.Name);
-                        }
                         else
-                        Players = string.Format("{0}, {1}", Players, player.Name);
-                    }
+                        {
+                            if (player.Group.HasPermission(Permissions.vipstatus))
+                            {
+                                Vips = string.Format("{0}, {1}", Vips, player.Name);
+                            }
+                            else
+                                Players = string.Format("{0}, {1}", Players, player.Name);
+                        }
+                     }
                 }
             if (Players.Length > 1)
             args.Player.SendMessage(string.Format("Current players: {0}.", Players.Remove(0,1)), 255, 240, 20);
-            else
+            //else
                 //args.Player.SendMessage(string.Format("Current players: "), 255, 240, 20);
             if (Vips.Length > 1)
                 args.Player.SendMessage(string.Format("Current vips: {0}.", Vips.Remove(0, 1)), Color.LightGreen);
-            else
+            //else
                 //args.Player.SendMessage(string.Format("Current vips: "), Color.LightGreen);
             if (Admins.Length > 1)
             args.Player.SendMessage(string.Format("Current admins: {0}.", Admins.Remove(0,1)), 0, 192, 255);
-            else
+            //else
                 //args.Player.SendMessage(string.Format("Current admins: "), 0, 192, 255);
             args.Player.SendMessage(string.Format("Total online players: {0}.", count), 255, 240, 20);
         }
