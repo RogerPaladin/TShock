@@ -194,6 +194,8 @@ namespace TShockAPI
             add(null, TopTime, "toptime");
             add(null, TopRC, "toprc");
             add(null, PayRC, "pay");
+            add(null, Shop, "shop", "buy");
+            add(null, TradeChat, "t", "tc");
         }
 
         public static bool HandleCommand(TSPlayer player, string text)
@@ -2043,6 +2045,7 @@ namespace TShockAPI
             int count = 0;  
             string Admins = String.Empty;
             string Players = String.Empty;
+            string Vips = String.Empty;
             foreach (TSPlayer player in TShock.Players)
                 {
                     if (player != null && player.Active)
@@ -2052,6 +2055,10 @@ namespace TShockAPI
                         {
                             Admins = string.Format("{0}, {1}", Admins, player.Name);
                         }
+                        if (player.Group.Name.Equals("vip"))
+                        {
+                            Vips = string.Format("{0}, {1}", Vips, player.Name);
+                        }
                         else
                         Players = string.Format("{0}, {1}", Players, player.Name);
                     }
@@ -2059,11 +2066,15 @@ namespace TShockAPI
             if (Players.Length > 1)
             args.Player.SendMessage(string.Format("Current players: {0}.", Players.Remove(0,1)), 255, 240, 20);
             else
-                args.Player.SendMessage(string.Format("Current players: "), 255, 240, 20);
+                //args.Player.SendMessage(string.Format("Current players: "), 255, 240, 20);
+            if (Vips.Length > 1)
+                args.Player.SendMessage(string.Format("Current vips: {0}.", Vips.Remove(0, 1)), Color.LightGreen);
+            else
+                //args.Player.SendMessage(string.Format("Current vips: "), Color.LightGreen);
             if (Admins.Length > 1)
             args.Player.SendMessage(string.Format("Current admins: {0}.", Admins.Remove(0,1)), 0, 192, 255);
             else
-                args.Player.SendMessage(string.Format("Current admins: "), 0, 192, 255);
+                //args.Player.SendMessage(string.Format("Current admins: "), 0, 192, 255);
             args.Player.SendMessage(string.Format("Total online players: {0}.", count), 255, 240, 20);
         }
 
@@ -2252,6 +2263,19 @@ namespace TShockAPI
             return;
         }
 
+        private static void TradeChat(CommandArgs args)
+        {
+            string message = "";
+
+            for (int i = 0; i < args.Parameters.Count; i++)
+            {
+                message += " " + args.Parameters[i];
+            }
+
+            Tools.Broadcast("(Trade)<" + args.Player.Name + ">" + message, Color.PaleGoldenrod);
+            return;
+        }
+        
         private static void TopRC(CommandArgs args)
         {
             if (TShock.Users.GetUserByName(args.Player.Name) == null)
@@ -2321,10 +2345,14 @@ namespace TShockAPI
             double rcoins = Convert.ToDouble(args.Parameters[1]);
             if (args.Parameters.Count >= 1)
             {
-                if (TShock.Users.CheckRCoins(args.Player.Name, rcoins) || args.Player.Group.HasPermission("rich"))
+                if (rcoins < 0 && !args.Player.Group.HasPermission("rich"))
                 {
-                   if (!args.Player.Group.HasPermission("rich"))
-                        TShock.Users.SetRCoins(args.Player.Name, -rcoins);
+                    args.Player.SendMessage("Ammount need to be bigger than 0", Color.Red);
+                    return;
+                }
+                
+                if (TShock.Users.Buy(args.Player.Name, rcoins))
+                {
                     TShock.Users.SetRCoins(args.Parameters[0], rcoins);
                     
                     args.Player.SendMessage("You payed " + rcoins + " Rcoins to <" + args.Parameters[0] + "> successfully", Color.LightGreen);
@@ -2355,7 +2383,288 @@ namespace TShockAPI
                 args.Player.SendMessage("Invalid syntax! Proper syntax: /pay <player> <amount>", Color.Red);
             }
         }
-        
+
+        private static void Shop(CommandArgs args)
+        {
+           if (args.Parameters.Count == 0)
+                {
+                args.Player.SendMessage("Invalid syntax! Proper syntax: /buy [item/buff/warp(50)/vip(500)]", Color.Red);
+                return;
+                }
+
+            switch (args.Parameters[0].ToLower())
+            {
+                #region item
+                case "item":
+                    if (args.Parameters.Count < 2)
+                    {
+                        args.Player.SendMessage("Invalid syntax! Proper syntax: /buy item [items]", Color.Red);
+                        args.Player.SendMessage("[Items]: meteor(2) shadow(4) jungle(6) necro(8) molten(10)", Color.Red);
+                        return;
+                    }    
+                    switch (args.Parameters[1].ToLower())
+                        {
+                           #region meteor
+                        case "meteor":
+                            if (TShock.Users.Buy(args.Player.Name, 2))
+                            {
+                                var items = Tools.GetItemByIdOrName("123");
+                                var helmet = items[0];
+                                args.Player.GiveItem(helmet.type, helmet.name, helmet.width, helmet.height, 1);
+                                
+                                items = Tools.GetItemByIdOrName("124");
+                                var suite = items[0];
+                                args.Player.GiveItem(suite.type, suite.name, suite.width, suite.height, 1);
+
+                                items = Tools.GetItemByIdOrName("125");
+                                var Leggings = items[0];
+                                args.Player.GiveItem(Leggings.type, Leggings.name, Leggings.width, Leggings.height, 1);
+
+                                args.Player.SendMessage("You buy meteor set successfully.", Color.Green);
+                                return;
+                            }
+                            else
+                            {
+                                args.Player.SendMessage("You need 2 RCoins to buy meteor set.", Color.Red);
+                                return;
+                            }
+                        #endregion
+                           #region shadow
+                        case "shadow":
+                            if (TShock.Users.Buy(args.Player.Name, 4))
+                            {
+                                var items = Tools.GetItemByIdOrName("102");
+                                var helmet = items[0];
+                                args.Player.GiveItem(helmet.type, helmet.name, helmet.width, helmet.height, 1);
+
+                                items = Tools.GetItemByIdOrName("101");
+                                var suite = items[0];
+                                args.Player.GiveItem(suite.type, suite.name, suite.width, suite.height, 1);
+
+                                items = Tools.GetItemByIdOrName("100");
+                                var Leggings = items[0];
+                                args.Player.GiveItem(Leggings.type, Leggings.name, Leggings.width, Leggings.height, 1);
+
+                                args.Player.SendMessage("You buy shadow set successfully.", Color.Green);
+                                return;
+                            }
+                            else
+                            {
+                                args.Player.SendMessage("You need 4 RCoins to buy shadow set.", Color.Red);
+                                return;
+                            }
+                        #endregion
+                           #region jungle
+                        case "jungle":
+                            if (TShock.Users.Buy(args.Player.Name, 6))
+                            {
+                                var items = Tools.GetItemByIdOrName("228");
+                                var helmet = items[0];
+                                args.Player.GiveItem(helmet.type, helmet.name, helmet.width, helmet.height, 1);
+
+                                items = Tools.GetItemByIdOrName("229");
+                                var suite = items[0];
+                                args.Player.GiveItem(suite.type, suite.name, suite.width, suite.height, 1);
+
+                                items = Tools.GetItemByIdOrName("230");
+                                var Leggings = items[0];
+                                args.Player.GiveItem(Leggings.type, Leggings.name, Leggings.width, Leggings.height, 1);
+
+                                args.Player.SendMessage("You buy jungle set successfully.", Color.Green);
+                                return;
+                            }
+                            else
+                            {
+                                args.Player.SendMessage("You need 6 RCoins to buy jungle set.", Color.Red);
+                                return;
+                            }
+                        #endregion
+                           #region necro
+                        case "necro":
+                            if (TShock.Users.Buy(args.Player.Name, 8))
+                            {
+                                var items = Tools.GetItemByIdOrName("151");
+                                var helmet = items[0];
+                                args.Player.GiveItem(helmet.type, helmet.name, helmet.width, helmet.height, 1);
+
+                                items = Tools.GetItemByIdOrName("152");
+                                var suite = items[0];
+                                args.Player.GiveItem(suite.type, suite.name, suite.width, suite.height, 1);
+
+                                items = Tools.GetItemByIdOrName("153");
+                                var Leggings = items[0];
+                                args.Player.GiveItem(Leggings.type, Leggings.name, Leggings.width, Leggings.height, 1);
+
+                                args.Player.SendMessage("You buy necro set successfully.", Color.Green);
+                                return;
+                            }
+                            else
+                            {
+                                args.Player.SendMessage("You need 8 RCoins to buy necro set.", Color.Red);
+                                return;
+                            }
+                        #endregion
+                           #region molten
+                        case "molten":
+                            if (TShock.Users.Buy(args.Player.Name, 10))
+                            {
+                                var items = Tools.GetItemByIdOrName("231");
+                                var helmet = items[0];
+                                args.Player.GiveItem(helmet.type, helmet.name, helmet.width, helmet.height, 1);
+
+                                items = Tools.GetItemByIdOrName("232");
+                                var suite = items[0];
+                                args.Player.GiveItem(suite.type, suite.name, suite.width, suite.height, 1);
+
+                                items = Tools.GetItemByIdOrName("233");
+                                var Leggings = items[0];
+                                args.Player.GiveItem(Leggings.type, Leggings.name, Leggings.width, Leggings.height, 1);
+
+                                args.Player.SendMessage("You buy molten set successfully.", Color.Green);
+                                return;
+                            }
+                            else
+                            {
+                                args.Player.SendMessage("You need 10 RCoins to buy molten set.", Color.Red);
+                                return;
+                            }
+                        #endregion
+                           default:
+                                args.Player.SendMessage("Invalid item name.", Color.Red);
+                                return;
+                        }
+                #endregion
+                #region buff
+                case "buff":
+                    if (args.Parameters.Count < 2)
+                    {
+                        args.Player.SendMessage("Invalid syntax! Proper syntax: /buy buff [fighter(5)/explorer(3)]", Color.Red);
+                        return;
+                    }    
+                    switch (args.Parameters[1].ToLower())
+                    {
+                        case "fighter":
+                            if (TShock.Users.Buy(args.Player.Name, 5))
+                            {
+                                //Regeneration
+                                args.Player.SetBuff(2, 60 * 60 * 5);
+                                //Swiftness
+                                args.Player.SetBuff(3, 60 * 60 * 4);
+                                //Ironskin
+                                args.Player.SetBuff(5, 60 * 60 * 5);
+                                //Mana Regeneration
+                                args.Player.SetBuff(6, 60 * 60 * 2);    
+                                //Magic Power
+                                args.Player.SetBuff(7, 60 * 60 * 2);
+                                //Battle
+                                args.Player.SetBuff(13, 60 * 60 * 7);    
+                                //Thorns
+                                args.Player.SetBuff(14, 60 * 60 * 2);    
+                                //Archery
+                                args.Player.SetBuff(16, 60 * 60 * 4);    
+                                //Hunter
+                                args.Player.SetBuff(17, 60 * 60 * 5);    
+                                //Well Fed
+                                args.Player.SetBuff(26, 60 * 60 * 9);
+
+                                args.Player.SendMessage("You buy fighter buff successfully.", Color.Green);
+                                return;
+                            }
+                            else
+                            {
+                                args.Player.SendMessage("You need 5 RCoins to buy fighter buff.", Color.Red);
+                                return;
+                            }
+                        case "explorer":
+                            if (TShock.Users.Buy(args.Player.Name, 3))
+                            {
+                                //Obsidian Skin
+                                args.Player.SetBuff(1, 60 * 60 * 4);
+                                //Swiftness
+                                args.Player.SetBuff(3, 60 * 60 * 4);
+                                //Featherfall
+                                args.Player.SetBuff(8, 60 * 60 * 5);
+                                //Spelunker
+                                args.Player.SetBuff(9, 60 * 60 * 5);
+                                //Night Owl
+                                args.Player.SetBuff(12, 60 * 60 * 4);
+                                //Water Walking
+                                args.Player.SetBuff(15, 60 * 60 * 5);
+                                //Hunter
+                                args.Player.SetBuff(17, 60 * 60 * 5);
+                                //Gravitation
+                                args.Player.SetBuff(18, 60 * 60 * 3);
+                                //Orb of Light
+                                args.Player.SetBuff(19, 60 * 60 * 5);
+                                //Well Fed
+                                args.Player.SetBuff(26, 60 * 60 * 9);
+
+                                args.Player.SendMessage("You buy explorer buff successfully.", Color.Green);
+                                return;
+                            }
+                            else
+                            {
+                                args.Player.SendMessage("You need 3 RCoins to buy explorer buff.", Color.Red);
+                                return;
+                            }
+                        default:
+                            args.Player.SendMessage("Invalid buff name.", Color.Red);
+                            return;
+                    }
+#endregion
+                #region warp
+                case "warp":
+                    if (args.Parameters.Count > 1)
+                    {
+                        if (TShock.Users.Buy(args.Player.Name, 50))
+                        {
+                            string warpName = args.Parameters[1];
+                            if (warpName.Equals("list"))
+                            {
+                                args.Player.SendMessage("Name reserved, use a different name", Color.Red);
+                                return;
+                            }
+                            else if (TShock.Warps.AddWarp(args.Player.TileX, args.Player.TileY, warpName, Main.worldID.ToString()))
+                            {
+                                args.Player.SendMessage("Set warp " + warpName, Color.Green);
+                                return;
+                            }
+                            else
+                            {
+                                args.Player.SendMessage("Warp " + warpName + " already exists", Color.Red);
+                            }
+                        }
+                        else
+                        {
+                            args.Player.SendMessage("You need 50 RCoins to buy warp.", Color.Red);
+                            return;
+                        }
+                    }
+                    else
+                    {
+                        args.Player.SendMessage("Need to write warp name.", Color.Red);
+                        return;
+                    }
+                    return;
+                #endregion
+                #region vip
+                case "vip":
+                    if (TShock.Users.Buy(args.Player.Name, 500))
+                    {
+                        var user = new User();
+                        user.Name = args.Player.Name;
+                        TShock.Users.SetUserGroup(user, "vip");
+                        args.Player.SendMessage("You buy vip status successfully.", Color.Green);
+                        args.Player.SendMessage("To use vip account reconnect to server.", Color.Green);
+                    }
+                    else
+                    {
+                        args.Player.SendMessage("You need 500 RCoins to buy vip.", Color.Red); 
+                    }
+                    return;
+                #endregion
+            }
+        }
         #endregion General Commands
 
         #region Cheat Commands

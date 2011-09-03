@@ -216,19 +216,32 @@ namespace TShockAPI.DB
         /// </summary>
         /// <param name="Name">String Name</param>
         /// <param name="RCoins">double RCoins</param>
-        public bool CheckRCoins(string Name, double RCoins)
+        public bool Buy(string Name, double RCoins)
         {
             double rcoins = 0;
             try
             {
                 var user = TShock.Users.GetUserByName(Name);
+                var player = Tools.FindPlayer(Name);
+                var plr = player[0];
+                
                 using (var reader = database.QueryReader("SELECT * FROM Users WHERE LOWER (Username) = @0;", Name.ToLower()))
                 {
                     if (reader.Read())
                     {
                         rcoins = reader.Get<double>("RCoins");
-                        if (rcoins > RCoins)
+                        
+                        if (plr.Group.HasPermission("rich"))
+                        {
                             return true;
+                        }
+
+                        if (rcoins >= RCoins)
+                        {
+                            TShock.Users.SetRCoins(Name, -RCoins);
+                            Log.ConsoleInfo(string.Format("[RCoins] Player <{0}> spent {1} RCoins. Before {2} - After {3}", Name, RCoins, user.RCoins, (user.RCoins) - RCoins));
+                            return true;
+                        }
                         return false;
                     }
                 }
@@ -315,12 +328,12 @@ namespace TShockAPI.DB
                             playingtime = reader.Get<int>("PlayingTime");
                             rcoins = reader.Get<double>("RCoins");
                             
-                            if (count == 1)
+                                if (count == 1)
                                 player.SendMessage(string.Format("{0} place - <{1}>. Have {2} RCoins. Total played time is {3} minutes.", count, playername, rcoins, playingtime), Color.LightPink);
                             if (count == 2)
-                                player.SendMessage(string.Format("{0} place - <{1}>. Have {2} RCoins. Total played time is {2} minutes.", count, playername, rcoins, playingtime), Color.LightGreen);
+                                player.SendMessage(string.Format("{0} place - <{1}>. Have {2} RCoins. Total played time is {3} minutes.", count, playername, rcoins, playingtime), Color.LightGreen);
                             if (count == 3)
-                                player.SendMessage(string.Format("{0} place - <{1}>. Have {2} RCoins. Total played time is {2} minutes.", count, playername, rcoins, playingtime), Color.LightBlue);
+                                player.SendMessage(string.Format("{0} place - <{1}>. Have {2} RCoins. Total played time is {3} minutes.", count, playername, rcoins, playingtime), Color.LightBlue);
                         }
                 }
                 else
@@ -336,9 +349,9 @@ namespace TShockAPI.DB
                             if (count == 1)
                                 player.SendMessage(string.Format("{0} place - <{1}>. Have {2} RCoins. Total played time is {3} minutes.", count, playername, rcoins, playingtime), Color.LightPink);
                             if (count == 2)
-                                player.SendMessage(string.Format("{0} place - <{1}>. Have {2} RCoins. Total played time is {2} minutes.", count, playername, rcoins, playingtime), Color.LightGreen);
+                                player.SendMessage(string.Format("{0} place - <{1}>. Have {2} RCoins. Total played time is {3} minutes.", count, playername, rcoins, playingtime), Color.LightGreen);
                             if (count == 3)
-                                player.SendMessage(string.Format("{0} place - <{1}>. Have {2} RCoins. Total played time is {2} minutes.", count, playername, rcoins, playingtime), Color.LightBlue);
+                                player.SendMessage(string.Format("{0} place - <{1}>. Have {2} RCoins. Total played time is {3} minutes.", count, playername, rcoins, playingtime), Color.LightBlue);
                         }
                 }
 
