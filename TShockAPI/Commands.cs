@@ -2330,60 +2330,71 @@ namespace TShockAPI
 
         private static void PayRC(CommandArgs args)
         {
-            if (TShock.Users.GetUserByName(args.Player.Name) == null)
-            {
-                args.Player.SendMessage("To pay RCoins you need to register.", Color.Red);
-                return;
-            }
-            if (TShock.Users.GetUserByName(args.Parameters[0]) == null)
-            {
-                args.Player.SendMessage("No players found.", Color.Red);
-                return;
-            }
-            if (args.Parameters[1].Length == 0)
-            {
-                args.Player.SendMessage("You must write the amount of RCoins.", Color.Red);
-                return;
-            }
-            double rcoins = Convert.ToDouble(args.Parameters[1]);
             if (args.Parameters.Count >= 1)
             {
-                if (rcoins < 0 && !args.Player.Group.HasPermission("rich"))
+            double rcoins = 0;
+                if (TShock.Users.GetUserByName(args.Player.Name) == null)
                 {
-                    args.Player.SendMessage("Ammount need to be bigger than 0", Color.Red);
+                    args.Player.SendMessage("To pay RCoins you need to register.", Color.Red);
                     return;
                 }
-                
-                if (TShock.Users.Buy(args.Player.Name, rcoins))
+                if (TShock.Users.GetUserByName(args.Parameters[1]) == null)
                 {
-                    TShock.Users.SetRCoins(args.Parameters[0], rcoins);
-                    
-                    args.Player.SendMessage("You payed " + rcoins + " Rcoins to <" + args.Parameters[0] + "> successfully", Color.LightGreen);
-                    var players = Tools.FindPlayer(args.Parameters[0]);
-                    if (players.Count == 0)
-                    {
-                        //args.Player.SendMessage("Invalid player!", Color.Red);
-                    }
-                    else if (players.Count > 1)
-                    {
-                        args.Player.SendMessage("More than one player matched!", Color.Red);
-                    }
-                    else
-                    {
-                        var plr = players[0];
-                        plr.SendMessage("Player <" + args.Player.Name + "> give you " + rcoins + " RCoins.", Color.LightGreen);
-                    }
-                    Log.ConsoleInfo("[RCoins] " + args.Player.Name + " payed " + rcoins + " Rcoins to " + args.Parameters[0] + " successfully");
+                    args.Player.SendMessage("No players found.", Color.Red);
+                    return;
+                }
+                if (args.Parameters[0].Length == 0)
+                {
+                    args.Player.SendMessage("You must write the amount of RCoins.", Color.Red);
+                    return;
+                }
+                if (args.Parameters[0].Contains("."))
+                {
+                    string v = args.Parameters[0];
+                    string r = v.Replace(".", ",");
+                    rcoins = Convert.ToDouble(r);
                 }
                 else
                 {
-                    args.Player.SendMessage("Not enough RCoins.", Color.Red);
-                    Log.ConsoleInfo("[RCoins] " + args.Player.Name + " - not enough RCoins.");
+                    rcoins = Convert.ToDouble(args.Parameters[0]);
                 }
-            }
+                    if (rcoins < 0 && !args.Player.Group.HasPermission("rich"))
+                    {
+                        args.Player.SendMessage("Ammount need to be bigger than 0", Color.Red);
+                        return;
+                    }
+                
+                    if (TShock.Users.Buy(args.Player.Name, rcoins))
+                    {
+                        TShock.Users.SetRCoins(args.Parameters[1], rcoins);
+                    
+                        args.Player.SendMessage("You payed " + rcoins + " Rcoins to <" + args.Parameters[1] + "> successfully", Color.LightGreen);
+                        var players = Tools.FindPlayer(args.Parameters[1]);
+                        if (players.Count == 0)
+                        {
+                            //args.Player.SendMessage("Invalid player!", Color.Red);
+                        }
+                        else if (players.Count > 1)
+                        {
+                            args.Player.SendMessage("More than one player matched!", Color.Red);
+                        }
+                        else
+                        {
+                            var plr = players[0];
+                            plr.SendMessage("Player <" + args.Player.Name + "> give you " + rcoins + " RCoins.", Color.LightGreen);
+                        }
+                        Log.ConsoleInfo("[RCoins] " + args.Player.Name + " payed " + rcoins + " Rcoins to " + args.Parameters[1] + " successfully");
+                    }
+                    else
+                    {
+                        args.Player.SendMessage("Not enough RCoins.", Color.Red);
+                        Log.ConsoleInfo("[RCoins] " + args.Player.Name + " - not enough RCoins.");
+                    }
+                }
             else
             {
-                args.Player.SendMessage("Invalid syntax! Proper syntax: /pay <player> <amount>", Color.Red);
+                args.Player.SendMessage("Invalid syntax! Proper syntax: /pay <amount> <player>", Color.Red);
+                return;
             }
         }
 
@@ -2402,14 +2413,14 @@ namespace TShockAPI
                     if (args.Parameters.Count < 2)
                     {
                         args.Player.SendMessage("Invalid syntax! Proper syntax: /buy item [items]", Color.Red);
-                        args.Player.SendMessage("[Items]: meteor(2) shadow(4) jungle(6) necro(8) molten(10)", Color.Red);
+                        args.Player.SendMessage("[Items]: meteor(10) shadow(15) jungle(20) necro(25) molten(30)", Color.Red);
                         return;
                     }    
                     switch (args.Parameters[1].ToLower())
                         {
                            #region meteor
                         case "meteor":
-                            if (TShock.Users.Buy(args.Player.Name, 2))
+                            if (TShock.Users.Buy(args.Player.Name, 10))
                             {
                                 var items = Tools.GetItemByIdOrName("123");
                                 var helmet = items[0];
@@ -2428,13 +2439,13 @@ namespace TShockAPI
                             }
                             else
                             {
-                                args.Player.SendMessage("You need 2 RCoins to buy meteor set.", Color.Red);
+                                args.Player.SendMessage("You need 10 RCoins to buy meteor set.", Color.Red);
                                 return;
                             }
                         #endregion
                            #region shadow
                         case "shadow":
-                            if (TShock.Users.Buy(args.Player.Name, 4))
+                            if (TShock.Users.Buy(args.Player.Name, 15))
                             {
                                 var items = Tools.GetItemByIdOrName("102");
                                 var helmet = items[0];
@@ -2453,13 +2464,13 @@ namespace TShockAPI
                             }
                             else
                             {
-                                args.Player.SendMessage("You need 4 RCoins to buy shadow set.", Color.Red);
+                                args.Player.SendMessage("You need 15 RCoins to buy shadow set.", Color.Red);
                                 return;
                             }
                         #endregion
                            #region jungle
                         case "jungle":
-                            if (TShock.Users.Buy(args.Player.Name, 6))
+                            if (TShock.Users.Buy(args.Player.Name, 20))
                             {
                                 var items = Tools.GetItemByIdOrName("228");
                                 var helmet = items[0];
@@ -2478,13 +2489,13 @@ namespace TShockAPI
                             }
                             else
                             {
-                                args.Player.SendMessage("You need 6 RCoins to buy jungle set.", Color.Red);
+                                args.Player.SendMessage("You need 20 RCoins to buy jungle set.", Color.Red);
                                 return;
                             }
                         #endregion
                            #region necro
                         case "necro":
-                            if (TShock.Users.Buy(args.Player.Name, 8))
+                            if (TShock.Users.Buy(args.Player.Name, 25))
                             {
                                 var items = Tools.GetItemByIdOrName("151");
                                 var helmet = items[0];
@@ -2503,13 +2514,13 @@ namespace TShockAPI
                             }
                             else
                             {
-                                args.Player.SendMessage("You need 8 RCoins to buy necro set.", Color.Red);
+                                args.Player.SendMessage("You need 25 RCoins to buy necro set.", Color.Red);
                                 return;
                             }
                         #endregion
                            #region molten
                         case "molten":
-                            if (TShock.Users.Buy(args.Player.Name, 10))
+                            if (TShock.Users.Buy(args.Player.Name, 30))
                             {
                                 var items = Tools.GetItemByIdOrName("231");
                                 var helmet = items[0];
@@ -2528,7 +2539,7 @@ namespace TShockAPI
                             }
                             else
                             {
-                                args.Player.SendMessage("You need 10 RCoins to buy molten set.", Color.Red);
+                                args.Player.SendMessage("You need 30 RCoins to buy molten set.", Color.Red);
                                 return;
                             }
                         #endregion
