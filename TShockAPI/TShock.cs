@@ -179,8 +179,8 @@ namespace TShockAPI
                 Itembans = new ItemManager(DB);
                 RememberedPos = new RemeberedPosManager(DB);
                 Restart = new RestartManager();
-                KayakBase Kayak = new KayakBase();
-                (new Thread(Kayak.Start)).Start();
+                //KayakBase Kayak = new KayakBase();
+                //(new Thread(Kayak.Start)).Start();
 
                 if (Config.EnableGeoIP)
                     Geo = new MaxMind.GeoIPCountry(Path.Combine(SavePath, "GeoIP.dat"));
@@ -459,7 +459,7 @@ namespace TShockAPI
                             if ((DateTime.UtcNow - player.LoginTime).TotalMinutes >= TShock.Config.TimeToLogin)
                             {
                                 Tools.Broadcast(player.Name + " Not logged in.", Color.Yellow);
-                                Tools.ForceKick(player, "Not logged in.");
+                                Tools.Kick(player, "Not logged in.");
                             }
 
                         }

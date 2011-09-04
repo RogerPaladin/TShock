@@ -302,7 +302,7 @@ namespace TShockAPI.DB
                         playername = reader.Get<string>("Username");
                         playingtime = reader.Get<int>("PlayingTime");
                         rcoins = reader.Get<double>("RCoins");
-                        player.SendMessage(string.Format("Player <{0}> have {1} RCoins. Total played time is {2} minutes.", playername, rcoins, playingtime), Color.LightGreen);
+                        player.SendMessage(string.Format("Player <{0}> have {1} RCoins. Total played time is {2} minutes.", playername, Math.Round(rcoins, 2), playingtime), Color.LightGreen);
                         return;
                     }
                     else
@@ -312,7 +312,7 @@ namespace TShockAPI.DB
                     }
                 }
             }
-            player.SendMessage("You have " + user.RCoins + " RCoins.", Color.LightPink);
+            player.SendMessage("You have " + Math.Round(user.RCoins, 2) + " RCoins.", Color.LightPink);
             player.SendMessage("Your total played time is " + user.PlayingTime + " minutes.", Color.LightGreen);
         }
         
