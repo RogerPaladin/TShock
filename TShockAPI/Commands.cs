@@ -2579,7 +2579,7 @@ namespace TShockAPI
                             Items.Add("dump");Items.Add("dump");Items.Add("dump");Items.Add("dump");Items.Add("dump");
                                 var sb = new StringBuilder();
                             if (page == 1)
-                                args.Player.SendMessage("Armor: ", Color.Yellow);
+                                args.Player.SendMessage("Armor sets: ", Color.Yellow);
                             if (page == 2)
                             {
                                 args.Player.SendMessage("Items: ", Color.Yellow);
