@@ -41,6 +41,7 @@ using TerrariaAPI;
 using TerrariaAPI.Hooks;
 using TShockAPI.DB;
 using TShockAPI.Net;
+using TShockAPI.Kayak;
 
 namespace TShockAPI
 {
@@ -72,6 +73,7 @@ namespace TShockAPI
         public static RestartManager Restart;
         public static PacketBufferer PacketBuffer;
         public static MaxMind.GeoIPCountry Geo;
+        public static bool PostInit = false;
 
         /// <summary>
         /// Called after TShock is initialized. Useful for plugins that needs hooks before tshock but also depend on tshock being loaded.
@@ -364,6 +366,10 @@ namespace TShockAPI
                 AuthToken = 0;
             }
             Regions.ReloadAllRegions();
+            
+            KayakBase Kayak = new KayakBase();
+            Kayak.Start();
+            Log.ConsoleInfo(string.Format("Kayak server started on port " + KayakBase.port + ".")); 
         }
 
 
@@ -374,6 +380,11 @@ namespace TShockAPI
             string item;
             int itemcount;
 
+            if (!PostInit)
+            {
+                OnPostInit();
+                PostInit = true;
+            }
             UpdateManager.UpdateProcedureCheck();
 
             if (Backups.IsBackupTime)
