@@ -60,21 +60,27 @@ namespace TShockAPI.Kayak
                       }
                         else
                         {
-                            if (player.Group.HasPermission(Permissions.vipstatus))
-                            {
-                                Vips = string.Format("{0}, {1}", Vips, player.Name);
-                            }
-                            else
+                            //if (player.Group.HasPermission(Permissions.vipstatus))
+                            //{
+                                //Vips = string.Format("{0}, {1}", Vips, player.Name);
+                            //}
+                            //else
                             Players = string.Format("{0}, {1}", Players, player.Name);
                         }
                         }
                        
                     }
+                    if (Players.Length > 1)
+                        Players = Players.Remove(0, 1);
+                    if (Vips.Length > 1 )
+                        Vips = Vips.Remove(0, 1);
+                    if (Admins.Length > 1)
+                        Admins = Admins.Remove(0, 1);
                     var body = string.Format(
-                        "Players: {0}\r\nVips: {1}\r\nAdmins: {2}\r\nTotal online players: {3}\r\n",
-                        Players.Remove(0, 1),
-                        Vips.Remove(0, 1),
-                        Admins.Remove(0, 1),
+                        "{0}\r\n{2}\r\n{3}\r\n",
+                        Players,
+                        Vips,
+                        Admins,
                         count);
 
                     var headers = new HttpResponseHead()
