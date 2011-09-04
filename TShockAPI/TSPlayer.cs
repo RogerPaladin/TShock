@@ -64,7 +64,6 @@ namespace TShockAPI
         public DateTime LastDeath { get; set; }
         public bool ForceSpawn = false;
         public string Country = "??";
-
         public bool RealPlayer
         {
             get { return Index >= 0 && Index < Main.maxNetPlayers && Main.player[Index] != null; }

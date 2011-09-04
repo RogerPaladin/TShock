@@ -61,6 +61,7 @@ namespace TShockAPI
         public static BackupManager Backups;
         public static GroupManager Groups;
         public static UserManager Users;
+        public static InventoryManager Inventory;
         public static ItemManager Itembans;
         public static RemeberedPosManager RememberedPos;
         public static ConfigFile Config { get; set; }
@@ -70,6 +71,7 @@ namespace TShockAPI
         public static List<string> DispenserTime = new List<string>();
         public static DateTime Spawner = new DateTime();
         public static DateTime StackCheatChecker = new DateTime();
+        public static DateTime InventoryCheckTime = new DateTime();
         public static RestartManager Restart;
         public static PacketBufferer PacketBuffer;
         public static MaxMind.GeoIPCountry Geo;
@@ -174,6 +176,7 @@ namespace TShockAPI
                 Warps = new WarpManager(DB);
                 Users = new UserManager(DB);
                 Groups = new GroupManager(DB);
+                Inventory = new InventoryManager(DB);
                 Groups.LoadPermisions();
                 Regions = new RegionManager(DB);
                 Itembans = new ItemManager(DB);
@@ -463,6 +466,12 @@ namespace TShockAPI
                             }
 
                         }
+                        if ((DateTime.UtcNow - InventoryCheckTime).TotalMilliseconds > 3000 && Config.StoreInventory)
+                        {
+                            if (!Inventory.CheckInventory(player))
+                                Inventory.UpdateInventory(player);
+                            InventoryCheckTime = DateTime.UtcNow;
+                        }
                         /*if (CheckPlayerCollision(player.TileX, player.TileY))
                             player.SendMessage("You are currently nocliping!", Color.Red);*/
                         if (player.ForceSpawn && (DateTime.Now - player.LastDeath).Seconds >= 3)
@@ -534,7 +543,8 @@ namespace TShockAPI
                     TShock.Users.PlayingTime(tsplr.Name, Convert.ToInt32((DateTime.UtcNow - tsplr.LoginTime).TotalMinutes));
                     TShock.Users.SetRCoins(tsplr.Name, Math.Round(0.1 * (DateTime.UtcNow - tsplr.LoginTime).TotalMinutes, 2));
                 }
-                
+                if (Config.StoreInventory)
+                    Inventory.UpdateInventory(tsplr);
                 if (Config.RememberLeavePos)
                 {
                     RememberedPos.InsertLeavePos(tsplr.Name, tsplr.IP, (int)(tsplr.X / 16), (int)(tsplr.Y / 16));
@@ -750,6 +760,15 @@ namespace TShockAPI
             if (!DispenserTime.Contains(player.Name))
             {
                 DispenserTime.Add(player.Name + ";" + Convert.ToString(DateTime.UtcNow.AddMilliseconds(-disptime)));
+            }
+            if (Inventory.UserExist(player) && Config.StoreInventory)
+            {
+                if (!Inventory.CheckInventory(player))
+                    Tools.Kick(player, "Your inventory was modified!!!");
+            }
+            else
+            {
+                Inventory.NewInventory(player);
             }
             if (Config.RememberLeavePos)
             {
