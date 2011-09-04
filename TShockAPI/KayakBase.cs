@@ -9,14 +9,14 @@ namespace TShockAPI.Kayak
 {
     class KayakBase
     {
-        public static int port = 8080;
+        public static int port = TShock.Config.KayakPort;
 
         public void Start()
         {
             var scheduler = KayakScheduler.Factory.Create(new SchedulerDelegate());
             var server = KayakServer.Factory.CreateHttp(new RequestDelegate(), scheduler);
 
-            using (server.Listen(new IPEndPoint(IPAddress.Any, 8080))) //TODO: Probably should bind the IP defined in -ip
+            using (server.Listen(new IPEndPoint(IPAddress.Any, port))) //TODO: Probably should bind the IP defined in -ip
             {
                 scheduler.Start();
             }

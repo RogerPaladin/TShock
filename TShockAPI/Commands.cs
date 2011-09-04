@@ -2430,7 +2430,7 @@ namespace TShockAPI
                     if (args.Parameters.Count < 2)
                     {
                         args.Player.SendMessage("Invalid syntax! Proper syntax: /buy item [items]", Color.Red);
-                        args.Player.SendMessage("[Items]: meteor(10) shadow(15) jungle(20) necro(25) molten(30)", Color.Red);
+                        args.Player.SendMessage("To see list of items type /buy item list", Color.Red);
                         return;
                     }    
                     switch (args.Parameters[1].ToLower())
@@ -2560,7 +2560,57 @@ namespace TShockAPI
                                 return;
                             }
                         #endregion
-                           default:
+                        #region list
+                        case "list":
+                            int page = 1;
+                            if (args.Parameters.Count == 3)
+                                int.TryParse(args.Parameters[2], out page);
+                            var ArmorSet = new List<String>();
+                                ArmorSet.Add("meteor(10)");
+                                ArmorSet.Add("shadow(15)");
+                                ArmorSet.Add("jungle(20)");
+                                ArmorSet.Add("necro(25)");
+
+                            var Items = new List<String>();
+                            Items.Add("dump");Items.Add("dump");Items.Add("dump");Items.Add("dump");Items.Add("dump");
+                            Items.Add("dump");Items.Add("dump");Items.Add("dump");Items.Add("dump");Items.Add("dump");
+                            Items.Add("dump");Items.Add("dump");Items.Add("dump");Items.Add("dump");Items.Add("dump");
+                            Items.Add("dump");Items.Add("dump");Items.Add("dump");Items.Add("dump");Items.Add("dump");
+                            Items.Add("dump");Items.Add("dump");Items.Add("dump");Items.Add("dump");Items.Add("dump");
+                                var sb = new StringBuilder();
+                            if (page == 1)
+                                args.Player.SendMessage("Armor: ", Color.Yellow);
+                            if (page == 2)
+                            {
+                                args.Player.SendMessage("Items: ", Color.Yellow);
+                                ArmorSet = Items;
+                            }
+                            if (ArmorSet.Count > (15 * (page - 1)))
+                                {
+                                    for (int j = (15 * (page - 1)); j < (15 * page); j++)
+                                    {
+                                        if (sb.Length != 0)
+                                            sb.Append(", ");
+                                        sb.Append(ArmorSet[j]);
+                                        if (j == ArmorSet.Count - 1)
+                                            {
+                                                args.Player.SendMessage(sb.ToString(), Color.Yellow);
+                                                break;
+                                            }
+                                        if ((j + 1) % 5 == 0)
+                                            {
+                                                args.Player.SendMessage(sb.ToString(), Color.Yellow);
+                                                sb.Clear();
+                                            }
+                                    }
+                                 }
+                            if (ArmorSet.Count > (15 * page))
+                                {
+                                    args.Player.SendMessage(string.Format("Type /buy item list {0} for more items.", (page + 1)), Color.Yellow);
+                                }
+                            return;
+                        #endregion
+                        default:
                                 args.Player.SendMessage("Invalid item name.", Color.Red);
                                 return;
                         }

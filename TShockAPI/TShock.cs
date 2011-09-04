@@ -206,7 +206,7 @@ namespace TShockAPI
                     PacketBuffer = new PacketBufferer();
 
                 Users.DeletePlayersAfterMinutes(TShock.Config.DeleteUserAfterMinutes);
-                Users.AutoVip(TShock.Config.AutoVIPAfterMinutes);
+                //Users.AutoVip(TShock.Config.AutoVIPAfterMinutes);
                 
                 Log.ConsoleInfo("AutoSave " + (Config.AutoSave ? "Enabled" : "Disabled"));
                 Log.ConsoleInfo("Backups " + (Backups.Interval > 0 ? "Enabled" : "Disabled"));

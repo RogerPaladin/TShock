@@ -114,6 +114,8 @@ namespace TShockAPI
         public string RconPassword = "";
         [Description("Not implemented")]
         public int RconPort = 7777;
+        [Description("Kayak port")]
+        public int KayakPort = 8080;
 
         [Description("Not implemented")]
         public string ServerName = "";
