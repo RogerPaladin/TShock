@@ -179,8 +179,8 @@ namespace TShockAPI
                 Itembans = new ItemManager(DB);
                 RememberedPos = new RemeberedPosManager(DB);
                 Restart = new RestartManager();
-                //KayakBase Kayak = new KayakBase();
-                //(new Thread(Kayak.Start)).Start();
+                KayakBase Kayak = new KayakBase();
+                (new Thread(Kayak.Start)).Start();
 
                 if (Config.EnableGeoIP)
                     Geo = new MaxMind.GeoIPCountry(Path.Combine(SavePath, "GeoIP.dat"));
