@@ -179,6 +179,8 @@ namespace TShockAPI
                 Itembans = new ItemManager(DB);
                 RememberedPos = new RemeberedPosManager(DB);
                 Restart = new RestartManager();
+                KayakBase Kayak = new KayakBase();
+                (new Thread(Kayak.Start)).Start();
 
                 if (Config.EnableGeoIP)
                     Geo = new MaxMind.GeoIPCountry(Path.Combine(SavePath, "GeoIP.dat"));
@@ -366,9 +368,7 @@ namespace TShockAPI
                 AuthToken = 0;
             }
             Regions.ReloadAllRegions();
-            
-            KayakBase Kayak = new KayakBase();
-            Kayak.Start();
+
             Log.ConsoleInfo(string.Format("Kayak server started on port " + KayakBase.port + ".")); 
         }
 

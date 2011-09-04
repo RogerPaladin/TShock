@@ -20,6 +20,7 @@ namespace TShockAPI.Kayak
             {
                 scheduler.Start();
             }
+        
         }
 
         class SchedulerDelegate : ISchedulerDelegate
@@ -44,12 +45,37 @@ namespace TShockAPI.Kayak
 
                 if (request.Uri.StartsWith("/"))
                 {
+                    int count = 0;  
+                    string Admins = String.Empty;
+                    string Players = String.Empty;
+                    string Vips = String.Empty;
+                    foreach (TSPlayer player in TShock.Players)
+                      {
+                        if (player != null && player.Active)
+                        {
+                      count++;
+                      if (player.Group.HasPermission(Permissions.adminstatus))
+                      {
+                            Admins = string.Format("{0}, {1}", Admins, player.Name);
+                      }
+                        else
+                        {
+                            if (player.Group.HasPermission(Permissions.vipstatus))
+                            {
+                                Vips = string.Format("{0}, {1}", Vips, player.Name);
+                            }
+                            else
+                            Players = string.Format("{0}, {1}", Players, player.Name);
+                        }
+                        }
+                       
+                    }
                     var body = string.Format(
-                        "Hello world.\r\nHello.\r\n\r\nUri: {0}\r\nPath: {1}\r\nQuery:{2}\r\nFragment: {3}\r\n",
-                        request.Uri,
-                        request.Path,
-                        request.QueryString,
-                        request.Fragment);
+                        "Players: {0}\r\nVips: {1}\r\nAdmins: {2}\r\nTotal online players: {3}\r\n",
+                        Players.Remove(0, 1),
+                        Vips.Remove(0, 1),
+                        Admins.Remove(0, 1),
+                        count);
 
                     var headers = new HttpResponseHead()
                     {
