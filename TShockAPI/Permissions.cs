@@ -153,6 +153,9 @@ namespace TShockAPI
         [Description("User can give unlimited RCoins")]
         public static readonly string rich;
 
+        [Description("User can heal all players")]
+        public static readonly string canhealall;
+        
         static Permissions()
         {
             foreach (var field in typeof(Permissions).GetFields())

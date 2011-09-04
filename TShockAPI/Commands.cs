@@ -1138,37 +1138,47 @@ namespace TShockAPI
 
         private static void TP(CommandArgs args)
         {
-            int result = 0;
-            if (!args.Player.RealPlayer)
-            {
-                args.Player.SendMessage("You cannot use teleport commands!");
-                return;
-            }
+             if (TShock.Users.Buy(args.Player.Name, 3, true) || args.Player.Group.HasPermission("rich"))
+             {
+                int result = 0;
+                if (!args.Player.RealPlayer)
+                {
+                    args.Player.SendMessage("You cannot use teleport commands!");
+                    return;
+                }
 
-            if (args.Parameters.Count < 1)
-            {
-                args.Player.SendMessage("Invalid syntax! Proper syntax: /tp <player/x y> ", Color.Red);
-                return;
-            }
-            if (Int32.TryParse(args.Parameters[args.Parameters.Count - 1], out result))
-            {
-                if (args.Player.Teleport(Convert.ToInt32(args.Parameters[0]), Convert.ToInt32(args.Parameters[1]) + 3))
-                    args.Player.SendMessage(string.Format("Teleported to X= {0}; Y= {1}", args.Parameters[0], args.Parameters[1]));
+                if (args.Parameters.Count < 1)
+                {
+                    args.Player.SendMessage("Invalid syntax! Proper syntax: /tp <player/x y> ", Color.Red);
+                    return;
+                }
+                if (Int32.TryParse(args.Parameters[args.Parameters.Count - 1], out result))
+                {
+                    if (args.Player.Teleport(Convert.ToInt32(args.Parameters[0]), Convert.ToInt32(args.Parameters[1]) + 3))
+                        args.Player.SendMessage(string.Format("Teleported to X= {0}; Y= {1}", args.Parameters[0], args.Parameters[1]));
+                }
+                else
+                {
+                    string plStr = String.Join(" ", args.Parameters);
+                    var players = Tools.FindPlayer(plStr);
+                    if (players.Count == 0)
+                        args.Player.SendMessage("Invalid player!", Color.Red);
+                    else if (players.Count > 1)
+                        args.Player.SendMessage("More than one player matched!", Color.Red);
+                    else
+                    {
+                        var plr = players[0];
+                        if (args.Player.Teleport(plr.TileX, plr.TileY + 3))
+                        {
+                            if (TShock.Users.Buy(args.Player.Name, 3) || args.Player.Group.HasPermission("rich"))
+                            args.Player.SendMessage(string.Format("Teleported to {0}", plr.Name));
+                        }
+                    }
+                }
             }
             else
             {
-                string plStr = String.Join(" ", args.Parameters);
-                var players = Tools.FindPlayer(plStr);
-                if (players.Count == 0)
-                    args.Player.SendMessage("Invalid player!", Color.Red);
-                else if (players.Count > 1)
-                    args.Player.SendMessage("More than one player matched!", Color.Red);
-                else
-                {
-                    var plr = players[0];
-                    if (args.Player.Teleport(plr.TileX, plr.TileY + 3))
-                        args.Player.SendMessage(string.Format("Teleported to {0}", plr.Name));
-                }
+                args.Player.SendMessage("You need 3 RCoins to use teleport!", Color.Red);
             }
         }
 
@@ -2381,7 +2391,14 @@ namespace TShockAPI
                         else
                         {
                             var plr = players[0];
-                            plr.SendMessage("Player <" + args.Player.Name + "> give you " + rcoins + " RCoins.", Color.LightGreen);
+                            if (rcoins > 0)
+                            {
+                                plr.SendMessage("Player <" + args.Player.Name + "> give you " + rcoins + " RCoins.", Color.LightGreen);
+                            }
+                            else
+                            {
+                                plr.SendMessage("Player <" + args.Player.Name + "> was fined you for " + rcoins + " RCoins.", Color.Yellow);
+                            }
                         }
                         Log.ConsoleInfo("[RCoins] " + args.Player.Name + " payed " + rcoins + " Rcoins to " + args.Parameters[1] + " successfully");
                     }
@@ -2862,19 +2879,27 @@ namespace TShockAPI
             {
                 if (args.Parameters[0] == "all")
                 {
-                    foreach (TSPlayer player in TShock.Players)
+                    if (args.Player.Group.HasPermission("canhealall"))
                     {
-                        if (player != null && player.Active)
+                        foreach (TSPlayer player in TShock.Players)
                         {
-                            for (int i = 0; i < 20; i++)
-                                player.GiveItem(heart.type, heart.name, heart.width, heart.height, heart.maxStack);
-                            for (int i = 0; i < 10; i++)
-                                player.GiveItem(star.type, star.name, star.width, star.height, star.maxStack);
-                            player.SendMessage(string.Format("{0} just healed you!", args.Player.Name));
+                            if (player != null && player.Active)
+                            {
+                                for (int i = 0; i < 20; i++)
+                                    player.GiveItem(heart.type, heart.name, heart.width, heart.height, heart.maxStack);
+                                for (int i = 0; i < 10; i++)
+                                    player.GiveItem(star.type, star.name, star.width, star.height, star.maxStack);
+                                player.SendMessage(string.Format("{0} just healed you!", args.Player.Name));
+                            }
                         }
+                        args.Player.SendMessage("You heal all players");
+                        return;
                     }
-                    args.Player.SendMessage("You heal all players");
-                    return;
+                    else
+                    {
+                        args.Player.SendMessage("You do not have permission to use heall all command.");
+                        return;
+                    }
                 }
                 
                 string plStr = String.Join(" ", args.Parameters);

@@ -216,7 +216,7 @@ namespace TShockAPI.DB
         /// </summary>
         /// <param name="Name">String Name</param>
         /// <param name="RCoins">double RCoins</param>
-        public bool Buy(string Name, double RCoins)
+        public bool Buy(string Name, double RCoins, bool check = false)
         {
             double rcoins = 0;
             try
@@ -236,10 +236,13 @@ namespace TShockAPI.DB
                             return true;
                         }
 
-                        if (rcoins >= RCoins)
+                        if (rcoins >= RCoins && check == false)
                         {
                             TShock.Users.SetRCoins(Name, -RCoins);
-                            Log.ConsoleInfo(string.Format("[RCoins] Player <{0}> spent {1} RCoins. Before {2} - After {3}", Name, RCoins, user.RCoins, (user.RCoins) - RCoins));
+                            return true;
+                        }
+                        if (rcoins >= RCoins && check == true)
+                        {
                             return true;
                         }
                         return false;
@@ -263,6 +266,14 @@ namespace TShockAPI.DB
             try
             {
                 var user = TShock.Users.GetUserByName(Name);
+                if (RCoins < 0)
+                {
+                    Log.ConsoleInfo(string.Format("[RCoins] Player <{0}> spent {1} RCoins. Before {2} - After {3}", Name, Math.Abs(RCoins), Math.Round(user.RCoins, 2), (Math.Round(user.RCoins, 2) + Math.Round(RCoins, 2))));
+                }
+                else
+                {
+                    Log.ConsoleInfo(string.Format("[RCoins] Player <{0}> gained {1} RCoins. Before {2} - After {3}", Name, RCoins, Math.Round(user.RCoins, 2), (Math.Round(user.RCoins, 2) + Math.Round(RCoins, 2))));
+                }
                 if (database.Query("UPDATE Users SET RCoins = @0 WHERE LOWER (Username) = @1;", ((user.RCoins) + RCoins), user.Name.ToLower()) == 0)
                     throw new UserNotExistException(user.Name);
             }
@@ -329,11 +340,11 @@ namespace TShockAPI.DB
                             rcoins = reader.Get<double>("RCoins");
                             
                                 if (count == 1)
-                                player.SendMessage(string.Format("{0} place - <{1}>. Have {2} RCoins. Total played time is {3} minutes.", count, playername, rcoins, playingtime), Color.LightPink);
+                                player.SendMessage(string.Format("{0} place - <{1}>. Have {2} RCoins. Total played time is {3} minutes.", count, playername, Math.Round(rcoins, 2), playingtime), Color.LightPink);
                             if (count == 2)
-                                player.SendMessage(string.Format("{0} place - <{1}>. Have {2} RCoins. Total played time is {3} minutes.", count, playername, rcoins, playingtime), Color.LightGreen);
+                                player.SendMessage(string.Format("{0} place - <{1}>. Have {2} RCoins. Total played time is {3} minutes.", count, playername, Math.Round(rcoins, 2), playingtime), Color.LightGreen);
                             if (count == 3)
-                                player.SendMessage(string.Format("{0} place - <{1}>. Have {2} RCoins. Total played time is {3} minutes.", count, playername, rcoins, playingtime), Color.LightBlue);
+                                player.SendMessage(string.Format("{0} place - <{1}>. Have {2} RCoins. Total played time is {3} minutes.", count, playername, Math.Round(rcoins, 2), playingtime), Color.LightBlue);
                         }
                 }
                 else
@@ -347,11 +358,11 @@ namespace TShockAPI.DB
                             rcoins = reader.Get<double>("RCoins");
 
                             if (count == 1)
-                                player.SendMessage(string.Format("{0} place - <{1}>. Have {2} RCoins. Total played time is {3} minutes.", count, playername, rcoins, playingtime), Color.LightPink);
+                                player.SendMessage(string.Format("{0} place - <{1}>. Have {2} RCoins. Total played time is {3} minutes.", count, playername, Math.Round(rcoins, 2), playingtime), Color.LightPink);
                             if (count == 2)
-                                player.SendMessage(string.Format("{0} place - <{1}>. Have {2} RCoins. Total played time is {3} minutes.", count, playername, rcoins, playingtime), Color.LightGreen);
+                                player.SendMessage(string.Format("{0} place - <{1}>. Have {2} RCoins. Total played time is {3} minutes.", count, playername, Math.Round(rcoins, 2), playingtime), Color.LightGreen);
                             if (count == 3)
-                                player.SendMessage(string.Format("{0} place - <{1}>. Have {2} RCoins. Total played time is {3} minutes.", count, playername, rcoins, playingtime), Color.LightBlue);
+                                player.SendMessage(string.Format("{0} place - <{1}>. Have {2} RCoins. Total played time is {3} minutes.", count, playername, Math.Round(rcoins, 2), playingtime), Color.LightBlue);
                         }
                 }
 
@@ -360,7 +371,7 @@ namespace TShockAPI.DB
             {
                 throw new UserManagerException("Top SQL returned an error", ex);
             }
-            player.SendMessage("You have " + user.RCoins + " Rcoins. Total played time is " + user.PlayingTime + " minutes", Color.Yellow);
+            player.SendMessage("You have " + Math.Round(user.RCoins, 2) + " Rcoins. Total played time is " + user.PlayingTime + " minutes", Color.Yellow);
         }
 
         /// <summary>
