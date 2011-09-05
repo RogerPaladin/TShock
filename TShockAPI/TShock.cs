@@ -69,6 +69,7 @@ namespace TShockAPI
         public static bool OverridePort;
         public static int disptime = 1000 * 60 * 15;
         public static List<string> DispenserTime = new List<string>();
+        public static List<string> InventoryAllow = new List<string>();
         public static DateTime Spawner = new DateTime();
         public static DateTime StackCheatChecker = new DateTime();
         public static DateTime InventoryCheckTime = new DateTime();
@@ -542,9 +543,9 @@ namespace TShockAPI
                 {
                     TShock.Users.PlayingTime(tsplr.Name, Convert.ToInt32((DateTime.UtcNow - tsplr.LoginTime).TotalMinutes));
                     TShock.Users.SetRCoins(tsplr.Name, Math.Round(0.1 * (DateTime.UtcNow - tsplr.LoginTime).TotalMinutes, 2));
+                    if (Config.StoreInventory)
+                        Inventory.UpdateInventory(tsplr);
                 }
-                if (Config.StoreInventory)
-                    Inventory.UpdateInventory(tsplr);
                 if (Config.RememberLeavePos)
                 {
                     RememberedPos.InsertLeavePos(tsplr.Name, tsplr.IP, (int)(tsplr.X / 16), (int)(tsplr.Y / 16));
@@ -764,11 +765,24 @@ namespace TShockAPI
             if (Inventory.UserExist(player) && Config.StoreInventory)
             {
                 if (!Inventory.CheckInventory(player))
-                    Tools.Kick(player, "Your inventory was modified!!!");
+                {
+                    if (InventoryAllow.Contains(player.Name.ToLower()))
+                    { 
+                        InventoryAllow.Remove(player.Name.ToLower());
+                    }
+                    else
+                    { Tools.Kick(player, "Your inventory was modified!!!"); }
+                }
             }
             else
             {
-                Inventory.NewInventory(player);
+                if (Config.OnlyNewCharacter)
+                    {
+                        if (Inventory.NewPlayer(player) || player.Name == "AHTOH" || player.Name == "Roger")
+                            { Inventory.NewInventory(player); }
+                        else Tools.Kick(player, "Read http://RogerPaladin.DynDns.org"); 
+
+                    }
             }
             if (Config.RememberLeavePos)
             {
@@ -868,6 +882,13 @@ namespace TShockAPI
             Tools.Broadcast("Saving world. Momentary lag might result from this.", Color.Red);
             Thread SaveWorld = new Thread(Tools.SaveWorld);
             SaveWorld.Start();
+            foreach (TSPlayer player in TShock.Players)
+            {
+                if (player != null && player.Active)
+                {
+                    TShock.Inventory.UpdateInventory(player);
+                }
+            }
             e.Handled = true;
         }
 

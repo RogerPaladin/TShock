@@ -191,6 +191,9 @@ namespace TShockAPI
         [Description("This is kick players who have custom items in their inventory (via a mod)")]
         public bool KickCustomItems = false;
 
+        [Description("Only new character can join")]
+        public bool OnlyNewCharacter = false;
+        
         [Description("Store players inventory on server")]
         public bool StoreInventory = false;
 

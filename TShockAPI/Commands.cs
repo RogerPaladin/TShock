@@ -196,6 +196,7 @@ namespace TShockAPI
             add(null, PayRC, "pay");
             add(null, Shop, "shop", "buy");
             add(null, TradeChat, "t", "tc");
+            add(Permissions.cfg, InventoryAllow, "inv", "inventory");
         }
 
         public static bool HandleCommand(TSPlayer player, string text)
@@ -420,7 +421,7 @@ namespace TShockAPI
                 }
                 else
                 {
-                    args.Player.SendMessage("Invalid syntax! Proper syntax: /register <username> <password>", Color.Red);
+                    args.Player.SendMessage("Invalid syntax! Proper syntax: /reg <password>", Color.Red);
                 }
             }
             catch (UserManagerException ex)
@@ -632,6 +633,19 @@ namespace TShockAPI
                 return;
             }
 
+            if (args.Parameters[0].ToLower() == "all")
+            {
+                foreach (TSPlayer player in TShock.Players)
+                {
+                    if (player != null && player.Active)
+                    {
+                        TShock.Inventory.UpdateInventory(player);
+                    }
+                }
+                Tools.ForceKickAll("Reboot!");
+                return;
+            }
+            
             string plStr = args.Parameters[0];
             var players = Tools.FindPlayer(plStr);
             if (players.Count == 0)
@@ -644,6 +658,7 @@ namespace TShockAPI
             }
             else
             {
+                TShock.Inventory.UpdateInventory(players[0]);
                 string reason = args.Parameters.Count > 1 ? String.Join(" ", args.Parameters.GetRange(1, args.Parameters.Count - 1)) : "Misbehaviour.";
                 if (!Tools.Kick(players[0], reason))
                 {
@@ -829,6 +844,14 @@ namespace TShockAPI
             args.Player.SendMessage("You now " + (args.Player.DisplayLogs ? "receive" : "stopped receiving") + " logs");
         }
 
+        public static void InventoryAllow(CommandArgs args)
+        {
+            if (args.Parameters[0] == "allow")
+            {
+                TShock.InventoryAllow.Add(args.Parameters[1].ToLower());
+                args.Player.SendMessage("Player added");
+            }
+        }
         #endregion Player Management Commands
 
         #region Server Maintenence Commands
@@ -1170,8 +1193,11 @@ namespace TShockAPI
                         var plr = players[0];
                         if (args.Player.Teleport(plr.TileX, plr.TileY + 3))
                         {
-                            if (TShock.Users.Buy(args.Player.Name, 3) || args.Player.Group.HasPermission("rich"))
-                            args.Player.SendMessage(string.Format("Teleported to {0}", plr.Name));
+                            if (TShock.Users.Buy(args.Player.Name, 3))
+                            {
+                                args.Player.SendMessage("You spent 3 RCoins.", Color.BlanchedAlmond);
+                                args.Player.SendMessage(string.Format("Teleported to {0}", plr.Name));
+                            }
                         }
                     }
                 }
@@ -1570,6 +1596,13 @@ namespace TShockAPI
             Tools.Broadcast("Server map saving, potential lag spike");
             Thread SaveWorld = new Thread(Tools.SaveWorld);
             SaveWorld.Start();
+            foreach (TSPlayer player in TShock.Players)
+            {
+                if (player != null && player.Active)
+                {
+                    TShock.Inventory.UpdateInventory(player);
+                }
+            }
         }
 
         private static void MaxSpawns(CommandArgs args)
@@ -2451,6 +2484,7 @@ namespace TShockAPI
                                 var Leggings = items[0];
                                 args.Player.GiveItem(Leggings.type, Leggings.name, Leggings.width, Leggings.height, 1);
 
+                                args.Player.SendMessage("You spent 10 RCoins.", Color.BlanchedAlmond);
                                 args.Player.SendMessage("You buy meteor set successfully.", Color.Green);
                                 return;
                             }
@@ -2476,6 +2510,7 @@ namespace TShockAPI
                                 var Leggings = items[0];
                                 args.Player.GiveItem(Leggings.type, Leggings.name, Leggings.width, Leggings.height, 1);
 
+                                args.Player.SendMessage("You spent 15 RCoins.", Color.BlanchedAlmond);
                                 args.Player.SendMessage("You buy shadow set successfully.", Color.Green);
                                 return;
                             }
@@ -2501,6 +2536,7 @@ namespace TShockAPI
                                 var Leggings = items[0];
                                 args.Player.GiveItem(Leggings.type, Leggings.name, Leggings.width, Leggings.height, 1);
 
+                                args.Player.SendMessage("You spent 20 RCoins.", Color.BlanchedAlmond);
                                 args.Player.SendMessage("You buy jungle set successfully.", Color.Green);
                                 return;
                             }
@@ -2526,6 +2562,7 @@ namespace TShockAPI
                                 var Leggings = items[0];
                                 args.Player.GiveItem(Leggings.type, Leggings.name, Leggings.width, Leggings.height, 1);
 
+                                args.Player.SendMessage("You spent 25 RCoins.", Color.BlanchedAlmond);
                                 args.Player.SendMessage("You buy necro set successfully.", Color.Green);
                                 return;
                             }
@@ -2551,6 +2588,7 @@ namespace TShockAPI
                                 var Leggings = items[0];
                                 args.Player.GiveItem(Leggings.type, Leggings.name, Leggings.width, Leggings.height, 1);
 
+                                args.Player.SendMessage("You spent 30 RCoins.", Color.BlanchedAlmond);
                                 args.Player.SendMessage("You buy molten set successfully.", Color.Green);
                                 return;
                             }
@@ -2619,13 +2657,13 @@ namespace TShockAPI
                 case "buff":
                     if (args.Parameters.Count < 2)
                     {
-                        args.Player.SendMessage("Invalid syntax! Proper syntax: /buy buff [fighter(5)/explorer(3)]", Color.Red);
+                        args.Player.SendMessage("Invalid syntax! Proper syntax: /buy buff [fighter(15)/explorer(7)]", Color.Red);
                         return;
                     }    
                     switch (args.Parameters[1].ToLower())
                     {
                         case "fighter":
-                            if (TShock.Users.Buy(args.Player.Name, 5))
+                            if (TShock.Users.Buy(args.Player.Name, 15))
                             {
                                 //Regeneration
                                 args.Player.SetBuff(2, 60 * 60 * 5);
@@ -2648,16 +2686,17 @@ namespace TShockAPI
                                 //Well Fed
                                 args.Player.SetBuff(26, 60 * 60 * 9);
 
+                                args.Player.SendMessage("You spent 15 RCoins.", Color.BlanchedAlmond);
                                 args.Player.SendMessage("You buy fighter buff successfully.", Color.Green);
                                 return;
                             }
                             else
                             {
-                                args.Player.SendMessage("You need 5 RCoins to buy fighter buff.", Color.Red);
+                                args.Player.SendMessage("You need 15 RCoins to buy fighter buff.", Color.Red);
                                 return;
                             }
                         case "explorer":
-                            if (TShock.Users.Buy(args.Player.Name, 3))
+                            if (TShock.Users.Buy(args.Player.Name, 7))
                             {
                                 //Obsidian Skin
                                 args.Player.SetBuff(1, 60 * 60 * 4);
@@ -2680,12 +2719,13 @@ namespace TShockAPI
                                 //Well Fed
                                 args.Player.SetBuff(26, 60 * 60 * 9);
 
+                                args.Player.SendMessage("You spent 7 RCoins.", Color.BlanchedAlmond);
                                 args.Player.SendMessage("You buy explorer buff successfully.", Color.Green);
                                 return;
                             }
                             else
                             {
-                                args.Player.SendMessage("You need 3 RCoins to buy explorer buff.", Color.Red);
+                                args.Player.SendMessage("You need 7 RCoins to buy explorer buff.", Color.Red);
                                 return;
                             }
                         default:
@@ -2707,6 +2747,7 @@ namespace TShockAPI
                             }
                             else if (TShock.Warps.AddWarp(args.Player.TileX, args.Player.TileY, warpName, Main.worldID.ToString()))
                             {
+                                args.Player.SendMessage("You spent 50 RCoins.", Color.BlanchedAlmond);
                                 args.Player.SendMessage("Set warp " + warpName, Color.Green);
                                 return;
                             }
@@ -2735,6 +2776,7 @@ namespace TShockAPI
                         var user = new User();
                         user.Name = args.Player.Name;
                         TShock.Users.SetUserGroup(user, "vip");
+                        args.Player.SendMessage("You spent 500 RCoins.", Color.BlanchedAlmond);
                         args.Player.SendMessage("You buy vip status successfully.", Color.Green);
                         args.Player.SendMessage("To use vip account reconnect to server.", Color.Green);
                     }

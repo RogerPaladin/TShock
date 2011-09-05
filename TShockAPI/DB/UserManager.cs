@@ -166,10 +166,11 @@ namespace TShockAPI.DB
                     LastLogin = DateTime.FromFileTime(reader.Get<long>("LastLogin"));
                     if (!PlayerGroup.Equals("admin") && !PlayerGroup.Equals("trustedadmin") && !PlayerGroup.Equals("superadmin"))
                     {
-                    TShock.Regions.DeleteRegionAfterMinutes(PlayerName);
-                    TShock.Regions.DeleteOwnersAfterMinutes(PlayerName);
-                    database.Query("DELETE FROM Users WHERE LOWER (Username) = @0;", PlayerName.ToLower());
-                    Log.ConsoleInfo(string.Format("Player {0}:{1} [{2}] deleted - lastlogin {3}", MergedIDs, PlayerName, PlayerGroup, LastLogin));
+                        TShock.Regions.DeleteRegionAfterMinutes(PlayerName);
+                        TShock.Regions.DeleteOwnersAfterMinutes(PlayerName);
+                        TShock.Inventory.DelInventory(PlayerName);
+                        database.Query("DELETE FROM Users WHERE LOWER (Username) = @0;", PlayerName.ToLower());
+                        Log.ConsoleInfo(string.Format("Player <{0}> [{1}] deleted - lastlogin {2}", PlayerName, PlayerGroup, LastLogin));
                     }
                  }
             }

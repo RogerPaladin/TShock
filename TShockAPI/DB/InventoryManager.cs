@@ -211,5 +211,34 @@ namespace TShockAPI.DB
                 return false;
             }
         }
+        public bool NewPlayer(TSPlayer player)
+        {
+            string[] inv;
+            inv = new string[41];
+            for (int i = 0; i < 40; i++)
+            {
+                inv[i] = player.TPlayer.inventory[i].name + ":" + player.TPlayer.inventory[i].stack;
+            }
+                        if ("Copper Shortsword:1" == inv[0] && "Copper Pickaxe:1" == inv[1] && "Copper Axe:1" == inv[2] && ":0" == inv[3] && ":0" == inv[4] &&
+                            ":0" == inv[5] && ":0" == inv[6] && ":0" == inv[7] && ":0" == inv[8] && ":0" == inv[9] &&
+                            ":0" == inv[10] && ":0" == inv[11] && ":0" == inv[12] && ":0" == inv[13] && ":0" == inv[14] &&
+                            ":0" == inv[15] && ":0" == inv[16] && ":0" == inv[17] && ":0" == inv[18] && ":0" == inv[19] &&
+                            ":0" == inv[20] && ":0" == inv[21] && ":0" == inv[22] && ":0" == inv[23] && ":0" == inv[24] &&
+                            ":0" == inv[25] && ":0" == inv[26] && ":0" == inv[27] && ":0" == inv[28] && ":0" == inv[29] &&
+                            ":0" == inv[30] && ":0" == inv[31] && ":0" == inv[32] && ":0" == inv[33] && ":0" == inv[34] &&
+                            ":0" == inv[35] && ":0" == inv[36] && ":0" == inv[37] && ":0" == inv[38] && ":0" == inv[39])
+                        {
+                            return true;
+                        }
+                        else
+                        {
+                            return false;
+                        }
+          }
+        public void DelInventory(string PlayerName)
+        {
+            database.Query("DELETE FROM Inventory WHERE LOWER (Username) = @0;", PlayerName.ToLower());
+            Log.ConsoleInfo(string.Format("Player <{0}> inventory automatically deleted.", PlayerName));
+        }
     }
 }
