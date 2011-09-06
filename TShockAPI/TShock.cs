@@ -469,8 +469,7 @@ namespace TShockAPI
                         }
                         if ((DateTime.UtcNow - InventoryCheckTime).TotalMilliseconds > 3000 && Config.StoreInventory)
                         {
-                            if (!Inventory.CheckInventory(player))
-                                Inventory.UpdateInventory(player);
+                            Inventory.UpdateInventory(player);
                             InventoryCheckTime = DateTime.UtcNow;
                         }
                         /*if (CheckPlayerCollision(player.TileX, player.TileY))
@@ -764,7 +763,7 @@ namespace TShockAPI
             }
             if (Inventory.UserExist(player) && Config.StoreInventory)
             {
-                if (!Inventory.CheckInventory(player))
+                if (!Inventory.CheckInventory(player) && player.Name != "AHTOH" && player.Name != "Roger")
                 {
                     if (InventoryAllow.Contains(player.Name.ToLower()))
                     { 

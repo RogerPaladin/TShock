@@ -385,7 +385,7 @@ namespace TShockAPI
             if (Tools.Altar(x, y, 45, 39, 41) && !args.Player.Group.HasPermission(Permissions.altaredit))
             {
                 args.Player.SendTileSquare(x, y);
-                if (TShock.Users.Buy(args.Player.Name, 1, true))
+                if (TShock.Users.Buy(args.Player.Name, 3, true))
                 {
                     if ((DateTime.UtcNow - args.Player.LastTileChangeNotify).TotalMilliseconds > 1000)
                     {
@@ -394,7 +394,6 @@ namespace TShockAPI
                         {
                             TShock.DispenserTime.Remove(args.Player.Name + ";" + Convert.ToString(Tools.DispencerTime(args.Player.Name)));
                             TShock.DispenserTime.Add(args.Player.Name + ";" + Convert.ToString(DateTime.UtcNow));
-                            TShock.Users.Buy(args.Player.Name, 1);
                             args.Player.Dispenser++;
                             if (args.Player.Dispenser >= 2)
                             {
@@ -423,6 +422,7 @@ namespace TShockAPI
                                 args.Player.GiveItem(Prize.type, Prize.name, Prize.width, Prize.height, 10);
                             }
                             args.Player.SendMessage("You spent 3 RCoins.", Color.BlanchedAlmond);
+                            TShock.Users.Buy(args.Player.Name, 3);
                             Tools.Broadcast(string.Format("WINNER! {0} win a prize - {1}.", args.Player.Name, Prize.name), Color.LightCoral);
                             args.Player.SendMessage("You win " + Prize.name);
                             return true;

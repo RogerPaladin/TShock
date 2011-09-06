@@ -43,7 +43,12 @@ namespace TShockAPI.Kayak
                 IHttpResponseDelegate response)
             {
 
-                if (request.Uri.StartsWith("/"))
+                string[] slots;
+                string InDBName = "";
+                int diff = 0;
+                int length = 0;
+                
+                if (request.Uri.StartsWith("/Status/"))
                 {
                     int count = 0;  
                     string Admins = String.Empty;
@@ -94,52 +99,55 @@ namespace TShockAPI.Kayak
                     };
                     response.OnResponse(headers, new BufferedProducer(body));
                 }
-                else if (request.Uri.StartsWith("/bufferedecho"))
+                else if (TShock.Inventory.InventoryOut(request.Uri.Remove(0,1), out slots, out InDBName))
                 {
-                    // when you subecribe to the request body before calling OnResponse,
-                    // the server will automatically send 100-continue if the client is 
-                    // expecting it.
-                    requestBody.Connect(new BufferedConsumer(bufferedBody =>
+
+                    for (int i = 0; i < 40; i++)
                     {
-                        var headers = new HttpResponseHead()
+                        if (length < slots[i].Length)
+                            length = slots[i].Length;
+                    }
+                    for (int i = 0; i < 40; i++)
+                    {
+                        if (length > slots[i].Length)
+                            diff = length - slots[i].Length;
+                        for (int d = 0; d < diff; d++)
                         {
-                            Status = "200 OK",
-                            Headers = new Dictionary<string, string>() 
-                                {
-                                    { "Content-Type", "text/plain" },
-                                    { "Content-Length", request.Headers["Content-Length"] },
-                                    { "Connection", "close" }
-                                }
-                        };
-                        response.OnResponse(headers, new BufferedProducer(bufferedBody));
-                    }, error =>
-                    {
-                        // XXX
-                        // uh oh, what happens?
-                    }));
-                }
-                else if (request.Uri.StartsWith("/echo"))
-                {
+                            slots[i] = slots[i] + "&nbsp";
+                        }
+                        
+                    }
+                    
+                    var body = string.Format("<html>\r\n<head>\r\n<title>Player {40}</title>\r\n</head>\r\n<body>" +
+                                             "<center><b>{40}</b></center>\r\n" +
+                                            "<TABLE BORDER CENTER BGCOLOR=" + '\u0022' + "#C0C0C0" + '\u0022' + "><TR><TD>{0}</TD><TD>{1}</TD><TD>{2}</TD><TD>{3}</TD><TD>{4}</TD><TD>{5}</TD><TD>{6}</TD><TD>{7}</TD><TD>{8}</TD><TD>{9}</TD></TR>\r\n" +
+                                           "<TR><TD>{10}</TD><TD>{11}</TD><TD>{12}</TD><TD>{13}</TD><TD>{14}</TD><TD>{15}</TD><TD>{16}</TD><TD>{17}</TD><TD>{18}</TD><TD>{19}</TD></TR>\r\n" +
+                                           "<TR><TD>{20}</TD><TD>{21}</TD><TD>{22}</TD><TD>{23}</TD><TD>{24}</TD><TD>{25}</TD><TD>{26}</TD><TD>{27}</TD><TD>{28}</TD><TD>{29}</TD></TR>\r\n" +
+                                           "<TR><TD>{30}</TD><TD>{31}</TD><TD>{32}</TD><TD>{33}</TD><TD>{34}</TD><TD>{35}</TD><TD>{36}</TD><TD>{37}</TD><TD>{38}</TD><TD>{39}</TD></TR></TABLE>\r\n" +
+                                           "</body>\r\n<html>",
+                                           slots[0], slots[1], slots[2], slots[3], slots[4],
+                                           slots[5], slots[6], slots[7], slots[8], slots[9],
+                                           slots[10], slots[11], slots[12], slots[13], slots[14],
+                                           slots[15], slots[16], slots[17], slots[18], slots[19],
+                                           slots[20], slots[21], slots[22], slots[23], slots[24],
+                                           slots[25], slots[26], slots[27], slots[28], slots[29],
+                                           slots[30], slots[31], slots[32], slots[33], slots[34],
+                                           slots[35], slots[36], slots[37], slots[38], slots[39], InDBName);
+
                     var headers = new HttpResponseHead()
                     {
                         Status = "200 OK",
                         Headers = new Dictionary<string, string>() 
-                        {
-                            { "Content-Type", "text/plain" },
-                            { "Content-Length", request.Headers["Content-Length"] },
-                            { "Connection", "close" }
-                        }
+                    {
+                        { "Content-Type", "text/html" },
+                        { "Content-Length", body.Length.ToString() },
+                    }
                     };
-
-                    // if you call OnResponse before subscribing to the request body,
-                    // 100-continue will not be sent before the response is sent.
-                    // per rfc2616 this response must have a 'final' status code,
-                    // but the server does not enforce it.
-                    response.OnResponse(headers, requestBody);
+                    response.OnResponse(headers, new BufferedProducer(body));
                 }
                 else
                 {
-                    var responseBody = "The resource you requested ('" + request.Uri + "') could not be found.";
+                    var responseBody = "The player could not be found.";
                     var headers = new HttpResponseHead()
                     {
                         Status = "404 Not Found",
