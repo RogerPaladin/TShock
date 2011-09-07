@@ -554,6 +554,9 @@ namespace TShockAPI
 
         private void OnChat(messageBuffer msg, int ply, string text, HandledEventArgs e)
         {
+            Rectangle rect;
+            rect = new Rectangle();
+            
             if (e.Handled)
                 return;
 
@@ -607,10 +610,27 @@ namespace TShockAPI
             }
             else
             {
-                Tools.Broadcast("{2}<{0}> {1}".SFormat(tsplr.Name, text, Config.ChatDisplayGroup ? "[{0}] ".SFormat(tsplr.Group.Name) : ""),
+                rect = new Rectangle((tsplr.TileX - 25), (tsplr.TileY - 25), 50, 50);
+                foreach (TSPlayer Player in TShock.Players)
+                {
+                    if (Player != null && Player.Active)
+                    {
+                        if (Player.TileX >= rect.Left && Player.TileX <= rect.Right &&
+                            Player.TileY >= rect.Top && Player.TileY <= rect.Bottom)
+                        {
+                                Player.SendMessage("{2}<{0}> {1}".SFormat(tsplr.Name, text, Config.ChatDisplayGroup ? "[{0}] ".SFormat(tsplr.Group.Name) : ""),
                                 tsplr.Group.R, tsplr.Group.G,
                                 tsplr.Group.B);
-                Log.Info(string.Format("{0} said: {1}", tsplr.Name, text));
+                        }
+                    
+                    }
+                }
+                
+                
+                /*Tools.Broadcast("{2}<{0}> {1}".SFormat(tsplr.Name, text, Config.ChatDisplayGroup ? "[{0}] ".SFormat(tsplr.Group.Name) : ""),
+                                tsplr.Group.R, tsplr.Group.G,
+                                tsplr.Group.B);
+                */Log.Info(string.Format("{0} said: {1}", tsplr.Name, text));
                 e.Handled = true;
             }
         }

@@ -46,7 +46,7 @@ namespace TShockAPI
         {
             get
             {
-                return (Interval > 0) && (Interval - (DateTime.UtcNow - lastrestart).TotalMinutes == 5);
+                return (Interval > 0) && (Interval - (DateTime.UtcNow - lastrestart).TotalMinutes <= 5);
             }
         }
 
@@ -61,6 +61,13 @@ namespace TShockAPI
             Console.WriteLine("Server is being restarted!");
             Log.Info("Server is being restarted!");
             Tools.ForceKickAll("Server is being restarted!");
+            foreach (TSPlayer player in TShock.Players)
+            {
+                if (player != null && player.Active)
+                {
+                    TShock.Inventory.UpdateInventory(player);
+                }
+            }
             WorldGen.saveWorld();
             Netplay.disconnect = true;
             Process.GetProcessById(TShock.id).Kill();

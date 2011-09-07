@@ -15,7 +15,7 @@ namespace TShockAPI.DB
             database = db;
 
             var table = new SqlTable("Inventory",
-                new SqlColumn("Username", MySqlDbType.VarChar, 32) { Unique = true },
+                new SqlColumn("Username", MySqlDbType.VarChar, 32) { Unique = true, Primary = true},
                 new SqlColumn("Slot0", MySqlDbType.VarChar, 32),
                 new SqlColumn("Slot1", MySqlDbType.VarChar, 32),
                 new SqlColumn("Slot2", MySqlDbType.VarChar, 32),

@@ -197,6 +197,9 @@ namespace TShockAPI
             add(null, Shop, "shop", "buy");
             add(null, TradeChat, "t", "tc");
             add(Permissions.cfg, InventoryAllow, "inv", "inventory");
+            add(null, Shout, "!");
+            add(null, GroupChat, "g");
+            add(null, Question, "?");
         }
 
         public static bool HandleCommand(TSPlayer player, string text)
@@ -1161,7 +1164,7 @@ namespace TShockAPI
 
         private static void TP(CommandArgs args)
         {
-             if (TShock.Users.Buy(args.Player.Name, 3, true) || args.Player.Group.HasPermission("rich"))
+            if (TShock.Users.Buy(args.Player.Name, 3, true) || args.Player.Group.HasPermission("rich") || args.Player.Group.HasPermission("vipstatus"))
              {
                 int result = 0;
                 if (!args.Player.RealPlayer)
@@ -1193,6 +1196,12 @@ namespace TShockAPI
                         var plr = players[0];
                         if (args.Player.Teleport(plr.TileX, plr.TileY + 3))
                         {
+                            if (args.Player.Group.HasPermission("vipstatus"))
+                            {
+                                args.Player.SendMessage(string.Format("Teleported to {0}", plr.Name));
+                                return;
+                            }
+                            
                             if (TShock.Users.Buy(args.Player.Name, 3))
                             {
                                 args.Player.SendMessage("You spent 3 RCoins.", Color.BlanchedAlmond);
@@ -2319,6 +2328,72 @@ namespace TShockAPI
             }
 
             Tools.Broadcast("(Trade)<" + args.Player.Name + ">" + message, Color.PaleGoldenrod);
+            return;
+        }
+
+        private static void Shout(CommandArgs args)
+        {
+            string message = "";
+
+            for (int i = 0; i < args.Parameters.Count; i++)
+            {
+                message += " " + args.Parameters[i];
+            }
+            if (TShock.Users.Buy(args.Player.Name, 0.5))
+            {
+                Tools.Broadcast("(ToAll)<" + args.Player.Name + ">" + message, Color.Gold);
+                return;
+            }
+            else
+            {
+                args.Player.SendMessage("You need 0,5 RCoins to shout.", Color.Red);
+                return;
+            }
+        }
+
+        private static void GroupChat(CommandArgs args)
+        {
+            string message = "";
+
+            for (int i = 0; i < args.Parameters.Count; i++)
+            {
+                message += " " + args.Parameters[i];
+            }
+            foreach (TSPlayer Player in TShock.Players)
+            {
+                if (Player != null && Player.Active && args.Player.Group.Name == Player.Group.Name)
+                {
+                    Player.SendMessage("(To {2})<{0}> {1}".SFormat(args.Player.Name, message, args.Player.Group.Name),
+                                                            args.Player.Group.R, args.Player.Group.G,
+                                                                    args.Player.Group.B);
+                }
+            }
+                
+        }
+
+        private static void Question(CommandArgs args)
+        {
+            string message = "";
+            int count = 0;
+            for (int i = 0; i < args.Parameters.Count; i++)
+            {
+                message += " " + args.Parameters[i];
+            }
+            foreach (TSPlayer Player in TShock.Players)
+            {
+                if (Player != null && Player.Active && Player.Group.HasPermission("adminstatus"))
+                {
+                    count++;
+                    Player.SendMessage("(To admin)<{0}> {1}".SFormat(args.Player.Name, message, args.Player.Group.Name),
+                                                            Color.PaleGreen);
+                    Player.LastWhisper = args.Player;
+                }
+            }
+            Log.ConsoleInfo(string.Format("[Question]<{0}> {1}".SFormat(args.Player.Name, message)));
+            if (count == 0)
+            { 
+                args.Player.SendMessage("There are no operators online.");
+            }
             return;
         }
         
