@@ -400,10 +400,7 @@ namespace TShockAPI
                 Tools.Broadcast("The server will be restarted in 5 minutes");
                 Log.Info("The server will be restarted in 5 minutes");
             }
-
-            if (Restart.IsRestartTime)
-                Restart.Restart();
-            
+        
             //call these every second, not every update
             if ((DateTime.UtcNow - LastCheck).TotalSeconds >= 1)
             {
@@ -467,13 +464,16 @@ namespace TShockAPI
                             }
 
                         }
-                        if ((DateTime.UtcNow - InventoryCheckTime).TotalMilliseconds > 3000 && Config.StoreInventory)
-                        {
+                        //if ((DateTime.UtcNow - InventoryCheckTime).TotalMilliseconds > 3000 && Config.StoreInventory)
+                        //{
                             Inventory.UpdateInventory(player);
-                            InventoryCheckTime = DateTime.UtcNow;
-                        }
+                            //InventoryCheckTime = DateTime.UtcNow;
+                        //}
                         /*if (CheckPlayerCollision(player.TileX, player.TileY))
                             player.SendMessage("You are currently nocliping!", Color.Red);*/
+                            if (Restart.IsRestartTime)
+                                Restart.Restart();
+                        
                         if (player.ForceSpawn && (DateTime.Now - player.LastDeath).Seconds >= 3)
                         {
                             player.Spawn();
@@ -610,19 +610,25 @@ namespace TShockAPI
             }
             else
             {
-                rect = new Rectangle((tsplr.TileX - 25), (tsplr.TileY - 25), 50, 50);
+                rect = new Rectangle((tsplr.TileX - 50), (tsplr.TileY - 50), 100, 100);
                 foreach (TSPlayer Player in TShock.Players)
                 {
                     if (Player != null && Player.Active)
                     {
-                        if (Player.TileX >= rect.Left && Player.TileX <= rect.Right &&
-                            Player.TileY >= rect.Top && Player.TileY <= rect.Bottom)
+                        if (Player.DisplayChat && Player.Group.HasPermission(Permissions.chat))
                         {
-                                Player.SendMessage("{2}<{0}> {1}".SFormat(tsplr.Name, text, Config.ChatDisplayGroup ? "[{0}] ".SFormat(tsplr.Group.Name) : ""),
-                                tsplr.Group.R, tsplr.Group.G,
-                                tsplr.Group.B);
+                            Player.SendMessage("(Ranged){2}<{0}> {1}".SFormat(tsplr.Name, text, Config.ChatDisplayGroup ? "[{0}] ".SFormat(tsplr.Group.Name) : ""),
+                                                                      tsplr.Group.R, tsplr.Group.G,
+                                                                      tsplr.Group.B);
                         }
-                    
+                        else
+                            if (Player.TileX >= rect.Left && Player.TileX <= rect.Right &&
+                                Player.TileY >= rect.Top && Player.TileY <= rect.Bottom)
+                            {
+                                    Player.SendMessage("{2}<{0}> {1}".SFormat(tsplr.Name, text, Config.ChatDisplayGroup ? "[{0}] ".SFormat(tsplr.Group.Name) : ""),
+                                    tsplr.Group.R, tsplr.Group.G,
+                                    tsplr.Group.B);
+                            }
                     }
                 }
                 
@@ -630,7 +636,8 @@ namespace TShockAPI
                 /*Tools.Broadcast("{2}<{0}> {1}".SFormat(tsplr.Name, text, Config.ChatDisplayGroup ? "[{0}] ".SFormat(tsplr.Group.Name) : ""),
                                 tsplr.Group.R, tsplr.Group.G,
                                 tsplr.Group.B);
-                */Log.Info(string.Format("{0} said: {1}", tsplr.Name, text));
+                */
+                 Log.Info(string.Format("{0} said: {1}", tsplr.Name, text));
                 e.Handled = true;
             }
         }

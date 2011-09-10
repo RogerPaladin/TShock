@@ -59,8 +59,14 @@ namespace TShockAPI
         [Description("Specific log messages are sent to users with this permission")]
         public static readonly string logs;
 
+        [Description("Chat messages are sent to users with this permission")]
+        public static readonly string chat;
+
         [Description("User gets the admin prefix/color in chat")]
         public static readonly string adminchat;
+
+        [Description("User can use treade chat")]
+        public static readonly string tradechat;
 
         [Todo]
         [Description("Not currently working")]

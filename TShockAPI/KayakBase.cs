@@ -45,9 +45,8 @@ namespace TShockAPI.Kayak
 
                 string[] slots;
                 string InDBName = "";
-                int diff = 0;
-                int length = 0;
-                
+                string[] split;
+
                 if (request.Uri.StartsWith("/Status/"))
                 {
                     int count = 0;  
@@ -104,19 +103,17 @@ namespace TShockAPI.Kayak
 
                     for (int i = 0; i < 40; i++)
                     {
-                        if (length < slots[i].Length)
-                            length = slots[i].Length;
-                    }
-                    for (int i = 0; i < 40; i++)
-                    {
-                        if (length > slots[i].Length)
-                            diff = length - slots[i].Length;
-                        for (int d = 0; d < diff; d++)
+                        if (slots[i].Length > 2)
                         {
-                            slots[i] = slots[i] + "&nbsp";
+                            split = slots[i].Split(':');
+                            slots[i] = "<img src=" + '\u0022' + "inv/" + split[0] + ".png" + '\u0022' + "alt=" + '\u0022' + split[0] + '\u0022' + "> x " + split[1];
                         }
-                        
+                        else
+                        {
+                            slots[i] = "none";
+                        }
                     }
+
                     
                     var body = string.Format("<html>\r\n<head>\r\n<title>Player {40}</title>\r\n</head>\r\n<body>" +
                                              "<center><b>{40}</b></center>\r\n" +

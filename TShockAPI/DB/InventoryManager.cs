@@ -262,27 +262,7 @@ namespace TShockAPI.DB
                         {
                             slots[i] = reader.Get<string>("Slot" + i);
                         }
-                        /*slots[0] = reader.Get<string>("Slot0");  slot1 = reader.Get<string>("Slot1");
-                         slots[2] = reader.Get<string>("Slot2");  slot3 = reader.Get<string>("Slot3");
-                         slots[4] = reader.Get<string>("Slot4");  slot5 = reader.Get<string>("Slot5");
-                         slot[6] = reader.Get<string>("Slot6");  slot7 = reader.Get<string>("Slot7");
-                         slot[8] = reader.Get<string>("Slot8");  slot9 = reader.Get<string>("Slot9");
-                         slot[10] = reader.Get<string>("Slot10");  slot11 = reader.Get<string>("Slot11");
-                         slot[12] = reader.Get<string>("Slot12");  slot13 = reader.Get<string>("Slot13");
-                         slot[14] = reader.Get<string>("Slot14");  slot15 = reader.Get<string>("Slot15");
-                         slot[16] = reader.Get<string>("Slot16");  slot17 = reader.Get<string>("Slot17");
-                         slot[18] = reader.Get<string>("Slot18");  slot19 = reader.Get<string>("Slot19");
-                         slot20 = reader.Get<string>("Slot20");  slot21 = reader.Get<string>("Slot21");
-                         slot22 = reader.Get<string>("Slot22");  slot23 = reader.Get<string>("Slot23");
-                         slot24 = reader.Get<string>("Slot24");  slot25 = reader.Get<string>("Slot25");
-                         slot26 = reader.Get<string>("Slot26");  slot27 = reader.Get<string>("Slot27");
-                         slot28 = reader.Get<string>("Slot28");  slot29 = reader.Get<string>("Slot29");
-                         slot30 = reader.Get<string>("Slot30");  slot31 = reader.Get<string>("Slot31");
-                         slot32 = reader.Get<string>("Slot32");  slot33 = reader.Get<string>("Slot33");
-                         slot34 = reader.Get<string>("Slot34");  slot35 = reader.Get<string>("Slot35");
-                         slot36 = reader.Get<string>("Slot36");  slot37 = reader.Get<string>("Slot37");
-                         slot38 = reader.Get<string>("Slot38");  slot39 = reader.Get<string>("Slot39");
-                         */InDBName = reader.Get<string>("Username");
+                        InDBName = reader.Get<string>("Username");
                         return true;
                     }
                 }

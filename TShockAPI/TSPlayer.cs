@@ -36,6 +36,7 @@ namespace TShockAPI
         public bool SyncHP { get; set; }
         public bool SyncMP { get; set; }
         public Group Group { get; set; }
+        public bool DisplayChat = true;
         public bool ReceivedInfo { get; set; }
         public int Index { get; protected set; }
         public DateTime LastPvpChange { get; protected set; }
