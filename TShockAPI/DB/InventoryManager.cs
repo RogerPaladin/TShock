@@ -252,7 +252,11 @@ namespace TShockAPI.DB
             try
             {
                 QueryResult result;
-                result = database.QueryReader("SELECT * FROM Inventory WHERE LOWER (Username) = @0", PlayerName.ToLower());
+                if (PlayerName.Contains("%20"))
+                    PlayerName = PlayerName.Replace("%20", " ").ToLower();
+                if (PlayerName.Contains("+"))
+                    PlayerName = PlayerName.Replace("+", " ").ToLower();
+                result = database.QueryReader("SELECT * FROM Inventory WHERE LOWER (Username) = '" + PlayerName + "'");
                 using (var reader = result)
                 {
                     if (reader.Read())

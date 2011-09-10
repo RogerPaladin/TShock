@@ -2534,6 +2534,7 @@ namespace TShockAPI
         private static void Shop(CommandArgs args)
         {
             int quantity = 1;
+            double cost;
             if (args.Parameters.Count == 0)
                 {
                 args.Player.SendMessage("Invalid syntax! Proper syntax: /buy [item/buff/warp(50)/vip(500)]", Color.Red);
@@ -3152,18 +3153,437 @@ namespace TShockAPI
                                 return;
                             }
                         #endregion                        
+                            #region aglet
+                        case "aglet":
+                            price = 8;
+                            id = "285";
+                            if (TShock.Users.Buy(args.Player.Name, price))
+                            {
+                                var items = Tools.GetItemByIdOrName(id);
+                                var item = items[0];
+                                args.Player.GiveItem(item.type, item.name, item.width, item.height, 1);
+
+                                args.Player.SendMessage("You spent " + price + " RCoins.", Color.BlanchedAlmond);
+                                args.Player.SendMessage("You buy " + item.name + " successfully.", Color.Green);
+                                return;
+                            }
+                            else
+                            {
+                                var items = Tools.GetItemByIdOrName(id);
+                                var item = items[0];
+                                args.Player.SendMessage("You need " + price + " RCoins to buy " + item.name + ".", Color.Red);
+                                return;
+                            }
+                        #endregion                        
+                            #region ankletofthewind
+                        case "ankletofthewind":
+                            price = 9;
+                            id = "212";
+                            if (TShock.Users.Buy(args.Player.Name, price))
+                            {
+                                var items = Tools.GetItemByIdOrName(id);
+                                var weapon = items[0];
+                                args.Player.GiveItem(weapon.type, weapon.name, weapon.width, weapon.height, 1);
+
+                                args.Player.SendMessage("You spent " + price + " RCoins.", Color.BlanchedAlmond);
+                                args.Player.SendMessage("You buy " + weapon.name + " successfully.", Color.Green);
+                                return;
+                            }
+                            else
+                            {
+                                var items = Tools.GetItemByIdOrName(id);
+                                var weapon = items[0];
+                                args.Player.SendMessage("You need " + price + " RCoins to buy " + weapon.name + ".", Color.Red);
+                                return;
+                            }
+                        #endregion
+                            #region cloudinabottle
+                        case "cloudinabottle":
+                            price = 15;
+                            id = "53";
+                            if (TShock.Users.Buy(args.Player.Name, price))
+                            {
+                                var items = Tools.GetItemByIdOrName(id);
+                                var item = items[0];
+                                args.Player.GiveItem(item.type, item.name, item.width, item.height, 1);
+
+                                args.Player.SendMessage("You spent " + price + " RCoins.", Color.BlanchedAlmond);
+                                args.Player.SendMessage("You buy " + item.name + " successfully.", Color.Green);
+                                return;
+                            }
+                            else
+                            {
+                                var items = Tools.GetItemByIdOrName(id);
+                                var item = items[0];
+                                args.Player.SendMessage("You need " + price + " RCoins to buy " + item.name + ".", Color.Red);
+                                return;
+                            }
+                        #endregion
+                            #region flipper
+                        case "flipper":
+                            price = 13;
+                            id = "187";
+                            if (TShock.Users.Buy(args.Player.Name, price))
+                            {
+                                var items = Tools.GetItemByIdOrName(id);
+                                var item = items[0];
+                                args.Player.GiveItem(item.type, item.name, item.width, item.height, 1);
+
+                                args.Player.SendMessage("You spent " + price + " RCoins.", Color.BlanchedAlmond);
+                                args.Player.SendMessage("You buy " + item.name + " successfully.", Color.Green);
+                                return;
+                            }
+                            else
+                            {
+                                var items = Tools.GetItemByIdOrName(id);
+                                var item = items[0];
+                                args.Player.SendMessage("You need " + price + " RCoins to buy " + item.name + ".", Color.Red);
+                                return;
+                            }
+                        #endregion                        
+                            #region hermesboots
+                        case "hermesboots":
+                            price = 17;
+                            id = "54";
+                            if (TShock.Users.Buy(args.Player.Name, price))
+                            {
+                                var items = Tools.GetItemByIdOrName(id);
+                                var weapon = items[0];
+                                args.Player.GiveItem(weapon.type, weapon.name, weapon.width, weapon.height, 1);
+
+                                args.Player.SendMessage("You spent " + price + " RCoins.", Color.BlanchedAlmond);
+                                args.Player.SendMessage("You buy " + weapon.name + " successfully.", Color.Green);
+                                return;
+                            }
+                            else
+                            {
+                                var items = Tools.GetItemByIdOrName(id);
+                                var weapon = items[0];
+                                args.Player.SendMessage("You need " + price + " RCoins to buy " + weapon.name + ".", Color.Red);
+                                return;
+                            }
+                        #endregion
+                            #region luckyhorseshoe
+                        case "luckyhorseshoe":
+                            price = 16;
+                            id = "158";
+                            if (TShock.Users.Buy(args.Player.Name, price))
+                            {
+                                var items = Tools.GetItemByIdOrName(id);
+                                var item = items[0];
+                                args.Player.GiveItem(item.type, item.name, item.width, item.height, 1);
+
+                                args.Player.SendMessage("You spent " + price + " RCoins.", Color.BlanchedAlmond);
+                                args.Player.SendMessage("You buy " + item.name + " successfully.", Color.Green);
+                                return;
+                            }
+                            else
+                            {
+                                var items = Tools.GetItemByIdOrName(id);
+                                var item = items[0];
+                                args.Player.SendMessage("You need " + price + " RCoins to buy " + item.name + ".", Color.Red);
+                                return;
+                            }
+                        #endregion
+                            #region rocketboots
+                        case "rocketboots":
+                            price = 30;
+                            id = "128";
+                            if (TShock.Users.Buy(args.Player.Name, price))
+                            {
+                                var items = Tools.GetItemByIdOrName(id);
+                                var item = items[0];
+                                args.Player.GiveItem(item.type, item.name, item.width, item.height, 1);
+
+                                args.Player.SendMessage("You spent " + price + " RCoins.", Color.BlanchedAlmond);
+                                args.Player.SendMessage("You buy " + item.name + " successfully.", Color.Green);
+                                return;
+                            }
+                            else
+                            {
+                                var items = Tools.GetItemByIdOrName(id);
+                                var item = items[0];
+                                args.Player.SendMessage("You need " + price + " RCoins to buy " + item.name + ".", Color.Red);
+                                return;
+                            }
+                        #endregion
+                            #region shinyredballoon
+                        case "shinyredballoon":
+                            price = 18;
+                            id = "159";
+                            if (TShock.Users.Buy(args.Player.Name, price))
+                            {
+                                var items = Tools.GetItemByIdOrName(id);
+                                var weapon = items[0];
+                                args.Player.GiveItem(weapon.type, weapon.name, weapon.width, weapon.height, 1);
+
+                                args.Player.SendMessage("You spent " + price + " RCoins.", Color.BlanchedAlmond);
+                                args.Player.SendMessage("You buy " + weapon.name + " successfully.", Color.Green);
+                                return;
+                            }
+                            else
+                            {
+                                var items = Tools.GetItemByIdOrName(id);
+                                var weapon = items[0];
+                                args.Player.SendMessage("You need " + price + " RCoins to buy " + weapon.name + ".", Color.Red);
+                                return;
+                            }
+                        #endregion
+                            #region depthmeter
+                            case "depthmeter":
+                            price = 5;
+                            id = "18";
+                            if (TShock.Users.Buy(args.Player.Name, price))
+                            {
+                                var items = Tools.GetItemByIdOrName(id);
+                                var item = items[0];
+                                args.Player.GiveItem(item.type, item.name, item.width, item.height, 1);
+
+                                args.Player.SendMessage("You spent " + price + " RCoins.", Color.BlanchedAlmond);
+                                args.Player.SendMessage("You buy " + item.name + " successfully.", Color.Green);
+                                return;
+                            }
+                            else
+                            {
+                                var items = Tools.GetItemByIdOrName(id);
+                                var item = items[0];
+                                args.Player.SendMessage("You need " + price + " RCoins to buy " + item.name + ".", Color.Red);
+                                return;
+                            }
+                        #endregion
+                            #region copperwatch
+                            case "copperwatch":
+                            price = 3;
+                            id = "15";
+                            if (TShock.Users.Buy(args.Player.Name, price))
+                            {
+                                var items = Tools.GetItemByIdOrName(id);
+                                var item = items[0];
+                                args.Player.GiveItem(item.type, item.name, item.width, item.height, 1);
+
+                                args.Player.SendMessage("You spent " + price + " RCoins.", Color.BlanchedAlmond);
+                                args.Player.SendMessage("You buy " + item.name + " successfully.", Color.Green);
+                                return;
+                            }
+                            else
+                            {
+                                var items = Tools.GetItemByIdOrName(id);
+                                var item = items[0];
+                                args.Player.SendMessage("You need " + price + " RCoins to buy " + item.name + ".", Color.Red);
+                                return;
+                            }
+                        #endregion                        
+                            #region silverwatch
+                            case "silverwatch":
+                            price = 5;
+                            id = "16";
+                            if (TShock.Users.Buy(args.Player.Name, price))
+                            {
+                                var items = Tools.GetItemByIdOrName(id);
+                                var item = items[0];
+                                args.Player.GiveItem(item.type, item.name, item.width, item.height, 1);
+
+                                args.Player.SendMessage("You spent " + price + " RCoins.", Color.BlanchedAlmond);
+                                args.Player.SendMessage("You buy " + item.name + " successfully.", Color.Green);
+                                return;
+                            }
+                            else
+                            {
+                                var items = Tools.GetItemByIdOrName(id);
+                                var item = items[0];
+                                args.Player.SendMessage("You need " + price + " RCoins to buy " + item.name + ".", Color.Red);
+                                return;
+                            }
+                            #endregion
+                            #region goldwatch
+                            case "goldwatch":
+                            price = 7;
+                            id = "17";
+                            if (TShock.Users.Buy(args.Player.Name, price))
+                            {
+                                var items = Tools.GetItemByIdOrName(id);
+                                var weapon = items[0];
+                                args.Player.GiveItem(weapon.type, weapon.name, weapon.width, weapon.height, 1);
+
+                                args.Player.SendMessage("You spent " + price + " RCoins.", Color.BlanchedAlmond);
+                                args.Player.SendMessage("You buy " + weapon.name + " successfully.", Color.Green);
+                                return;
+                            }
+                            else
+                            {
+                                var items = Tools.GetItemByIdOrName(id);
+                                var weapon = items[0];
+                                args.Player.SendMessage("You need " + price + " RCoins to buy " + weapon.name + ".", Color.Red);
+                                return;
+                            }
+                            #endregion
+                            #region bandofregeneration
+                            case "bandofregeneration":
+                            price = 10;
+                            id = "49";
+                            if (TShock.Users.Buy(args.Player.Name, price))
+                            {
+                                var items = Tools.GetItemByIdOrName(id);
+                                var item = items[0];
+                                args.Player.GiveItem(item.type, item.name, item.width, item.height, 1);
+
+                                args.Player.SendMessage("You spent " + price + " RCoins.", Color.BlanchedAlmond);
+                                args.Player.SendMessage("You buy " + item.name + " successfully.", Color.Green);
+                                return;
+                            }
+                            else
+                            {
+                                var items = Tools.GetItemByIdOrName(id);
+                                var item = items[0];
+                                args.Player.SendMessage("You need " + price + " RCoins to buy " + item.name + ".", Color.Red);
+                                return;
+                            }
+                            #endregion
+                            #region bandofstarpower
+                            case "bandofstarpower":
+                            price = 9;
+                            id = "111";
+                            if (TShock.Users.Buy(args.Player.Name, price))
+                            {
+                                var items = Tools.GetItemByIdOrName(id);
+                                var item = items[0];
+                                args.Player.GiveItem(item.type, item.name, item.width, item.height, 1);
+
+                                args.Player.SendMessage("You spent " + price + " RCoins.", Color.BlanchedAlmond);
+                                args.Player.SendMessage("You buy " + item.name + " successfully.", Color.Green);
+                                return;
+                            }
+                            else
+                            {
+                                var items = Tools.GetItemByIdOrName(id);
+                                var item = items[0];
+                                args.Player.SendMessage("You need " + price + " RCoins to buy " + item.name + ".", Color.Red);
+                                return;
+                            }
+                            #endregion
+                            #region naturesgift
+                            case "naturesgift":
+                            price = 12;
+                            id = "223";
+                            if (TShock.Users.Buy(args.Player.Name, price))
+                            {
+                                var items = Tools.GetItemByIdOrName(id);
+                                var weapon = items[0];
+                                args.Player.GiveItem(weapon.type, weapon.name, weapon.width, weapon.height, 1);
+
+                                args.Player.SendMessage("You spent " + price + " RCoins.", Color.BlanchedAlmond);
+                                args.Player.SendMessage("You buy " + weapon.name + " successfully.", Color.Green);
+                                return;
+                            }
+                            else
+                            {
+                                var items = Tools.GetItemByIdOrName(id);
+                                var weapon = items[0];
+                                args.Player.SendMessage("You need " + price + " RCoins to buy " + weapon.name + ".", Color.Red);
+                                return;
+                            }
+                            #endregion
+                            #region cobaltshield
+                            case "cobaltshield":
+                            price = 17;
+                            id = "156";
+                            if (TShock.Users.Buy(args.Player.Name, price))
+                            {
+                                var items = Tools.GetItemByIdOrName(id);
+                                var item = items[0];
+                                args.Player.GiveItem(item.type, item.name, item.width, item.height, 1);
+
+                                args.Player.SendMessage("You spent " + price + " RCoins.", Color.BlanchedAlmond);
+                                args.Player.SendMessage("You buy " + item.name + " successfully.", Color.Green);
+                                return;
+                            }
+                            else
+                            {
+                                var items = Tools.GetItemByIdOrName(id);
+                                var item = items[0];
+                                args.Player.SendMessage("You need " + price + " RCoins to buy " + item.name + ".", Color.Red);
+                                return;
+                            }
+                            #endregion
+                            #region feralclaws
+                            case "feralclaws":
+                            price = 11;
+                            id = "211";
+                            if (TShock.Users.Buy(args.Player.Name, price))
+                            {
+                                var items = Tools.GetItemByIdOrName(id);
+                                var item = items[0];
+                                args.Player.GiveItem(item.type, item.name, item.width, item.height, 1);
+
+                                args.Player.SendMessage("You spent " + price + " RCoins.", Color.BlanchedAlmond);
+                                args.Player.SendMessage("You buy " + item.name + " successfully.", Color.Green);
+                                return;
+                            }
+                            else
+                            {
+                                var items = Tools.GetItemByIdOrName(id);
+                                var item = items[0];
+                                args.Player.SendMessage("You need " + price + " RCoins to buy " + item.name + ".", Color.Red);
+                                return;
+                            }
+                            #endregion                        
+                            #region obsidianskull
+                            case "obsidianskull":
+                            price = 16;
+                            id = "193";
+                            if (TShock.Users.Buy(args.Player.Name, price))
+                            {
+                                var items = Tools.GetItemByIdOrName(id);
+                                var item = items[0];
+                                args.Player.GiveItem(item.type, item.name, item.width, item.height, 1);
+
+                                args.Player.SendMessage("You spent " + price + " RCoins.", Color.BlanchedAlmond);
+                                args.Player.SendMessage("You buy " + item.name + " successfully.", Color.Green);
+                                return;
+                            }
+                            else
+                            {
+                                var items = Tools.GetItemByIdOrName(id);
+                                var item = items[0];
+                                args.Player.SendMessage("You need " + price + " RCoins to buy " + item.name + ".", Color.Red);
+                                return;
+                            }
+                            #endregion
+                            #region shackle
+                            case "shackle":
+                            price = 2;
+                            id = "216";
+                            if (TShock.Users.Buy(args.Player.Name, price))
+                            {
+                                var items = Tools.GetItemByIdOrName(id);
+                                var item = items[0];
+                                args.Player.GiveItem(item.type, item.name, item.width, item.height, 1);
+
+                                args.Player.SendMessage("You spent " + price + " RCoins.", Color.BlanchedAlmond);
+                                args.Player.SendMessage("You buy " + item.name + " successfully.", Color.Green);
+                                return;
+                            }
+                            else
+                            {
+                                var items = Tools.GetItemByIdOrName(id);
+                                var item = items[0];
+                                args.Player.SendMessage("You need " + price + " RCoins to buy " + item.name + ".", Color.Red);
+                                return;
+                            }
+                            #endregion                        
 
                             #region graybrick
                         case "graybrick":
                             price = 18;
                             id = "129";
-                            if (TShock.Users.Buy(args.Player.Name, price/250*quantity))
+                            cost = ((double)price / 250) * quantity;
+                            if (TShock.Users.Buy(args.Player.Name, cost))
                             {
                                 var items = Tools.GetItemByIdOrName(id);
                                 var brick = items[0];
                                 args.Player.GiveItem(brick.type, brick.name, brick.width, brick.height, quantity);
 
-                                args.Player.SendMessage("You spent " + price / 250 * quantity + " RCoins.", Color.BlanchedAlmond);
+                                args.Player.SendMessage("You spent " + cost + " RCoins.", Color.BlanchedAlmond);
                                 args.Player.SendMessage("You buy " + quantity + " " + brick.name + " successfully.", Color.Green);
                                 return;
                             }
@@ -3171,7 +3591,7 @@ namespace TShockAPI
                             {
                                 var items = Tools.GetItemByIdOrName(id);
                                 var brick = items[0];
-                                args.Player.SendMessage("You need " + price + " RCoins to buy " + brick.name + ".", Color.Red);
+                                args.Player.SendMessage("You need " + cost + " RCoins to buy " + quantity + " " + brick.name + ".", Color.Red);
                                 return;
                             }
                         #endregion                        
@@ -3179,21 +3599,22 @@ namespace TShockAPI
                         case "redbrick":
                             price = 20;
                             id = "131";
-                            if (TShock.Users.Buy(args.Player.Name, price))
+                            cost = ((double)price / 250) * quantity;
+                            if (TShock.Users.Buy(args.Player.Name, cost))
                             {
                                 var items = Tools.GetItemByIdOrName(id);
                                 var brick = items[0];
-                                args.Player.GiveItem(brick.type, brick.name, brick.width, brick.height, 250);
+                                args.Player.GiveItem(brick.type, brick.name, brick.width, brick.height, quantity);
 
-                                args.Player.SendMessage("You spent " + price + " RCoins.", Color.BlanchedAlmond);
-                                args.Player.SendMessage("You buy " + brick.name + " successfully.", Color.Green);
+                                args.Player.SendMessage("You spent " + cost + " RCoins.", Color.BlanchedAlmond);
+                                args.Player.SendMessage("You buy " + quantity + " " + brick.name + " successfully.", Color.Green);
                                 return;
                             }
                             else
                             {
                                 var items = Tools.GetItemByIdOrName(id);
                                 var brick = items[0];
-                                args.Player.SendMessage("You need " + price + " RCoins to buy " + brick.name + ".", Color.Red);
+                                args.Player.SendMessage("You need " + cost + " RCoins to buy " + quantity + " " + brick.name + ".", Color.Red);
                                 return;
                             }
                         #endregion                        
@@ -3201,21 +3622,22 @@ namespace TShockAPI
                         case "bluebrick":
                             price = 20;
                             id = "134";
-                            if (TShock.Users.Buy(args.Player.Name, price))
+                            cost = ((double)price / 250) * quantity;
+                            if (TShock.Users.Buy(args.Player.Name, cost))
                             {
                                 var items = Tools.GetItemByIdOrName(id);
                                 var brick = items[0];
-                                args.Player.GiveItem(brick.type, brick.name, brick.width, brick.height, 250);
+                                args.Player.GiveItem(brick.type, brick.name, brick.width, brick.height, quantity);
 
-                                args.Player.SendMessage("You spent " + price + " RCoins.", Color.BlanchedAlmond);
-                                args.Player.SendMessage("You buy " + brick.name + " successfully.", Color.Green);
+                                args.Player.SendMessage("You spent " + cost + " RCoins.", Color.BlanchedAlmond);
+                                args.Player.SendMessage("You buy " + quantity + " " + brick.name + " successfully.", Color.Green);
                                 return;
                             }
                             else
                             {
                                 var items = Tools.GetItemByIdOrName(id);
                                 var brick = items[0];
-                                args.Player.SendMessage("You need " + price + " RCoins to buy " + brick.name + ".", Color.Red);
+                                args.Player.SendMessage("You need " + cost + " RCoins to buy " + quantity + " " + brick.name + ".", Color.Red);
                                 return;
                             }
                         #endregion                        
@@ -3223,21 +3645,22 @@ namespace TShockAPI
                         case "greenbrick":
                             price = 20;
                             id = "137";
-                            if (TShock.Users.Buy(args.Player.Name, price))
+                            cost = ((double)price / 250) * quantity;
+                            if (TShock.Users.Buy(args.Player.Name, cost))
                             {
                                 var items = Tools.GetItemByIdOrName(id);
                                 var brick = items[0];
-                                args.Player.GiveItem(brick.type, brick.name, brick.width, brick.height, 250);
+                                args.Player.GiveItem(brick.type, brick.name, brick.width, brick.height, quantity);
 
-                                args.Player.SendMessage("You spent " + price + " RCoins.", Color.BlanchedAlmond);
-                                args.Player.SendMessage("You buy " + brick.name + " successfully.", Color.Green);
+                                args.Player.SendMessage("You spent " + cost + " RCoins.", Color.BlanchedAlmond);
+                                args.Player.SendMessage("You buy " + quantity + " " + brick.name + " successfully.", Color.Green);
                                 return;
                             }
                             else
                             {
                                 var items = Tools.GetItemByIdOrName(id);
                                 var brick = items[0];
-                                args.Player.SendMessage("You need " + price + " RCoins to buy " + brick.name + ".", Color.Red);
+                                args.Player.SendMessage("You need " + cost + " RCoins to buy " + quantity + " " + brick.name + ".", Color.Red);
                                 return;
                             }
                         #endregion                        
@@ -3245,21 +3668,22 @@ namespace TShockAPI
                         case "pinkbrick":
                             price = 20;
                             id = "139";
-                            if (TShock.Users.Buy(args.Player.Name, price))
+                            cost = ((double)price / 250) * quantity;
+                            if (TShock.Users.Buy(args.Player.Name, cost))
                             {
                                 var items = Tools.GetItemByIdOrName(id);
                                 var brick = items[0];
-                                args.Player.GiveItem(brick.type, brick.name, brick.width, brick.height, 250);
+                                args.Player.GiveItem(brick.type, brick.name, brick.width, brick.height, quantity);
 
-                                args.Player.SendMessage("You spent " + price + " RCoins.", Color.BlanchedAlmond);
-                                args.Player.SendMessage("You buy " + brick.name + " successfully.", Color.Green);
+                                args.Player.SendMessage("You spent " + cost + " RCoins.", Color.BlanchedAlmond);
+                                args.Player.SendMessage("You buy " + quantity + " " + brick.name + " successfully.", Color.Green);
                                 return;
                             }
                             else
                             {
                                 var items = Tools.GetItemByIdOrName(id);
                                 var brick = items[0];
-                                args.Player.SendMessage("You need " + price + " RCoins to buy " + brick.name + ".", Color.Red);
+                                args.Player.SendMessage("You need " + cost + " RCoins to buy " + quantity + " " + brick.name + ".", Color.Red);
                                 return;
                             }
                         #endregion                        
@@ -3267,21 +3691,22 @@ namespace TShockAPI
                         case "goldbrick":
                             price = 23;
                             id = "141";
-                            if (TShock.Users.Buy(args.Player.Name, price))
+                            cost = ((double)price / 250) * quantity;
+                            if (TShock.Users.Buy(args.Player.Name, cost))
                             {
                                 var items = Tools.GetItemByIdOrName(id);
                                 var brick = items[0];
-                                args.Player.GiveItem(brick.type, brick.name, brick.width, brick.height, 250);
+                                args.Player.GiveItem(brick.type, brick.name, brick.width, brick.height, quantity);
 
-                                args.Player.SendMessage("You spent " + price + " RCoins.", Color.BlanchedAlmond);
-                                args.Player.SendMessage("You buy " + brick.name + " successfully.", Color.Green);
+                                args.Player.SendMessage("You spent " + cost + " RCoins.", Color.BlanchedAlmond);
+                                args.Player.SendMessage("You buy " + quantity + " " + brick.name + " successfully.", Color.Green);
                                 return;
                             }
                             else
                             {
                                 var items = Tools.GetItemByIdOrName(id);
                                 var brick = items[0];
-                                args.Player.SendMessage("You need " + price + " RCoins to buy " + brick.name + ".", Color.Red);
+                                args.Player.SendMessage("You need " + cost + " RCoins to buy " + quantity + " " + brick.name + ".", Color.Red);
                                 return;
                             }
                         #endregion                        
@@ -3289,21 +3714,22 @@ namespace TShockAPI
                         case "silverbrick":
                             price = 23;
                             id = "143";
-                            if (TShock.Users.Buy(args.Player.Name, price))
+                            cost = ((double)price / 250) * quantity;
+                            if (TShock.Users.Buy(args.Player.Name, cost))
                             {
                                 var items = Tools.GetItemByIdOrName(id);
                                 var brick = items[0];
-                                args.Player.GiveItem(brick.type, brick.name, brick.width, brick.height, 250);
+                                args.Player.GiveItem(brick.type, brick.name, brick.width, brick.height, quantity);
 
-                                args.Player.SendMessage("You spent " + price + " RCoins.", Color.BlanchedAlmond);
-                                args.Player.SendMessage("You buy " + brick.name + " successfully.", Color.Green);
+                                args.Player.SendMessage("You spent " + cost + " RCoins.", Color.BlanchedAlmond);
+                                args.Player.SendMessage("You buy " + quantity + " " + brick.name + " successfully.", Color.Green);
                                 return;
                             }
                             else
                             {
                                 var items = Tools.GetItemByIdOrName(id);
                                 var brick = items[0];
-                                args.Player.SendMessage("You need " + price + " RCoins to buy " + brick.name + ".", Color.Red);
+                                args.Player.SendMessage("You need " + cost + " RCoins to buy " + quantity + " " + brick.name + ".", Color.Red);
                                 return;
                             }
                         #endregion                        
@@ -3311,21 +3737,22 @@ namespace TShockAPI
                         case "copperbrick":
                             price = 21;
                             id = "145";
-                            if (TShock.Users.Buy(args.Player.Name, price))
+                            cost = ((double)price / 250) * quantity;
+                            if (TShock.Users.Buy(args.Player.Name, cost))
                             {
                                 var items = Tools.GetItemByIdOrName(id);
                                 var brick = items[0];
-                                args.Player.GiveItem(brick.type, brick.name, brick.width, brick.height, 250);
+                                args.Player.GiveItem(brick.type, brick.name, brick.width, brick.height, quantity);
 
-                                args.Player.SendMessage("You spent " + price + " RCoins.", Color.BlanchedAlmond);
-                                args.Player.SendMessage("You buy " + brick.name + " successfully.", Color.Green);
+                                args.Player.SendMessage("You spent " + cost + " RCoins.", Color.BlanchedAlmond);
+                                args.Player.SendMessage("You buy " + quantity + " " + brick.name + " successfully.", Color.Green);
                                 return;
                             }
                             else
                             {
                                 var items = Tools.GetItemByIdOrName(id);
                                 var brick = items[0];
-                                args.Player.SendMessage("You need " + price + " RCoins to buy " + brick.name + ".", Color.Red);
+                                args.Player.SendMessage("You need " + cost + " RCoins to buy " + quantity + " " + brick.name + ".", Color.Red);
                                 return;
                             }
                         #endregion                        
@@ -3333,21 +3760,22 @@ namespace TShockAPI
                         case "glass":
                             price = 21;
                             id = "170";
-                            if (TShock.Users.Buy(args.Player.Name, price))
+                            cost = ((double)price / 250) * quantity;
+                            if (TShock.Users.Buy(args.Player.Name, cost))
                             {
                                 var items = Tools.GetItemByIdOrName(id);
                                 var brick = items[0];
-                                args.Player.GiveItem(brick.type, brick.name, brick.width, brick.height, 250);
+                                args.Player.GiveItem(brick.type, brick.name, brick.width, brick.height, quantity);
 
-                                args.Player.SendMessage("You spent " + price + " RCoins.", Color.BlanchedAlmond);
-                                args.Player.SendMessage("You buy " + brick.name + " successfully.", Color.Green);
+                                args.Player.SendMessage("You spent " + cost + " RCoins.", Color.BlanchedAlmond);
+                                args.Player.SendMessage("You buy " + quantity + " " + brick.name + " successfully.", Color.Green);
                                 return;
                             }
                             else
                             {
                                 var items = Tools.GetItemByIdOrName(id);
                                 var brick = items[0];
-                                args.Player.SendMessage("You need " + price + " RCoins to buy " + brick.name + ".", Color.Red);
+                                args.Player.SendMessage("You need " + cost + " RCoins to buy " + quantity + " " + brick.name + ".", Color.Red);
                                 return;
                             }
                         #endregion                        
@@ -3355,21 +3783,22 @@ namespace TShockAPI
                         case "hellstonebrick":
                             price = 29;
                             id = "214";
-                            if (TShock.Users.Buy(args.Player.Name, price))
+                            cost = ((double)price / 250) * quantity;
+                            if (TShock.Users.Buy(args.Player.Name, cost))
                             {
                                 var items = Tools.GetItemByIdOrName(id);
                                 var brick = items[0];
-                                args.Player.GiveItem(brick.type, brick.name, brick.width, brick.height, 250);
+                                args.Player.GiveItem(brick.type, brick.name, brick.width, brick.height, quantity);
 
-                                args.Player.SendMessage("You spent " + price + " RCoins.", Color.BlanchedAlmond);
-                                args.Player.SendMessage("You buy " + brick.name + " successfully.", Color.Green);
+                                args.Player.SendMessage("You spent " + cost + " RCoins.", Color.BlanchedAlmond);
+                                args.Player.SendMessage("You buy " + quantity + " " + brick.name + " successfully.", Color.Green);
                                 return;
                             }
                             else
                             {
                                 var items = Tools.GetItemByIdOrName(id);
                                 var brick = items[0];
-                                args.Player.SendMessage("You need " + price + " RCoins to buy " + brick.name + ".", Color.Red);
+                                args.Player.SendMessage("You need " + cost + " RCoins to buy " + quantity + " " + brick.name + ".", Color.Red);
                                 return;
                             }
                         #endregion                        
@@ -3377,21 +3806,22 @@ namespace TShockAPI
                         case "wood":
                             price = 10;
                             id = "9";
-                            if (TShock.Users.Buy(args.Player.Name, price))
+                            cost = ((double)price / 250) * quantity;
+                            if (TShock.Users.Buy(args.Player.Name, cost))
                             {
                                 var items = Tools.GetItemByIdOrName(id);
                                 var brick = items[0];
-                                args.Player.GiveItem(brick.type, brick.name, brick.width, brick.height, 250);
+                                args.Player.GiveItem(brick.type, brick.name, brick.width, brick.height, quantity);
 
-                                args.Player.SendMessage("You spent " + price + " RCoins.", Color.BlanchedAlmond);
-                                args.Player.SendMessage("You buy " + brick.name + " successfully.", Color.Green);
+                                args.Player.SendMessage("You spent " + cost + " RCoins.", Color.BlanchedAlmond);
+                                args.Player.SendMessage("You buy " + quantity + " " + brick.name + " successfully.", Color.Green);
                                 return;
                             }
                             else
                             {
                                 var items = Tools.GetItemByIdOrName(id);
                                 var brick = items[0];
-                                args.Player.SendMessage("You need " + price + " RCoins to buy " + brick.name + ".", Color.Red);
+                                args.Player.SendMessage("You need " + cost + " RCoins to buy " + quantity + " " + brick.name + ".", Color.Red);
                                 return;
                             }
                         #endregion                        
@@ -3399,21 +3829,22 @@ namespace TShockAPI
                         case "obsidianbrick":
                             price = 26;
                             id = "192";
-                            if (TShock.Users.Buy(args.Player.Name, price))
+                            cost = ((double)price / 250) * quantity;
+                            if (TShock.Users.Buy(args.Player.Name, cost))
                             {
                                 var items = Tools.GetItemByIdOrName(id);
                                 var brick = items[0];
-                                args.Player.GiveItem(brick.type, brick.name, brick.width, brick.height, 250);
+                                args.Player.GiveItem(brick.type, brick.name, brick.width, brick.height, quantity);
 
-                                args.Player.SendMessage("You spent " + price + " RCoins.", Color.BlanchedAlmond);
-                                args.Player.SendMessage("You buy " + brick.name + " successfully.", Color.Green);
+                                args.Player.SendMessage("You spent " + cost + " RCoins.", Color.BlanchedAlmond);
+                                args.Player.SendMessage("You buy " + quantity + " " + brick.name + " successfully.", Color.Green);
                                 return;
                             }
                             else
                             {
                                 var items = Tools.GetItemByIdOrName(id);
                                 var brick = items[0];
-                                args.Player.SendMessage("You need " + price + " RCoins to buy " + brick.name + ".", Color.Red);
+                                args.Player.SendMessage("You need " + cost + " RCoins to buy " + quantity + " " + brick.name + ".", Color.Red);
                                 return;
                             }
                         #endregion                        
@@ -3566,7 +3997,7 @@ namespace TShockAPI
         {
             if (args.Parameters.Count == 0)
             {
-                args.Player.SendMessage("Invalid syntax! Proper syntax: /items [armor/weapon/item/brick]", Color.Red);
+                args.Player.SendMessage("Invalid syntax! Proper syntax: /items [armor/weapon/item/block]", Color.Red);
                 return;
             }
 
@@ -3672,6 +4103,25 @@ namespace TShockAPI
                             var ItemSet = new List<String>();
                             ItemSet.Add("harpoon(11)");
                             ItemSet.Add("ivywhip(25)");
+                            ItemSet.Add("aglet(8)");
+                            ItemSet.Add("ankletofthewind(9)");
+                            ItemSet.Add("cloudinabottle(15)");
+                            ItemSet.Add("flipper(13)");
+                            ItemSet.Add("hermesboots(17)");
+                            ItemSet.Add("luckyhorseshoe(16)");
+                            ItemSet.Add("rocketboots(30)");
+                            ItemSet.Add("shinyredballoon(18)");
+                            ItemSet.Add("depthmeter(5)");
+                            ItemSet.Add("copperwatch(3)");
+                            ItemSet.Add("silverwatch(5)");
+                            ItemSet.Add("goldwatch(7)");
+                            ItemSet.Add("bandofregeneration(10)");
+                            ItemSet.Add("bandofstarpower(9)");
+                            ItemSet.Add("naturesgift(12)");
+                            ItemSet.Add("cobaltshield(17)");
+                            ItemSet.Add("feralclaws(11)");
+                            ItemSet.Add("obsidianskull(16)");
+                            ItemSet.Add("shackle(2)");
 
                             sb = new StringBuilder();
                             if (ItemSet.Count > (15 * (page - 1)))
@@ -3699,8 +4149,8 @@ namespace TShockAPI
                             }
                             return;
                 #endregion
-                #region brick
-                case "brick":
+                #region block
+                case "block":
                             page = 1;
                             if (args.Parameters.Count == 2)
                                 int.TryParse(args.Parameters[1], out page);
@@ -3740,7 +4190,7 @@ namespace TShockAPI
                             }
                             if (BrickSet.Count > (15 * page))
                             {
-                                args.Player.SendMessage(string.Format("Type /items brick {0} for more items.", (page + 1)), Color.Yellow);
+                                args.Player.SendMessage(string.Format("Type /items block {0} for more items.", (page + 1)), Color.Yellow);
                             }
                             return;
                 #endregion

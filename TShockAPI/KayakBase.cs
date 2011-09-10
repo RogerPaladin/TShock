@@ -46,7 +46,6 @@ namespace TShockAPI.Kayak
                 string[] slots;
                 string InDBName = "";
                 string[] split;
-
                 if (request.Uri.StartsWith("/Status/"))
                 {
                     int count = 0;  
@@ -147,10 +146,10 @@ namespace TShockAPI.Kayak
                     var responseBody = "The player could not be found.";
                     var headers = new HttpResponseHead()
                     {
-                        Status = "404 Not Found",
+                        Status = "200 OK",
                         Headers = new Dictionary<string, string>()
                     {
-                        { "Content-Type", "text/plain" },
+                        { "Content-Type", "text/html" },
                         { "Content-Length", responseBody.Length.ToString() }
                     }
                     };
