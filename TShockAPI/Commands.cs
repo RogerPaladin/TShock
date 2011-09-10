@@ -2533,7 +2533,8 @@ namespace TShockAPI
 
         private static void Shop(CommandArgs args)
         {
-           if (args.Parameters.Count == 0)
+            int quantity = 1;
+            if (args.Parameters.Count == 0)
                 {
                 args.Player.SendMessage("Invalid syntax! Proper syntax: /buy [item/buff/warp(50)/vip(500)]", Color.Red);
                 return;
@@ -2548,8 +2549,10 @@ namespace TShockAPI
                         args.Player.SendMessage("Invalid syntax! Proper syntax: /buy item [items]", Color.Red);
                         args.Player.SendMessage("To see list of items type /items [armor/weapon/item/brick]", Color.Red);
                         return;
-                    }    
-                    switch (args.Parameters[1].ToLower())
+                    }
+                    if (args.Parameters.Count == 3)
+                        int.TryParse(args.Parameters[2], out quantity);    
+                switch (args.Parameters[1].ToLower())
                         {
                             #region meteor
                         case "meteor":
@@ -3154,14 +3157,14 @@ namespace TShockAPI
                         case "graybrick":
                             price = 18;
                             id = "129";
-                            if (TShock.Users.Buy(args.Player.Name, price))
+                            if (TShock.Users.Buy(args.Player.Name, price/250*quantity))
                             {
                                 var items = Tools.GetItemByIdOrName(id);
                                 var brick = items[0];
-                                args.Player.GiveItem(brick.type, brick.name, brick.width, brick.height, 250);
+                                args.Player.GiveItem(brick.type, brick.name, brick.width, brick.height, quantity);
 
-                                args.Player.SendMessage("You spent " + price + " RCoins.", Color.BlanchedAlmond);
-                                args.Player.SendMessage("You buy " + brick.name + " successfully.", Color.Green);
+                                args.Player.SendMessage("You spent " + price / 250 * quantity + " RCoins.", Color.BlanchedAlmond);
+                                args.Player.SendMessage("You buy " + quantity + " " + brick.name + " successfully.", Color.Green);
                                 return;
                             }
                             else
