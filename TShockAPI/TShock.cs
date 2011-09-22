@@ -464,11 +464,6 @@ namespace TShockAPI
                             }
 
                         }
-                        //if ((DateTime.UtcNow - InventoryCheckTime).TotalMilliseconds > 3000 && Config.StoreInventory)
-                        //{
-                            Inventory.UpdateInventory(player);
-                            //InventoryCheckTime = DateTime.UtcNow;
-                        //}
                         /*if (CheckPlayerCollision(player.TileX, player.TileY))
                             player.SendMessage("You are currently nocliping!", Color.Red);*/
                             if (Restart.IsRestartTime)
@@ -796,8 +791,8 @@ namespace TShockAPI
                     { 
                         InventoryAllow.Remove(player.Name.ToLower());
                     }
-                    else
-                    { Tools.Kick(player, "Your inventory was modified!!!"); }
+                    //else
+                    //{ Tools.Kick(player, "Your inventory was modified!!!"); }
                 }
             }
             else

@@ -388,7 +388,7 @@ namespace TShockAPI
         /// </summary>
         /// <param name="ply">int player</param>
         /// <param name="reason">string reason</param>
-        public static bool Ban(TSPlayer player, string reason, string adminUserName = "")
+        public static bool Ban(TSPlayer player, string reason, string BannedBy = "Server", string adminUserName = "")
         {
             if (!player.ConnectionAlive)
                 return true;
@@ -396,7 +396,7 @@ namespace TShockAPI
             {
                 string ip = player.IP;
                 string playerName = player.Name;
-                TShock.Bans.AddBan(ip, playerName, reason);
+                TShock.Bans.AddBan(ip, playerName, reason, BannedBy);
                 player.Disconnect(string.Format("Banned: {0}", reason));
                 Log.ConsoleInfo(string.Format("Banned {0} for : {1}", playerName, reason));
                 if (adminUserName.Length == 0)

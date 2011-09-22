@@ -33,8 +33,10 @@ namespace TShockAPI.DB
 
             var table = new SqlTable("Bans",
                 new SqlColumn("IP", MySqlDbType.String, 16) { Primary = true },
-                new SqlColumn("Name", MySqlDbType.Text),
-                new SqlColumn("Reason", MySqlDbType.Text)
+                new SqlColumn("Name", MySqlDbType.VarChar, 32),
+                new SqlColumn("Reason", MySqlDbType.VarChar, 32),
+                new SqlColumn("BannedBy", MySqlDbType.VarChar, 32),
+                new SqlColumn("BannedTime", MySqlDbType.VarChar, 32)
             );
             var creator = new SqlTableCreator(db, db.GetSqlType() == SqlType.Sqlite ? (IQueryBuilder)new SqliteQueryCreator() : new MysqlQueryCreator());
             creator.EnsureExists(table);
@@ -73,7 +75,7 @@ namespace TShockAPI.DB
                 using (var reader = database.QueryReader("SELECT * FROM Bans WHERE IP=@0", ip))
                 {
                     if (reader.Read())
-                        return new Ban(reader.Get<string>("IP"), reader.Get<string>("Name"), reader.Get<string>("Reason"));
+                        return new Ban(reader.Get<string>("IP"), reader.Get<string>("Name"), reader.Get<string>("Reason"), reader.Get<string>("BannedBy"), reader.Get<DateTime>("BannedTime"));
                 }
             }
             catch (Exception ex)
@@ -97,7 +99,7 @@ namespace TShockAPI.DB
                 using (var reader = database.QueryReader("SELECT * FROM Bans WHERE " + namecol + "=@0", name))
                 {
                     if (reader.Read())
-                        return new Ban(reader.Get<string>("IP"), reader.Get<string>("Name"), reader.Get<string>("Reason"));
+                        return new Ban(reader.Get<string>("IP"), reader.Get<string>("Name"), reader.Get<string>("Reason"), reader.Get<string>("BannedBy"), reader.Get<DateTime>("BannedTime"));
 
                 }
             }
@@ -108,11 +110,11 @@ namespace TShockAPI.DB
             return null;
         }
 
-        public bool AddBan(string ip, string name = "", string reason = "")
+        public bool AddBan(string ip, string name = "", string reason = "", string bannedby = "Server")
         {
             try
             {
-                return database.Query("INSERT INTO Bans (IP, Name, Reason) VALUES (@0, @1, @2);", ip, name, reason) != 0;
+                return database.Query("INSERT INTO Bans (IP, Name, Reason, BannedBy, BannedTime) VALUES (@0, @1, @2, @3, @4);", ip, name, reason, bannedby, Convert.ToString(DateTime.Now)) != 0;
             }
             catch (Exception ex)
             {
@@ -155,11 +157,17 @@ namespace TShockAPI.DB
 
         public string Reason { get; set; }
 
-        public Ban(string ip, string name, string reason)
+        public string BannedBy { get; set; }
+
+        public DateTime BannedTime { get; set; }
+
+        public Ban(string ip, string name, string reason, string bannedby, DateTime bannedtime)
         {
             IP = ip;
             Name = name;
             Reason = reason;
+            BannedBy = bannedby;
+            BannedTime = bannedtime;
         }
 
         public Ban()
@@ -167,6 +175,8 @@ namespace TShockAPI.DB
             IP = string.Empty;
             Name = string.Empty;
             Reason = string.Empty;
+            BannedBy = string.Empty;
+            BannedTime = DateTime.Now;
         }
     }
 }

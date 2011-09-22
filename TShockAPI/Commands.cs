@@ -698,7 +698,7 @@ namespace TShockAPI
             else
             {
                 string reason = args.Parameters.Count > 1 ? String.Join(" ", args.Parameters.GetRange(1, args.Parameters.Count - 1)) : "Misbehaviour.";
-                if (!Tools.Ban(players[0], reason))
+                if (!Tools.Ban(players[0], reason, args.Player.Name))
                 {
                     args.Player.SendMessage("You can't ban another admin!", Color.Red);
                 }
