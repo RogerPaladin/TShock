@@ -60,7 +60,7 @@ namespace TShockAPI
         {
             Console.WriteLine("Server is being restarted!");
             Log.Info("Server is being restarted!");
-            TShock.Utils.ForceKickAll("Server is being restarted!");
+            Tools.ForceKickAll("Server is being restarted!");
             foreach (TSPlayer player in TShock.Players)
             {
                 if (player != null && player.Active)

@@ -18,13 +18,12 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 using System;
 using System.Collections.Generic;
 using System.Diagnostics;
+
 using System.IO;
 using System.Text;
-using Microsoft.Xna.Framework;
 using Terraria;
-using TerrariaAPI;
 using TShockAPI.Net;
-using XNAHelpers;
+using System.IO.Streams;
 
 namespace TShockAPI
 {
@@ -52,6 +51,7 @@ namespace TShockAPI
 
         public static void InitGetDataHandler()
         {
+            // Need to update to 1.1 tiles
             #region Blacklisted tiles
 
             BlacklistTiles = new bool[Main.maxTileSets];
@@ -145,21 +145,15 @@ namespace TShockAPI
             int plr = args.Data.ReadInt8();
             int slot = args.Data.ReadInt8();
             int stack = args.Data.ReadInt8();
-            int namelength = (int)(args.Data.Length - args.Data.Position - 1);
+            short prefix = (short) args.Data.ReadInt8();
+            int type = (int) args.Data.ReadInt16();
 
-            if (namelength > 0)
-            {
-                string itemname = Encoding.ASCII.GetString(args.Data.ReadBytes(namelength));
+            var it = new Item();
+            it.netDefaults(type);
+            var itemname = it.name;
 
-                if (!args.Player.Group.HasPermission(Permissions.usebanneditem) && TShock.Itembans.ItemIsBanned(itemname))
-                    args.Player.Disconnect("Using banned item: " + itemname + ", remove it and rejoin");
-                if (itemname == "KANNIBALE BLADE"
-                    || itemname == "Super Gel")
-                    return Tools.HandleCheater(args.Player, string.Format(TShock.Config.GriefClientReason, "KANNIBALE"));
-                if (Tools.GetItemByName(itemname).Count == 0 && !args.Player.Group.HasPermission(Permissions.ignorecheatdetection)
-                    && TShock.Config.KickCustomItems)
-                    args.Player.Disconnect("Using custom item: " + itemname + ", remove it and region");
-            }
+            if (!args.Player.Group.HasPermission(Permissions.usebanneditem) && TShock.Itembans.ItemIsBanned(itemname))
+                args.Player.Disconnect("Using banned item: " + itemname + ", remove it and rejoin");;
 
             return false;
         }
@@ -175,51 +169,52 @@ namespace TShockAPI
 
             if (hair >= Main.maxHair)
             {
-                Tools.ForceKick(args.Player, "Hair crash exploit.");
+                TShock.Utils.ForceKick(args.Player, "Hair crash exploit.");
                 return true;
             }
-            if (!Tools.ValidString(name))
+            if (!TShock.Utils.ValidString(name))
             {
-                Tools.ForceKick(args.Player, "Unprintable character in name");
+                TShock.Utils.ForceKick(args.Player, "Unprintable character in name");
                 return true;
             }
             if (name.Length > 32)
             {
-                Tools.ForceKick(args.Player, "Name exceeded 32 characters.");
+                TShock.Utils.ForceKick(args.Player, "Name exceeded 32 characters.");
                 return true;
             }
             if (name.Trim().Length == 0)
             {
-                Tools.ForceKick(args.Player, "Empty Name.");
+                TShock.Utils.ForceKick(args.Player, "Empty Name.");
                 return true;
             }
             var ban = TShock.Bans.GetBanByName(name);
             if (ban != null)
             {
-                Tools.ForceKick(args.Player, string.Format("You are banned: {0}", ban.Reason));
+                TShock.Utils.ForceKick(args.Player, string.Format("You are banned: {0}", ban.Reason));
                 return true;
             }
             if (args.Player.ReceivedInfo)
             {
-                return Tools.HandleGriefer(args.Player, "Sent client info more than once");
+                return TShock.Utils.HandleGriefer(args.Player, "Sent client info more than once");
             }
             if (TShock.Config.MediumcoreOnly && difficulty < 1)
             {
-                Tools.ForceKick(args.Player, "Server is set to mediumcore and above characters only!");
+                TShock.Utils.ForceKick(args.Player, "Server is set to mediumcore and above characters only!");
                 return true;
             }
             if (TShock.Config.HardcoreOnly && difficulty < 2)
             {
-                Tools.ForceKick(args.Player, "Server is set to hardcore characters only!");
+                TShock.Utils.ForceKick(args.Player, "Server is set to hardcore characters only!");
                 return true;
             }
-
+            args.Player.Difficulty = difficulty;
             args.Player.ReceivedInfo = true;
             return false;
         }
 
         private static bool HandleSendTileSquare(GetDataHandlerArgs args)
         {
+        	
             short size = args.Data.ReadInt16();
             int tilex = args.Data.ReadInt32();
             int tiley = args.Data.ReadInt32();
@@ -233,7 +228,8 @@ namespace TShockAPI
             {
                 for (int y = 0; y < size; y++)
                 {
-                    tiles[x, y] = new NetTile(args.Data);
+                    tiles[x, y] = new NetTile(args.Data); // Need to fix this. Tiles in SendTileSquare have a short at the end
+                                                          // that says how many tiles right are the same.
                 }
             }
 
@@ -246,14 +242,20 @@ namespace TShockAPI
 
                 for (int y = 0; y < size; y++)
                 {
-                    int realy = tiley + y;
-                    if (realy < 0 || realy >= Main.maxTilesY)
-                        continue;
+                	int realy = tiley + y;
+                	if (realy < 0 || realy >= Main.maxTilesY)
+                		continue;
 
-                    var tile = Main.tile[realx, realy];
-                    var newtile = tiles[x, y];
+                	var tile = Main.tile[realx, realy];
+                	var newtile = tiles[x, y];
+                	if ((tile.type == 128 && newtile.Type == 128) || (tile.type == 105 || newtile.Type == 105))
+                	{
+						Console.WriteLine("SendTileSquareCalled on a 128 or 105.");
+                		changed = true;
+						
+                	}
 
-                    if (tile.type == 0x17 && newtile.Type == 0x2)
+            		if (tile.type == 0x17 && newtile.Type == 0x2)
                     {
                         tile.type = 0x2;
                         changed = true;
@@ -273,10 +275,12 @@ namespace TShockAPI
                 }
             }
 
-            if (changed)
-                TSPlayer.All.SendTileSquare(tilex, tiley, 3);
-
-            return true;
+			if (changed)
+			{
+				TSPlayer.All.SendTileSquare(tilex, tiley, 3);
+				WorldGen.RangeFrame(tilex, tiley, tilex + size, tiley + size);
+			}
+        	return true;
         }
 
         private static bool HandleTile(GetDataHandlerArgs args)
@@ -287,8 +291,8 @@ namespace TShockAPI
             byte tiletype = args.Data.ReadInt8();
             string Owner = string.Empty;
             string RegionName = string.Empty;
-            Item heart = Tools.GetItemById(58);
-            Item star = Tools.GetItemById(184);
+            Item heart = TShock.Utils.GetItemById(58);
+            Item star = TShock.Utils.GetItemById(184);
             Random Rand = new Random();
 
             if (args.Player.AwaitingName)
@@ -320,6 +324,7 @@ namespace TShockAPI
                 args.Player.SendTileSquare(x, y);
                 return true;
             }
+			
             if (type == 1 || type == 3)
             {
                 int plyX = Math.Abs(args.Player.TileX);
@@ -329,7 +334,7 @@ namespace TShockAPI
 
                 if (tiletype >= ((type == 1) ? Main.maxTileSets : Main.maxWallTypes))
                 {
-                    Tools.HandleGriefer(args.Player, string.Format(TShock.Config.TileAbuseReason, "Invalid tile type"));
+                    TShock.Utils.HandleGriefer(args.Player, string.Format(TShock.Config.TileAbuseReason, "Invalid tile type"));
                     return true;
                 }
                 if (TShock.Config.RangeChecks && ((Math.Abs(plyX - tileX) > 32) || (Math.Abs(plyY - tileY) > 32)))
@@ -338,20 +343,27 @@ namespace TShockAPI
                     {
                         Log.Debug(string.Format("TilePlaced(PlyXY:{0}_{1}, TileXY:{2}_{3}, Result:{4}_{5}, Type:{6})",
                                                 plyX, plyY, tileX, tileY, Math.Abs(plyX - tileX), Math.Abs(plyY - tileY), tiletype));
-                        return Tools.HandleGriefer(args.Player, TShock.Config.RangeCheckBanReason);
+                        return TShock.Utils.HandleGriefer(args.Player, TShock.Config.RangeCheckBanReason);
                     }
                 }
                 if (tiletype == 48 && !args.Player.Group.HasPermission(Permissions.canspike))
                 {
                     args.Player.SendMessage("You do not have permission to place spikes.", Color.Red);
-                    Tools.SendLogs(string.Format("{0} tried to place spikes", args.Player.Name), Color.Red);
+                    TShock.Utils.SendLogs(string.Format("{0} tried to place spikes", args.Player.Name), Color.Red);
+                    args.Player.SendTileSquare(x, y);
+                    return true;
+                }
+                if (type == 1 && tiletype == 21 && TShock.Utils.MaxChests())
+                {
+                    args.Player.SendMessage("Reached world's max chest limit, unable to place more!", Color.Red);
+                    Log.Info("Reached world's chest limit, unable to place more.");
                     args.Player.SendTileSquare(x, y);
                     return true;
                 }
                 if (tiletype == 37 && !args.Player.Group.HasPermission(Permissions.canmeteor))
                 {
                     args.Player.SendMessage("You do not have permission to place meteorite.", Color.Red);
-                    Tools.SendLogs(string.Format("{0} tried to place meteorite", args.Player.Name), Color.Red);
+                    TShock.Utils.SendLogs(string.Format("{0} tried to place meteorite", args.Player.Name), Color.Red);
                     args.Player.SendTileSquare(x, y);
                     return true;
                 }
@@ -360,7 +372,7 @@ namespace TShockAPI
                     if ((DateTime.UtcNow - args.Player.LastTileChangeNotify).TotalMilliseconds > 2000 || TShock.Regions.InArea(x, y, out RegionName))
                     {
                         //args.Player.SendMessage("You do not have permission to place sand.", Color.Red);
-                        //Tools.SendLogs(string.Format("{0} tried to place sand", args.Player.Name), Color.Red);
+                        //TShock.Utils.SendLogs(string.Format("{0} tried to place sand", args.Player.Name), Color.Red);
                         args.Player.LastTileChangeNotify = DateTime.UtcNow;
                         return true;
                     }
@@ -382,7 +394,7 @@ namespace TShockAPI
                 return true;
             }
             #region AltarDispenser
-            if (Tools.Altar(x, y, 45, 39, 41) && !args.Player.Group.HasPermission(Permissions.altaredit))
+            if (TShock.Utils.Altar(x, y, 45, 39, 41) && !args.Player.Group.HasPermission(Permissions.altaredit))
             {
                 args.Player.SendTileSquare(x, y);
                 if (TShock.Users.Buy(args.Player.Name, 3, true))
@@ -390,9 +402,9 @@ namespace TShockAPI
                     if ((DateTime.UtcNow - args.Player.LastTileChangeNotify).TotalMilliseconds > 1000)
                     {
                         args.Player.LastTileChangeNotify = DateTime.UtcNow;
-                        if ((DateTime.UtcNow - Convert.ToDateTime(Tools.DispencerTime(args.Player.Name))).TotalMilliseconds > TShock.disptime)
+                        if ((DateTime.UtcNow - Convert.ToDateTime(TShock.Utils.DispencerTime(args.Player.Name))).TotalMilliseconds > TShock.disptime)
                         {
-                            TShock.DispenserTime.Remove(args.Player.Name + ";" + Convert.ToString(Tools.DispencerTime(args.Player.Name)));
+                            TShock.DispenserTime.Remove(args.Player.Name + ";" + Convert.ToString(TShock.Utils.DispencerTime(args.Player.Name)));
                             TShock.DispenserTime.Add(args.Player.Name + ";" + Convert.ToString(DateTime.UtcNow));
                             args.Player.Dispenser++;
                             if (args.Player.Dispenser >= 2)
@@ -412,7 +424,7 @@ namespace TShockAPI
                                 rand == 173 || rand == 174 || rand == 175 || rand == 176 || rand == 197 || rand == 205 || rand == 207 ||
                                 rand == 222 || rand == 235 || rand == 266 || rand == 297);
 
-                            Item Prize = Tools.GetItemById(rand);
+                            Item Prize = TShock.Utils.GetItemById(rand);
                             if (Prize.maxStack == 1)
                             {
                                 args.Player.GiveItem(Prize.type, Prize.name, Prize.width, Prize.height, 1);
@@ -423,13 +435,13 @@ namespace TShockAPI
                             }
                             args.Player.SendMessage("You spent 3 RCoins.", Color.BlanchedAlmond);
                             TShock.Users.Buy(args.Player.Name, 3);
-                            Tools.Broadcast(string.Format("WINNER! {0} win a prize - {1}.", args.Player.Name, Prize.name), Color.LightCoral);
+                            TShock.Utils.Broadcast(string.Format("WINNER! {0} win a prize - {1}.", args.Player.Name, Prize.name), Color.LightCoral);
                             args.Player.SendMessage("You win " + Prize.name);
                             return true;
                         }
                         args.Player.Dispenser = 0;
-                        double minutes = Math.Round(15 - (DateTime.UtcNow - Convert.ToDateTime(Tools.DispencerTime(args.Player.Name))).TotalMinutes, 0);
-                        double seconds = Math.Round(900 - (DateTime.UtcNow - Convert.ToDateTime(Tools.DispencerTime(args.Player.Name))).TotalSeconds, 0) - (minutes * 60 - 30);
+                        double minutes = Math.Round(15 - (DateTime.UtcNow - Convert.ToDateTime(TShock.Utils.DispencerTime(args.Player.Name))).TotalMinutes, 0);
+                        double seconds = Math.Round(900 - (DateTime.UtcNow - Convert.ToDateTime(TShock.Utils.DispencerTime(args.Player.Name))).TotalSeconds, 0) - (minutes * 60 - 30);
                         args.Player.SendMessage(string.Format("Please wait for {0} minutes {1} seconds", minutes, seconds), Color.Orchid);
                         return true;
                     }
@@ -443,7 +455,7 @@ namespace TShockAPI
             }
             #endregion
             #region HardcoreSpawner
-            if (Tools.Altar(x, y, 58, 8, 1) && !args.Player.Group.HasPermission(Permissions.altaredit))
+            if (TShock.Utils.Altar(x, y, 58, 8, 1) && !args.Player.Group.HasPermission(Permissions.altaredit))
             {
                 args.Player.SendTileSquare(x, y);
                 if ((DateTime.UtcNow - args.Player.LastTileChangeNotify).TotalMilliseconds > 1000)
@@ -451,16 +463,16 @@ namespace TShockAPI
                     if ((DateTime.UtcNow - TShock.Spawner).TotalMilliseconds > 1000 * 60 * 30)
                     {
                         args.Player.DamagePlayer(100);
-                        NPC skeletron = Tools.GetNPCById(35);
-                        NPC slime = Tools.GetNPCById(50);
-                        NPC eye = Tools.GetNPCById(4);
-                        NPC eater = Tools.GetNPCById(13);
+                        NPC skeletron = TShock.Utils.GetNPCById(35);
+                        NPC slime = TShock.Utils.GetNPCById(50);
+                        NPC eye = TShock.Utils.GetNPCById(4);
+                        NPC eater = TShock.Utils.GetNPCById(13);
                         TSPlayer.Server.SetTime(false, 0.0);
                         TSPlayer.Server.SpawnNPC(skeletron.type, skeletron.name, 3, (int)args.Player.TileX, (int)args.Player.TileY);
                         TSPlayer.Server.SpawnNPC(slime.type, slime.name, 3, (int)args.Player.TileX, (int)args.Player.TileY + 20);
                         TSPlayer.Server.SpawnNPC(eye.type, eye.name, 3, (int)args.Player.TileX, (int)args.Player.TileY);
                         TSPlayer.Server.SpawnNPC(eater.type, eater.name, 3, (int)args.Player.TileX, (int)args.Player.TileY);
-                        Tools.Broadcast(string.Format("{0} awakened an ancient evil in PVP arena!", args.Player.Name), Color.Moccasin);
+                        TShock.Utils.Broadcast(string.Format("{0} awakened an ancient evil in PVP arena!", args.Player.Name), Color.Moccasin);
                         TShock.Spawner = DateTime.UtcNow;
                         args.Player.LastTileChangeNotify = DateTime.UtcNow;
                         return true;
@@ -537,7 +549,7 @@ namespace TShockAPI
                 args.Player.TileThreshold++;
                 var coords = new Vector2(x, y);
                 if (!args.Player.TilesDestroyed.ContainsKey(coords))
-                    args.Player.TilesDestroyed.Add(coords, Main.tile[x, y]);
+                    args.Player.TilesDestroyed.Add(coords, Main.tile[x, y].Data);
             }
 
             if ((DateTime.UtcNow - args.Player.LastExplosive).TotalMilliseconds < 1000)
@@ -569,12 +581,12 @@ namespace TShockAPI
 
         private static bool HandleSendSection(GetDataHandlerArgs args)
         {
-            return Tools.HandleGriefer(args.Player, TShock.Config.SendSectionAbuseReason);
+            return TShock.Utils.HandleGriefer(args.Player, TShock.Config.SendSectionAbuseReason);
         }
 
         private static bool HandleNpcUpdate(GetDataHandlerArgs args)
         {
-            return Tools.HandleGriefer(args.Player, TShock.Config.NPCSpawnAbuseReason);
+            return TShock.Utils.HandleGriefer(args.Player, TShock.Config.NPCSpawnAbuseReason);
         }
 
         private static bool HandlePlayerUpdate(GetDataHandlerArgs args)
@@ -592,12 +604,12 @@ namespace TShockAPI
 
             if (plr != args.Player.Index)
             {
-                return Tools.HandleGriefer(args.Player, TShock.Config.UpdatePlayerAbuseReason);
+                return TShock.Utils.HandleGriefer(args.Player, TShock.Config.UpdatePlayerAbuseReason);
             }
 
             if (item < 0 || item >= args.TPlayer.inventory.Length)
             {
-                Tools.HandleGriefer(args.Player, TShock.Config.UpdatePlayerAbuseReason);
+                TShock.Utils.HandleGriefer(args.Player, TShock.Config.UpdatePlayerAbuseReason);
                 return true;
             }
 
@@ -618,29 +630,36 @@ namespace TShockAPI
 
             if (ident > Main.maxProjectiles || ident < 0)
             {
-                Tools.HandleGriefer(args.Player, TShock.Config.ExplosiveAbuseReason);
+                TShock.Utils.HandleGriefer(args.Player, TShock.Config.ExplosiveAbuseReason);
                 return true;
             }
 
-            if (type == 23 && float.IsNaN((float)Math.Sqrt((double)(velx * velx + vely * vely))))
+            if (type == 23)
             {
-                Tools.HandleGriefer(args.Player, TShock.Config.ProjectileAbuseReason);
-                return true;
+                if (velx == 0f && vely == 0f && dmg == 99)
+                {
+                    TShock.Utils.HandleGriefer(args.Player, TShock.Config.ProjectileAbuseReason);
+                    return true;
+                }
+                else if (velx == 0f || vely == 0f)
+                    return true;
             }
 
-            if (type == 29 || type == 28 || type == 37)
+
+            if (type == 29 || type == 28 || type == 37) //need more explosives from 1.1
             {
                 Log.Debug(string.Format("Explosive(PlyXY:{0}_{1}, Type:{2})", args.Player.TileX, args.Player.TileY, type));
                 if (TShock.Config.DisableExplosives && (!args.Player.Group.HasPermission(Permissions.useexplosives) || !args.Player.Group.HasPermission(Permissions.ignoregriefdetection)))
                 {
                     Main.projectile[ident].type = 0;
+                    Main.projectile[ident].owner = 255;
                     args.Player.SendData(PacketTypes.ProjectileNew, "", ident);
                     args.Player.SendMessage("Explosives are disabled!", Color.Red);
                     args.Player.LastExplosive = DateTime.UtcNow;
                     //return true;
                 }
                 else
-                    return Tools.HandleExplosivesUser(args.Player, TShock.Config.ExplosiveAbuseReason);
+                    return TShock.Utils.HandleExplosivesUser(args.Player, TShock.Config.ExplosiveAbuseReason);
             }
             return false;
         }
@@ -648,12 +667,27 @@ namespace TShockAPI
         private static bool HandlePlayerKillMe(GetDataHandlerArgs args)
         {
             byte id = args.Data.ReadInt8();
+            byte direction = args.Data.ReadInt8();
+            short dmg = args.Data.ReadInt16();
+            bool pvp = args.Data.ReadInt8() == 0;
+            int textlength = (int)(args.Data.Length - args.Data.Position - 1);
+            string deathtext = "";
+            if (textlength > 0)
+            {
+                deathtext = Encoding.ASCII.GetString(args.Data.ReadBytes(textlength));
+                if (!TShock.Utils.ValidString(deathtext))
+                {
+                    TShock.Utils.HandleGriefer(args.Player, "Death text exploit.");
+                    return true;
+                }
+            }
             if (id != args.Player.Index)
             {
-                return Tools.HandleGriefer(args.Player, TShock.Config.KillMeAbuseReason);
+                return TShock.Utils.HandleGriefer(args.Player, TShock.Config.KillMeAbuseReason);
             }
             args.Player.LastDeath = DateTime.Now;
-            args.Player.ForceSpawn = true;
+            if (args.Player.Difficulty != 2)
+                args.Player.ForceSpawn = true;
             return false;
         }
 
@@ -702,14 +736,14 @@ namespace TShockAPI
             if (lava && !args.Player.Group.HasPermission(Permissions.canlava))
             {
                 args.Player.SendMessage("You do not have permission to use lava", Color.Red);
-                Tools.SendLogs(string.Format("{0} tried using lava", args.Player.Name), Color.Red);
+                TShock.Utils.SendLogs(string.Format("{0} tried using lava", args.Player.Name), Color.Red);
                 args.Player.SendTileSquare(x, y);
                 return true;
             }
             if (!lava && !args.Player.Group.HasPermission(Permissions.canwater))
             {
                 args.Player.SendMessage("You do not have permission to use water", Color.Red);
-                Tools.SendLogs(string.Format("{0} tried using water", args.Player.Name), Color.Red);
+                TShock.Utils.SendLogs(string.Format("{0} tried using water", args.Player.Name), Color.Red);
                 args.Player.SendTileSquare(x, y);
                 return true;
             }
@@ -719,13 +753,13 @@ namespace TShockAPI
                 Log.Debug(string.Format("{0}(PlyXY:{1}_{2}, TileXY:{3}_{4}, Result:{5}_{6}, Amount:{7})",
                                         lava ? "Lava" : "Water", plyX, plyY, tileX, tileY,
                                         Math.Abs(plyX - tileX), Math.Abs(plyY - tileY), liquid));
-                return Tools.HandleGriefer(args.Player, TShock.Config.IllogicalLiquidUseReason); ;
+                return TShock.Utils.HandleGriefer(args.Player, TShock.Config.IllogicalLiquidUseReason); ;
             }
             if (TShock.Config.RangeChecks && ((Math.Abs(plyX - tileX) > 32) || (Math.Abs(plyY - tileY) > 32)))
             {
                 Log.Debug(string.Format("Liquid(PlyXY:{0}_{1}, TileXY:{2}_{3}, Result:{4}_{5}, Amount:{6})",
                                         plyX, plyY, tileX, tileY, Math.Abs(plyX - tileX), Math.Abs(plyY - tileY), liquid));
-                return Tools.HandleGriefer(args.Player, TShock.Config.LiquidAbuseReason);
+                return TShock.Utils.HandleGriefer(args.Player, TShock.Config.LiquidAbuseReason);
             }
 
             if (TShock.Config.SpawnProtection)
@@ -753,11 +787,11 @@ namespace TShockAPI
             if (tilex < 0 || tilex >= Main.maxTilesX || tiley < 0 || tiley >= Main.maxTilesY)
                 return false;
 
-            if (Main.tile[tilex, tiley].type != 0x15 && (!Tools.MaxChests() && Main.tile[tilex, tiley].type != 0)) //Chest
+            if (Main.tile[tilex, tiley].type != 0x15 && (!TShock.Utils.MaxChests() && Main.tile[tilex, tiley].type != 0)) //Chest
             {
                 Log.Debug(string.Format("TileKill(TileXY:{0}_{1}, Type:{2})",
                                         tilex, tiley, Main.tile[tilex, tiley].type));
-                Tools.ForceKick(args.Player, string.Format(TShock.Config.TileKillAbuseReason, Main.tile[tilex, tiley].type));
+                TShock.Utils.ForceKick(args.Player, string.Format(TShock.Config.TileKillAbuseReason, Main.tile[tilex, tiley].type));
                 return true;
             }
             if (!args.Player.Group.HasPermission(Permissions.canbuild))
@@ -811,12 +845,12 @@ namespace TShockAPI
                     {
                         if (TShock.Config.BanOnMediumcoreDeath)
                         {
-                            if (!Tools.Ban(args.Player, TShock.Config.MediumcoreBanReason))
-                                Tools.ForceKick(args.Player, "Death results in a ban, but can't ban you");
+                            if (!TShock.Utils.Ban(args.Player, TShock.Config.MediumcoreBanReason))
+                                TShock.Utils.ForceKick(args.Player, "Death results in a ban, but can't ban you");
                         }
                         else
                         {
-                            Tools.ForceKick(args.Player, TShock.Config.MediumcoreKickReason);
+                            TShock.Utils.ForceKick(args.Player, TShock.Config.MediumcoreKickReason);
                         }
                         return true;
                     }
@@ -837,7 +871,7 @@ namespace TShockAPI
             
             if (TShock.Config.RangeChecks && ((Math.Abs(args.Player.TileX - x) > 32) || (Math.Abs(args.Player.TileY - y) > 32)))
             {
-                return Tools.HandleGriefer(args.Player, TShock.Config.RangeCheckBanReason);
+                return TShock.Utils.HandleGriefer(args.Player, TShock.Config.RangeCheckBanReason);
             }
 
             if (!args.Player.Group.HasPermission(Permissions.manageregion) && !TShock.Regions.CanBuild(x, y, args.Player, out Owner) && TShock.Regions.InArea(x, y, out RegionName))
@@ -860,7 +894,7 @@ namespace TShockAPI
             
             if (TShock.Config.RangeChecks && ((Math.Abs(args.Player.TileX - x) > 32) || (Math.Abs(args.Player.TileY - y) > 32)))
             {
-                return Tools.HandleGriefer(args.Player, TShock.Config.RangeCheckBanReason);
+                return TShock.Utils.HandleGriefer(args.Player, TShock.Config.RangeCheckBanReason);
             }
             
             if (!args.Player.Group.HasPermission(Permissions.manageregion) && !TShock.Regions.CanBuild(x, y, args.Player, out Owner) && TShock.Regions.InArea(x, y, out RegionName))
@@ -880,7 +914,7 @@ namespace TShockAPI
 
             if (args.Player.RequestedSection)
             {
-                Tools.ForceKick(args.Player, "Requested sections more than once.");
+                TShock.Utils.ForceKick(args.Player, "Requested sections more than once.");
                 return true;
             }
             args.Player.RequestedSection = true;

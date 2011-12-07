@@ -1,4 +1,4 @@
-/*   
+/*
 TShock, a server mod for Terraria
 Copyright (C) 2011 The TShock Team
 
@@ -18,14 +18,15 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 using System;
 using System.Collections.Generic;
 using System.Diagnostics;
+
 using System.IO;
 using System.Linq;
 using System.Net;
 using System.Text;
 using System.Threading;
-using Microsoft.Xna.Framework;
 using Terraria;
 using TShockAPI.DB;
+using Region = TShockAPI.DB.Region;
 
 namespace TShockAPI
 {
@@ -35,7 +36,7 @@ namespace TShockAPI
         public string Message { get; private set; }
         public TSPlayer Player { get; private set; }
         /// <summary>
-        /// Parameters passed to the arguement. Does not include the command name. 
+        /// Parameters passed to the arguement. Does not include the command name.
         /// IE '/kick "jerk face"' will only have 1 argument
         /// </summary>
         public List<string> Parameters { get; private set; }
@@ -126,18 +127,24 @@ namespace TShockAPI
             add(Permissions.maintenance, CheckUpdates, "checkupdates");
             add(Permissions.causeevents, DropMeteor, "dropmeteor");
             add(Permissions.causeevents, Star, "star");
+            add(Permissions.causeevents, Fullmoon, "fullmoon");
             add(Permissions.causeevents, Bloodmoon, "bloodmoon");
             add(Permissions.causeevents, Invade, "invade");
             add(Permissions.spawnboss, Eater, "eater");
             add(Permissions.spawnboss, Eye, "eye");
             add(Permissions.spawnboss, King, "king");
             add(Permissions.spawnboss, Skeletron, "skeletron");
+            add(Permissions.spawnboss, WoF, "wof", "wallofflesh");
+            add(Permissions.spawnboss, Twins, "twins");
+            add(Permissions.spawnboss, Destroyer, "destroyer");
+            add(Permissions.spawnboss, SkeletronPrime, "skeletronp", "prime");
             add(Permissions.spawnboss, Hardcore, "hardcore");
             add(Permissions.spawnmob, SpawnMob, "spawnmob", "sm");
             add(Permissions.tp, Home, "home");
             add(Permissions.tp, Spawn, "spawn");
             add(Permissions.tp, TP, "tp");
             add(Permissions.tphere, TPHere, "tphere");
+            add(Permissions.tphere, SendWarp, "sendwarp", "sw");
             add(Permissions.warp, UseWarp, "warp");
             add(Permissions.managewarp, SetWarp, "setwarp");
             add(Permissions.managewarp, DeleteWarp, "delwarp");
@@ -152,6 +159,7 @@ namespace TShockAPI
             add(Permissions.cfg, ShowConfiguration, "showconfig");
             add(Permissions.cfg, ServerPassword, "serverpassword");
             add(Permissions.cfg, Save, "save");
+            add(Permissions.cfg, Settle, "settle");
             add(Permissions.cfg, MaxSpawns, "maxspawns");
             add(Permissions.cfg, SpawnRate, "spawnrate");
             add(Permissions.time, Time, "time");
@@ -165,6 +173,7 @@ namespace TShockAPI
             add(null, AuthToken, "auth");
             add(null, ThirdPerson, "me");
             add(null, PartyChat, "p");
+            add(null, Motd, "motd");
             add(null, Rules, "rules");
             add(Permissions.logs, DisplayLogs, "displaylogs");
             add(Permissions.chat, DisplayChat, "displaychat");
@@ -183,6 +192,7 @@ namespace TShockAPI
             add(Permissions.butcher, Butcher, "butcher");
             add(Permissions.item, Item, "item", "i");
             add(Permissions.item, Give, "give");
+            add(Permissions.clearitems, ClearItems, "clearitems");
             add(Permissions.heal, Heal, "heal");
             add(Permissions.buff, Buff, "buff");
 			add(Permissions.buffplayer, GBuff, "gbuff", "buffplayer");
@@ -202,6 +212,11 @@ namespace TShockAPI
             add(null, GroupChat, "g");
             add(null, Question, "?");
             add(null, Items, "items");
+            add(Permissions.buffplayer, GBuff, "gbuff", "buffplayer");
+            add(Permissions.grow, Grow, "grow");
+            add(Permissions.hardmode, StartHardMode, "hardmode");
+            add(Permissions.hardmode, DisableHardMode, "stophardmode", "disablehardmode");
+        	add(Permissions.cfg, ServerInfo, "stats");
         }
 
         public static bool HandleCommand(TSPlayer player, string text)
@@ -222,13 +237,13 @@ namespace TShockAPI
 
             if (!cmd.CanRun(player))
             {
-                Tools.SendLogs(string.Format("{0} tried to execute {1}", player.Name, cmd.Name), Color.Red);
+                TShock.Utils.SendLogs(string.Format("{0} tried to execute {1}", player.Name, cmd.Name), Color.Red);
                 player.SendMessage("You do not have access to that command.", Color.Red);
             }
             else
             {
                 if (cmd.DoLog)
-                    Tools.SendLogs(string.Format("{0} executed: /{1}", player.Name, cmdText), Color.Red);
+                    TShock.Utils.SendLogs(string.Format("{0} executed: /{1}", player.Name, cmdText), Color.Red);
                 cmd.Run(cmdText, player, args);
             }
             return true;
@@ -324,7 +339,7 @@ namespace TShockAPI
             if (args.Player.LoginAttempts > TShock.Config.MaximumLoginAttempts && (TShock.Config.MaximumLoginAttempts != -1))
             {
                 Log.Warn(args.Player.IP + "(" + args.Player.Name + ") had " + TShock.Config.MaximumLoginAttempts + " or more invalid login attempts and was kicked automatically.");
-                Tools.Kick(args.Player, "Too many invalid login attempts.");
+                TShock.Utils.Kick(args.Player, "Too many invalid login attempts.");
             }
 
             if (args.Parameters.Count != 1)
@@ -335,7 +350,7 @@ namespace TShockAPI
             }
             try
             {
-                string encrPass = Tools.HashPassword(args.Parameters[0]);
+                string encrPass = TShock.Utils.HashPassword(args.Parameters[0]);
                 var user = TShock.Users.GetUserByName(args.Player.Name);
                 if (user == null)
                 {
@@ -343,7 +358,7 @@ namespace TShockAPI
                 }
                 else if (user.Password.ToUpper() == encrPass.ToUpper())
                 {
-                    args.Player.Group = Tools.GetGroup(user.Group);
+                    args.Player.Group = TShock.Utils.GetGroup(user.Group);
                     args.Player.UserAccountName = args.Player.Name;
                     args.Player.UserID = TShock.Users.GetUserID(args.Player.UserAccountName);
                     args.Player.IsLoggedIn = true;
@@ -369,13 +384,12 @@ namespace TShockAPI
 
         private static void PasswordUser(CommandArgs args)
         {
-
             try
             {
                 if (args.Player.IsLoggedIn && args.Parameters.Count == 2)
                 {
                     var user = TShock.Users.GetUserByName(args.Player.UserAccountName);
-                    string encrPass = Tools.HashPassword(args.Parameters[0]);
+                    string encrPass = TShock.Utils.HashPassword(args.Parameters[0]);
                     if (user.Password.ToUpper() == encrPass.ToUpper())
                     {
                         args.Player.SendMessage("You changed your password!", Color.Green);
@@ -448,6 +462,13 @@ namespace TShockAPI
             //    args.Player.SendMessage("Note: Passwords are stored with SHA512 hashing. To reset a user's password, remove and re-add them.");
             //    return;
             //}
+
+            // This guy needs to be here so that people don't get exceptions when they type /user
+            if (args.Parameters.Count < 1)
+            {
+                args.Player.SendMessage("Invalid user syntax. Try /user help.", Color.Red);
+                return;
+            }
 
             string subcmd = args.Parameters[0];
 
@@ -598,10 +619,21 @@ namespace TShockAPI
         }
         #endregion
 
+		#region Stupid commands
+		public static void ServerInfo(CommandArgs args)
+		{
+			args.Player.SendMessage("Memory usage: " + System.Diagnostics.Process.GetCurrentProcess().WorkingSet64);
+			args.Player.SendMessage("Allocated memory: " + System.Diagnostics.Process.GetCurrentProcess().VirtualMemorySize64);
+			args.Player.SendMessage("Total processor time: " + System.Diagnostics.Process.GetCurrentProcess().TotalProcessorTime);
+			args.Player.SendMessage("Ver: " + System.Environment.OSVersion);
+			args.Player.SendMessage("Proc count: " + System.Environment.ProcessorCount);
+			args.Player.SendMessage("Machine name: " + System.Environment.MachineName);
+		}
+		#endregion
 
-        #region Player Management Commands
+		#region Player Management Commands
 
-        private static void GrabUserUserInfo(CommandArgs args)
+		private static void GrabUserUserInfo(CommandArgs args)
         {
             if (args.Parameters.Count < 1)
             {
@@ -609,7 +641,7 @@ namespace TShockAPI
                 return;
             }
 
-            var players = Tools.FindPlayer(args.Parameters[0]);
+            var players = TShock.Utils.FindPlayer(args.Parameters[0]);
             if (players.Count > 1)
             {
                 args.Player.SendMessage("More than one player matched your query.", Color.Red);
@@ -647,12 +679,12 @@ namespace TShockAPI
                         TShock.Inventory.UpdateInventory(player);
                     }
                 }
-                Tools.ForceKickAll("Reboot!");
+                TShock.Utils.ForceKickAll("Reboot!");
                 return;
             }
             
             string plStr = args.Parameters[0];
-            var players = Tools.FindPlayer(plStr);
+            var players = TShock.Utils.FindPlayer(plStr);
             if (players.Count == 0)
             {
                 args.Player.SendMessage("Invalid player!", Color.Red);
@@ -665,7 +697,7 @@ namespace TShockAPI
             {
                 TShock.Inventory.UpdateInventory(players[0]);
                 string reason = args.Parameters.Count > 1 ? String.Join(" ", args.Parameters.GetRange(1, args.Parameters.Count - 1)) : "Misbehaviour.";
-                if (!Tools.Kick(players[0], reason))
+                if (!TShock.Utils.Kick(players[0], reason))
                 {
                     args.Player.SendMessage("You can't kick another admin!", Color.Red);
                 }
@@ -686,7 +718,7 @@ namespace TShockAPI
             }
 
             string plStr = args.Parameters[0];
-            var players = Tools.FindPlayer(plStr);
+            var players = TShock.Utils.FindPlayer(plStr);
             if (players.Count == 0)
             {
                 args.Player.SendMessage("Invalid player!", Color.Red);
@@ -698,7 +730,7 @@ namespace TShockAPI
             else
             {
                 string reason = args.Parameters.Count > 1 ? String.Join(" ", args.Parameters.GetRange(1, args.Parameters.Count - 1)) : "Misbehaviour.";
-                if (!Tools.Ban(players[0], reason, args.Player.Name))
+                if (!TShock.Utils.Ban(players[0], reason, args.Player.Name))
                 {
                     args.Player.SendMessage("You can't ban another admin!", Color.Red);
                 }
@@ -835,7 +867,7 @@ namespace TShockAPI
         {
             if (args.Parameters.Count == 1)
             {
-                using (var tw = new StreamWriter(FileTools.WhitelistPath, true))
+                using (var tw = new StreamWriter(FileTool.WhitelistPath, true))
                 {
                     tw.WriteLine(args.Parameters[0]);
                 }
@@ -893,20 +925,20 @@ namespace TShockAPI
                 message += " " + args.Parameters[i];
             }
 
-            Tools.Broadcast("(Server Broadcast)" + message, Color.Red);
+            TShock.Utils.Broadcast("(Server Broadcast)" + message, Color.Red);
             return;
         }
 
         private static void Off(CommandArgs args)
         {
-            Tools.ForceKickAll("Server shutting down!");
+            TShock.Utils.ForceKickAll("Server shutting down!");
             WorldGen.saveWorld();
             Netplay.disconnect = true;
         }
 
         private static void OffNoSave(CommandArgs args)
         {
-            Tools.ForceKickAll("Server shutting down!");
+            TShock.Utils.ForceKickAll("Server shutting down!");
             Netplay.disconnect = true;
         }
 
@@ -943,10 +975,9 @@ namespace TShockAPI
 
             Process.Start(new ProcessStartInfo("UpdateTShock.exe"));
 
-            Tools.ForceKickAll("Server shutting down for update!");
+            TShock.Utils.ForceKickAll("Server shutting down for update!");
             WorldGen.saveWorld();
             Netplay.disconnect = true;
-
         }
 
         #endregion Server Maintenence Commands
@@ -974,23 +1005,29 @@ namespace TShockAPI
             speedY *= penis61;
             Projectile.NewProjectile(vector.X, vector.Y, speedX, speedY, 12, 0x3e8, 10f, Main.myPlayer);
         }
+        
+        private static void Fullmoon(CommandArgs args)
+        {
+            TSPlayer.Server.SetFullMoon(true);
+            TShock.Utils.Broadcast(string.Format("{0} turned on full moon.", args.Player.Name));
+        }
 
         private static void Bloodmoon(CommandArgs args)
         {
             TSPlayer.Server.SetBloodMoon(true);
-            Tools.Broadcast(string.Format("{0} turned on blood moon.", args.Player.Name));
+            TShock.Utils.Broadcast(string.Format("{0} turned on blood moon.", args.Player.Name));
         }
 
         private static void Invade(CommandArgs args)
         {
             if (Main.invasionSize <= 0)
             {
-                Tools.Broadcast(string.Format("{0} has started an invasion.", args.Player.Name));
+                TShock.Utils.Broadcast(string.Format("{0} has started an invasion.", args.Player.Name));
                 TShock.StartInvasion();
             }
             else
             {
-                Tools.Broadcast(string.Format("{0} has ended an invasion.", args.Player.Name));
+                TShock.Utils.Broadcast(string.Format("{0} has ended an invasion.", args.Player.Name));
                 Main.invasionSize = 0;
             }
         }
@@ -1009,9 +1046,9 @@ namespace TShockAPI
                 return;
             }
             amount = Math.Min(amount, Main.maxNPCs);
-            NPC eater = Tools.GetNPCById(13);
+            NPC eater = TShock.Utils.GetNPCById(13);
             TSPlayer.Server.SpawnNPC(eater.type, eater.name, amount, args.Player.TileX, args.Player.TileY);
-            Tools.Broadcast(string.Format("{0} has spawned eater of worlds {1} times!", args.Player.Name, amount));
+            TShock.Utils.Broadcast(string.Format("{0} has spawned eater of worlds {1} times!", args.Player.Name, amount));
         }
 
         private static void Eye(CommandArgs args)
@@ -1028,10 +1065,10 @@ namespace TShockAPI
                 return;
             }
             amount = Math.Min(amount, Main.maxNPCs);
-            NPC eye = Tools.GetNPCById(4);
+            NPC eye = TShock.Utils.GetNPCById(4);
             TSPlayer.Server.SetTime(false, 0.0);
             TSPlayer.Server.SpawnNPC(eye.type, eye.name, amount, args.Player.TileX, args.Player.TileY);
-            Tools.Broadcast(string.Format("{0} has spawned eye {1} times!", args.Player.Name, amount));
+            TShock.Utils.Broadcast(string.Format("{0} has spawned eye {1} times!", args.Player.Name, amount));
         }
 
         private static void King(CommandArgs args)
@@ -1048,9 +1085,9 @@ namespace TShockAPI
                 return;
             }
             amount = Math.Min(amount, Main.maxNPCs);
-            NPC king = Tools.GetNPCById(50);
+            NPC king = TShock.Utils.GetNPCById(50);
             TSPlayer.Server.SpawnNPC(king.type, king.name, amount, args.Player.TileX, args.Player.TileY);
-            Tools.Broadcast(string.Format("{0} has spawned king slime {1} times!", args.Player.Name, amount));
+            TShock.Utils.Broadcast(string.Format("{0} has spawned king slime {1} times!", args.Player.Name, amount));
         }
 
         private static void Skeletron(CommandArgs args)
@@ -1067,13 +1104,86 @@ namespace TShockAPI
                 return;
             }
             amount = Math.Min(amount, Main.maxNPCs);
-            NPC skeletron = Tools.GetNPCById(35);
+            NPC skeletron = TShock.Utils.GetNPCById(35);
             TSPlayer.Server.SetTime(false, 0.0);
             TSPlayer.Server.SpawnNPC(skeletron.type, skeletron.name, amount, args.Player.TileX, args.Player.TileY);
-            Tools.Broadcast(string.Format("{0} has spawned skeletron {1} times!", args.Player.Name, amount));
+            TShock.Utils.Broadcast(string.Format("{0} has spawned skeletron {1} times!", args.Player.Name, amount));
         }
 
-        private static void Hardcore(CommandArgs args)
+        private static void WoF(CommandArgs args)
+        {
+            if (Main.wof >= 0 || (args.Player.Y / 16f < (float)(Main.maxTilesY - 205)))
+            {
+                args.Player.SendMessage("Can't spawn Wall of Flesh!", Color.Red);
+                return;
+            }
+            NPC.SpawnWOF(new Microsoft.Xna.Framework.Vector2(args.Player.X, args.Player.Y));
+            TShock.Utils.Broadcast(string.Format("{0} has spawned Wall of Flesh!", args.Player.Name));
+        }
+        
+        private static void Twins(CommandArgs args)
+        {
+            if (args.Parameters.Count > 1)
+            {
+                args.Player.SendMessage("Invalid syntax! Proper syntax: /twins [amount]", Color.Red);
+                return;
+            }
+            int amount = 1;
+            if (args.Parameters.Count == 1 && !int.TryParse(args.Parameters[0], out amount))
+            {
+                args.Player.SendMessage("Invalid syntax! Proper syntax: /twins [amount]", Color.Red);
+                return;
+            }
+            amount = Math.Min(amount, Main.maxNPCs);
+            NPC retinazer = TShock.Utils.GetNPCById(125);
+            NPC spaz = TShock.Utils.GetNPCById(126);
+            TSPlayer.Server.SetTime(false, 0.0);
+            TSPlayer.Server.SpawnNPC(retinazer.type, retinazer.name, amount, args.Player.TileX, args.Player.TileY);
+            TSPlayer.Server.SpawnNPC(spaz.type, spaz.name, amount, args.Player.TileX, args.Player.TileY);
+            TShock.Utils.Broadcast(string.Format("{0} has spawned the twins {1} times!", args.Player.Name, amount));
+        }
+
+        private static void Destroyer(CommandArgs args)
+        {
+            if (args.Parameters.Count > 1)
+            {
+                args.Player.SendMessage("Invalid syntax! Proper syntax: /destroyer [amount]", Color.Red);
+                return;
+            }
+            int amount = 1;
+            if (args.Parameters.Count == 1 && !int.TryParse(args.Parameters[0], out amount))
+            {
+                args.Player.SendMessage("Invalid syntax! Proper syntax: /destroyer [amount]", Color.Red);
+                return;
+            }
+            amount = Math.Min(amount, Main.maxNPCs);
+            NPC destroyer = TShock.Utils.GetNPCById(134);
+            TSPlayer.Server.SetTime(false, 0.0);
+            TSPlayer.Server.SpawnNPC(destroyer.type, destroyer.name, amount, args.Player.TileX, args.Player.TileY);
+            TShock.Utils.Broadcast(string.Format("{0} has spawned the destroyer {1} times!", args.Player.Name, amount));
+        }
+
+        private static void SkeletronPrime(CommandArgs args)
+        {
+            if (args.Parameters.Count > 1)
+            {
+                args.Player.SendMessage("Invalid syntax! Proper syntax: /prime [amount]", Color.Red);
+                return;
+            }
+            int amount = 1;
+            if (args.Parameters.Count == 1 && !int.TryParse(args.Parameters[0], out amount))
+            {
+                args.Player.SendMessage("Invalid syntax! Proper syntax: /prime [amount]", Color.Red);
+                return;
+            }
+            amount = Math.Min(amount, Main.maxNPCs);
+            NPC prime = TShock.Utils.GetNPCById(127);
+            TSPlayer.Server.SetTime(false, 0.0);
+            TSPlayer.Server.SpawnNPC(prime.type, prime.name, amount, args.Player.TileX, args.Player.TileY);
+            TShock.Utils.Broadcast(string.Format("{0} has spawned skeletron prime {1} times!", args.Player.Name, amount));
+        }
+
+        private static void Hardcore(CommandArgs args) // TODO: Add all 8 bosses
         {
             if (args.Parameters.Count > 1)
             {
@@ -1087,16 +1197,24 @@ namespace TShockAPI
                 return;
             }
             amount = Math.Min(amount, Main.maxNPCs / 4);
-            NPC eater = Tools.GetNPCById(13);
-            NPC eye = Tools.GetNPCById(4);
-            NPC king = Tools.GetNPCById(50);
-            NPC skeletron = Tools.GetNPCById(35);
+            NPC retinazer = TShock.Utils.GetNPCById(125);
+            NPC spaz = TShock.Utils.GetNPCById(126);
+            NPC destroyer = TShock.Utils.GetNPCById(134);
+            NPC prime = TShock.Utils.GetNPCById(127);
+            NPC eater = TShock.Utils.GetNPCById(13);
+            NPC eye = TShock.Utils.GetNPCById(4);
+            NPC king = TShock.Utils.GetNPCById(50);
+            NPC skeletron = TShock.Utils.GetNPCById(35);
             TSPlayer.Server.SetTime(false, 0.0);
+            TSPlayer.Server.SpawnNPC(retinazer.type, retinazer.name, amount, args.Player.TileX, args.Player.TileY);
+            TSPlayer.Server.SpawnNPC(spaz.type, spaz.name, amount, args.Player.TileX, args.Player.TileY);
+            TSPlayer.Server.SpawnNPC(destroyer.type, destroyer.name, amount, args.Player.TileX, args.Player.TileY);
+            TSPlayer.Server.SpawnNPC(prime.type, prime.name, amount, args.Player.TileX, args.Player.TileY);
             TSPlayer.Server.SpawnNPC(eater.type, eater.name, amount, args.Player.TileX, args.Player.TileY);
             TSPlayer.Server.SpawnNPC(eye.type, eye.name, amount, args.Player.TileX, args.Player.TileY);
             TSPlayer.Server.SpawnNPC(king.type, king.name, amount, args.Player.TileX, args.Player.TileY);
             TSPlayer.Server.SpawnNPC(skeletron.type, skeletron.name, amount, args.Player.TileX, args.Player.TileY);
-            Tools.Broadcast(string.Format("{0} has spawned all bosses {1} times!", args.Player.Name, amount));
+            TShock.Utils.Broadcast(string.Format("{0} has spawned all bosses {1} times!", args.Player.Name, amount));
         }
 
         private static void SpawnMob(CommandArgs args)
@@ -1120,7 +1238,7 @@ namespace TShockAPI
 
             amount = Math.Min(amount, Main.maxNPCs);
 
-            var npcs = Tools.GetNPCByIdOrName(args.Parameters[0]);
+            var npcs = TShock.Utils.GetNPCByIdOrName(args.Parameters[0]);
             if (npcs.Count == 0)
             {
                 args.Player.SendMessage("Invalid mob type!", Color.Red);
@@ -1132,14 +1250,26 @@ namespace TShockAPI
             else
             {
                 var npc = npcs[0];
-                if (npc.type >= 1 && npc.type < Main.maxNPCTypes)
+                if (npc.type >= 1 && npc.type < Main.maxNPCTypes && npc.type != 113) //Do not allow WoF to spawn, in certain conditions may cause loops in client
                 {
                     TSPlayer.Server.SpawnNPC(npc.type, npc.name, amount, args.Player.TileX, args.Player.TileY, 50, 20);
-                    Tools.Broadcast(string.Format("{0} was spawned {1} time(s).", npc.name, amount));
+                    TShock.Utils.Broadcast(string.Format("{0} was spawned {1} time(s).", npc.name, amount));
                 }
+                else if (npc.type == 113)
+                    args.Player.SendMessage("Sorry, you can't spawn Wall of Flesh! Try /wof instead."); // Maybe perhaps do something with WorldGen.SpawnWoF?
                 else
                     args.Player.SendMessage("Invalid mob type!", Color.Red);
             }
+        }
+
+        private static void StartHardMode(CommandArgs args)
+        {
+            WorldGen.StartHardmode();
+        }
+
+        private static void DisableHardMode(CommandArgs args)
+        {
+            Main.hardMode = false;
         }
 
         #endregion Cause Events and Spawn Monsters Commands
@@ -1194,7 +1324,7 @@ namespace TShockAPI
                 else
                 {
                     string plStr = String.Join(" ", args.Parameters);
-                    var players = Tools.FindPlayer(plStr);
+                    var players = TShock.Utils.FindPlayer(plStr);
                     if (players.Count == 0)
                         args.Player.SendMessage("Invalid player!", Color.Red);
                     else if (players.Count > 1)
@@ -1255,7 +1385,7 @@ namespace TShockAPI
                 return;
             }
 
-            var players = Tools.FindPlayer(plStr);
+            var players = TShock.Utils.FindPlayer(plStr);
             if (players.Count == 0)
             {
                 args.Player.SendMessage("Invalid player!", Color.Red);
@@ -1273,6 +1403,42 @@ namespace TShockAPI
                     args.Player.SendMessage(string.Format("You brought {0} here.", plr.Name));
                 }
 
+            }
+        }
+
+        private static void SendWarp(CommandArgs args)
+        {
+            if (args.Parameters.Count < 2)
+            {
+                args.Player.SendMessage("Invalid syntax! Proper syntax: /sendwarp [player] [warpname]", Color.Red);
+                return;
+            }
+
+            var foundplr = TShock.Utils.FindPlayer(args.Parameters[0]);
+            if (foundplr.Count == 0)
+            {
+                args.Player.SendMessage("Invalid player!", Color.Red);
+                return;
+            }
+            else if (foundplr.Count > 1)
+            {
+                args.Player.SendMessage(string.Format("More than one ({0}) player matched!", args.Parameters.Count), Color.Red);
+                return;
+            }
+            string warpName = String.Join(" ", args.Parameters[1]);
+            var warp = TShock.Warps.FindWarp(warpName);
+            var plr = foundplr[0];
+            if (warp.WarpPos != Vector2.Zero)
+            {
+                if (plr.Teleport((int)warp.WarpPos.X, (int)warp.WarpPos.Y + 3))
+                {
+                    plr.SendMessage(string.Format("{0} Warped you to {1}", args.Player.Name, warpName), Color.Yellow);
+                    args.Player.SendMessage(string.Format("You warped {0} to {1}.", plr.Name, warpName), Color.Yellow);
+                }
+            }
+            else
+            {
+                args.Player.SendMessage("Specified warp not found", Color.Red);
             }
         }
 
@@ -1404,7 +1570,7 @@ namespace TShockAPI
                 if (warp.WarpPos != Vector2.Zero)
                 {
                     if (warpName.ToLower().Contains("pvp"))
-                        Tools.Broadcast(string.Format("{0} teleported to PVP arena and wants to kick your ass!!!", args.Player.Name), Color.SkyBlue);
+                        TShock.Utils.Broadcast(string.Format("{0} teleported to PVP arena and wants to kick your ass!!!", args.Player.Name), Color.SkyBlue);
                     if (args.Player.Teleport((int)warp.WarpPos.X, (int)warp.WarpPos.Y + 3))
                         args.Player.SendMessage("Warped to " + warpName, Color.Yellow);
                 }
@@ -1413,7 +1579,6 @@ namespace TShockAPI
                     args.Player.SendMessage("Specified warp not found", Color.Red);
                 }
             }
-
         }
 
         #endregion Teleport Commands
@@ -1490,7 +1655,7 @@ namespace TShockAPI
         {
             if (args.Parameters.Count > 0)
             {
-                var items = Tools.GetItemByIdOrName(args.Parameters[0]);
+                var items = TShock.Utils.GetItemByIdOrName(args.Parameters[0]);
                 if (items.Count == 0)
                 {
                     args.Player.SendMessage("Invalid item type!", Color.Red);
@@ -1523,7 +1688,7 @@ namespace TShockAPI
         {
             if (args.Parameters.Count > 0)
             {
-                var items = Tools.GetItemByIdOrName(args.Parameters[0]);
+                var items = TShock.Utils.GetItemByIdOrName(args.Parameters[0]);
                 if (items.Count == 0)
                 {
                     args.Player.SendMessage("Invalid item type!", Color.Red);
@@ -1561,8 +1726,8 @@ namespace TShockAPI
             Main.spawnTileX = args.Player.TileX + 1;
             Main.spawnTileY = args.Player.TileY + 3;
 
-            Tools.Broadcast("Server map saving, potential lag spike");
-            Thread SaveWorld = new Thread(Tools.SaveWorld);
+            TShock.Utils.Broadcast("Server map saving, potential lag spike");
+            Thread SaveWorld = new Thread(TShock.Utils.SaveWorld);
             SaveWorld.Start();
         }
 
@@ -1590,7 +1755,7 @@ namespace TShockAPI
 
         private static void Reload(CommandArgs args)
         {
-            FileTools.SetupConfig();
+            FileTool.SetupConfig();
             TShock.Groups.LoadPermisions();
             TShock.Regions.ReloadAllRegions();
             args.Player.SendMessage("Configuration & Permissions reload complete. Some changes may require server restart.");
@@ -1610,8 +1775,8 @@ namespace TShockAPI
 
         private static void Save(CommandArgs args)
         {
-            Tools.Broadcast("Server map saving, potential lag spike");
-            Thread SaveWorld = new Thread(Tools.SaveWorld);
+            TShock.Utils.Broadcast("Server map saving, potential lag spike");
+            Thread SaveWorld = new Thread(TShock.Utils.SaveWorld);
             SaveWorld.Start();
             foreach (TSPlayer player in TShock.Players)
             {
@@ -1622,9 +1787,21 @@ namespace TShockAPI
             }
         }
 
-        private static void MaxSpawns(CommandArgs args)
+        private static void Settle(CommandArgs args)
         {
 
+            if (Liquid.panicMode)
+            {
+                args.Player.SendMessage("Liquid is already settling!", Color.Red);
+                return;
+            }
+            Liquid.StartPanic();
+            TShock.Utils.Broadcast("Settling all liquids...");
+
+        }
+
+        private static void MaxSpawns(CommandArgs args)
+        {
             if (args.Parameters.Count != 1)
             {
                 args.Player.SendMessage("Invalid syntax! Proper syntax: /maxspawns <maxspawns>", Color.Red);
@@ -1635,7 +1812,7 @@ namespace TShockAPI
             int.TryParse(args.Parameters[0], out amount);
             NPC.defaultMaxSpawns = amount;
             TShock.Config.DefaultMaximumSpawns = amount;
-            Tools.Broadcast(string.Format("{0} changed the maximum spawns to: {1}", args.Player.Name, amount));
+            TShock.Utils.Broadcast(string.Format("{0} changed the maximum spawns to: {1}", args.Player.Name, amount));
         }
 
         private static void SpawnRate(CommandArgs args)
@@ -1650,7 +1827,7 @@ namespace TShockAPI
             int.TryParse(args.Parameters[0], out amount);
             NPC.defaultSpawnRate = amount;
             TShock.Config.DefaultSpawnRate = amount;
-            Tools.Broadcast(string.Format("{0} changed the spawn rate to: {1}", args.Player.Name, amount));
+            TShock.Utils.Broadcast(string.Format("{0} changed the spawn rate to: {1}", args.Player.Name, amount));
         }
 
         #endregion Server Config Commands
@@ -1669,23 +1846,23 @@ namespace TShockAPI
             {
                 case "day":
                     TSPlayer.Server.SetTime(true, 150.0);
-                    Tools.Broadcast(string.Format("{0} set time to day.", args.Player.Name));
+                    TShock.Utils.Broadcast(string.Format("{0} set time to day.", args.Player.Name));
                     break;
                 case "night":
                     TSPlayer.Server.SetTime(false, 0.0);
-                    Tools.Broadcast(string.Format("{0} set time to night.", args.Player.Name));
+                    TShock.Utils.Broadcast(string.Format("{0} set time to night.", args.Player.Name));
                     break;
                 case "dusk":
                     TSPlayer.Server.SetTime(false, 0.0);
-                    Tools.Broadcast(string.Format("{0} set time to dusk.", args.Player.Name));
+                    TShock.Utils.Broadcast(string.Format("{0} set time to dusk.", args.Player.Name));
                     break;
                 case "noon":
                     TSPlayer.Server.SetTime(true, 27000.0);
-                    Tools.Broadcast(string.Format("{0} set time to noon.", args.Player.Name));
+                    TShock.Utils.Broadcast(string.Format("{0} set time to noon.", args.Player.Name));
                     break;
                 case "midnight":
                     TSPlayer.Server.SetTime(false, 16200.0);
-                    Tools.Broadcast(string.Format("{0} set time to midnight.", args.Player.Name));
+                    TShock.Utils.Broadcast(string.Format("{0} set time to midnight.", args.Player.Name));
                     break;
                 default:
                     args.Player.SendMessage("Invalid syntax! Proper syntax: /time <day/night/dusk/noon/midnight>", Color.Red);
@@ -1707,7 +1884,7 @@ namespace TShockAPI
             }
 
             string plStr = args.Parameters[0];
-            var players = Tools.FindPlayer(plStr);
+            var players = TShock.Utils.FindPlayer(plStr);
             if (players.Count == 0)
             {
                 args.Player.SendMessage("Invalid player!", Color.Red);
@@ -1726,10 +1903,10 @@ namespace TShockAPI
                 }
                 if (!args.Player.Group.HasPermission(Permissions.kill))
                 {
-                    damage = Tools.Clamp(damage, 15, 0);
+                    damage = TShock.Utils.Clamp(damage, 15, 0);
                 }
                 plr.DamagePlayer(damage);
-                Tools.Broadcast(string.Format("{0} slapped {1} for {2} damage.",
+                TShock.Utils.Broadcast(string.Format("{0} slapped {1} for {2} damage.",
                                 args.Player.Name, plr.Name, damage));
                 Log.Info(args.Player.Name + " slapped " + plr.Name + " with " + damage + " damage.");
             }
@@ -1742,13 +1919,13 @@ namespace TShockAPI
         private static void ToggleAntiBuild(CommandArgs args)
         {
             TShock.Config.DisableBuild = (TShock.Config.DisableBuild == false);
-            Tools.Broadcast(string.Format("Anti-build is now {0}.", (TShock.Config.DisableBuild ? "on" : "off")));
+            TShock.Utils.Broadcast(string.Format("Anti-build is now {0}.", (TShock.Config.DisableBuild ? "on" : "off")));
         }
 
         private static void ProtectSpawn(CommandArgs args)
         {
             TShock.Config.SpawnProtection = (TShock.Config.SpawnProtection == false);
-            Tools.Broadcast(string.Format("Spawn is now {0}.", (TShock.Config.SpawnProtection ? "protected" : "open")));
+            TShock.Utils.Broadcast(string.Format("Spawn is now {0}.", (TShock.Config.SpawnProtection ? "protected" : "open")));
         }
 
         private static void DebugRegions(CommandArgs args)
@@ -1775,6 +1952,14 @@ namespace TShockAPI
             }
             switch (cmd)
             {
+                case "name":
+                    {
+                        {
+                            args.Player.SendMessage("Hit a block to get the name of the region", Color.Yellow);
+                            args.Player.AwaitingName = true;
+                        }
+                        break;
+                    }
                 case "set":
                     {
                         int choice = 0;
@@ -2013,9 +2198,63 @@ namespace TShockAPI
                         {
                             args.Player.SendMessage("Invalid syntax! Proper syntax: /region info {region name}", Color.Red);
                         }
-
+                        break;
                     }
-                    break;
+                case "expand":
+                    {
+                        if (args.Parameters.Count == 4)
+                        {
+                            int direction;
+                            switch (args.Parameters[3])
+                            {
+                                case "u":
+                                case "up":
+                                    {
+                                        direction = 0;
+                                        break;
+                                    }
+                                case "r":
+                                case "right":
+                                    {
+                                        direction = 1;
+                                        break;
+                                    }
+                                case "d":
+                                case "down":
+                                    {
+                                        direction = 2;
+                                        break;
+                                    }
+                                case "l":
+                                case "left":
+                                    {
+                                        direction = 3;
+                                        break;
+                                    }
+                                default:
+                                    {
+                                        direction = -1;
+                                        break;
+                                    }
+                            }
+                            int addAmount;
+                            int.TryParse(args.Parameters[2], out addAmount);
+                            if (TShock.Regions.resizeRegion(args.Parameters[1], addAmount, direction))
+                            {
+                                args.Player.SendMessage("Region Resized Successfully!", Color.Yellow);
+                                TShock.Regions.ReloadAllRegions();
+                            }
+                            else
+                            {
+                                args.Player.SendMessage("Invalid syntax! Proper syntax: /region resize [regionname] [u/d/l/r] [amount]", Color.Red);
+                            }
+                        }
+                        else
+                        {
+                            args.Player.SendMessage("Invalid syntax! Proper syntax: /region resize [regionname] [u/d/l/r] [amount]1", Color.Red);
+                        }
+                        break;
+                    }
                 case "help":
                 default:
                     {
@@ -2024,28 +2263,28 @@ namespace TShockAPI
                         args.Player.SendMessage("/region info (provides region name)", Color.Yellow);
                         args.Player.SendMessage("/region delete [name] /region clear (temporary region)", Color.Yellow);
                         args.Player.SendMessage("/region allow [name] [regionname]", Color.Yellow);
+                        args.Player.SendMessage("/region resize [regionname] [u/d/l/r] [amount]", Color.Yellow);
                         break;
                     }
             }
-
         }
         
         private static void AltarEdit(CommandArgs args)
         {
             if (!args.Player.Group.HasPermission(Permissions.altaredit))
             {
-                args.Player.Group = Tools.GetGroup("editor");
+                args.Player.Group = TShock.Utils.GetGroup("editor");
                 args.Player.SendMessage("Now you can destroy altars", Color.Yellow);
             }
             else
             {
-                args.Player.Group = Tools.GetGroup("trustedadmin");
+                args.Player.Group = TShock.Utils.GetGroup("trustedadmin");
                 args.Player.SendMessage("Now you can't destroy altars", Color.Green);
             }
         }
         private static void AltarTimer(CommandArgs args)
         {
-            TShock.DispenserTime.Remove(args.Player.Name + ";" + Convert.ToString(Tools.DispencerTime(args.Player.Name)));
+            TShock.DispenserTime.Remove(args.Player.Name + ";" + Convert.ToString(TShock.Utils.DispencerTime(args.Player.Name)));
             TShock.DispenserTime.Add(args.Player.Name + ";" + Convert.ToString(DateTime.UtcNow.AddMilliseconds(-TShock.disptime)));
             TShock.Spawner = DateTime.UtcNow.AddMinutes(-30);
             args.Player.SendMessage("Altar timers reset successfull.", Color.Green);
@@ -2128,16 +2367,10 @@ namespace TShockAPI
                 }
             if (Players.Length > 1)
             args.Player.SendMessage(string.Format("Current players: {0}.", Players.Remove(0,1)), 255, 240, 20);
-            //else
-                //args.Player.SendMessage(string.Format("Current players: "), 255, 240, 20);
             if (Vips.Length > 1)
                 args.Player.SendMessage(string.Format("Current vips: {0}.", Vips.Remove(0, 1)), Color.LightGreen);
-            //else
-                //args.Player.SendMessage(string.Format("Current vips: "), Color.LightGreen);
             if (Admins.Length > 1)
             args.Player.SendMessage(string.Format("Current admins: {0}.", Admins.Remove(0,1)), 0, 192, 255);
-            //else
-                //args.Player.SendMessage(string.Format("Current admins: "), 0, 192, 255);
             args.Player.SendMessage(string.Format("Total online players: {0}.", count), 255, 240, 20);
         }
 
@@ -2155,7 +2388,7 @@ namespace TShockAPI
                 try
                 {
                     TShock.Users.AddUser(new User(args.Player.IP, "", "", "superadmin", DateTime.Now, 0, 0));
-                    args.Player.Group = Tools.GetGroup("superadmin");
+                    args.Player.Group = TShock.Utils.GetGroup("superadmin");
                     args.Player.SendMessage("This IP address is now superadmin. Please perform the following command:");
                     args.Player.SendMessage("/user add <username>:<password> superadmin");
                     args.Player.SendMessage("Creates: <username> with the password <password> as part of the superadmin group.");
@@ -2206,7 +2439,7 @@ namespace TShockAPI
             args.Player.SendMessage("Your new account has been verified, and the /auth system has been turned off.");
             args.Player.SendMessage("You can always use the /user command to manage players. Don't just delete the auth.lck.");
             args.Player.SendMessage("Thankyou for using TShock! http://tshock.co/ & http://github.com/TShock/TShock");
-            FileTools.CreateFile(Path.Combine(TShock.SavePath, "auth.lck"));
+            FileTool.CreateFile(Path.Combine(TShock.SavePath, "auth.lck"));
             File.Delete(Path.Combine(TShock.SavePath, "authcode.txt"));
             TShock.AuthToken = 0;
         }
@@ -2218,7 +2451,7 @@ namespace TShockAPI
                 args.Player.SendMessage("Invalid syntax! Proper syntax: /me <text>", Color.Red);
                 return;
             }
-            Tools.Broadcast(string.Format("*{0} {1}", args.Player.Name, String.Join(" ", args.Parameters)), 205, 133, 63);
+            TShock.Utils.Broadcast(string.Format("*{0} {1}", args.Player.Name, String.Join(" ", args.Parameters)), 205, 133, 63);
         }
 
         private static void PartyChat(CommandArgs args)
@@ -2243,10 +2476,15 @@ namespace TShockAPI
                 args.Player.SendMessage("You are not in a party!", 255, 240, 20);
             }
         }
+        
+        private static void Motd(CommandArgs args)
+        {
+            TShock.Utils.ShowFileToUser(args.Player, "motd.txt");
+        }
 
         private static void Rules(CommandArgs args)
         {
-            Tools.ShowFileToUser(args.Player, "rules.txt");
+            TShock.Utils.ShowFileToUser(args.Player, "rules.txt");
         }
 
         private static void Whisper(CommandArgs args)
@@ -2257,7 +2495,7 @@ namespace TShockAPI
                 return;
             }
 
-            var players = Tools.FindPlayer(args.Parameters[0]);
+            var players = TShock.Utils.FindPlayer(args.Parameters[0]);
             if (players.Count == 0)
             {
                 args.Player.SendMessage("Invalid player!", Color.Red);
@@ -2299,7 +2537,7 @@ namespace TShockAPI
             int annoy = 5;
             int.TryParse(args.Parameters[1], out annoy);
 
-            var players = Tools.FindPlayer(args.Parameters[0]);
+            var players = TShock.Utils.FindPlayer(args.Parameters[0]);
             if (players.Count == 0)
                 args.Player.SendMessage("Invalid player!", Color.Red);
             else if (players.Count > 1)
@@ -2321,7 +2559,7 @@ namespace TShockAPI
                 message += " " + args.Parameters[i];
             }
 
-            Tools.Broadcast(TShock.Config.AdminChatPrefix + "<" + args.Player.Name + ">" + message,
+            TShock.Utils.Broadcast(TShock.Config.AdminChatPrefix + "<" + args.Player.Name + ">" + message,
                  (byte)TShock.Config.SuperAdminChatRGB[0], (byte)TShock.Config.SuperAdminChatRGB[1], (byte)TShock.Config.SuperAdminChatRGB[2]);
             return;
         }
@@ -2335,7 +2573,7 @@ namespace TShockAPI
                 message += " " + args.Parameters[i];
             }
 
-            Tools.Broadcast("(Trade)<" + args.Player.Name + ">" + message, Color.PaleGoldenrod);
+            TShock.Utils.Broadcast("(Trade)<" + args.Player.Name + ">" + message, Color.PaleGoldenrod);
             return;
         }
 
@@ -2349,7 +2587,7 @@ namespace TShockAPI
             }
             if (TShock.Users.Buy(args.Player.Name, 0.5))
             {
-                Tools.Broadcast("(ToAll)<" + args.Player.Name + ">" + message, Color.Gold);
+                TShock.Utils.Broadcast("(ToAll)<" + args.Player.Name + ">" + message, Color.Gold);
                 return;
             }
             else
@@ -2376,7 +2614,6 @@ namespace TShockAPI
                                                                     args.Player.Group.B);
                 }
             }
-                
         }
 
         private static void Question(CommandArgs args)
@@ -2495,7 +2732,7 @@ namespace TShockAPI
                         TShock.Users.SetRCoins(args.Parameters[1], rcoins);
                     
                         args.Player.SendMessage("You payed " + rcoins + " Rcoins to <" + args.Parameters[1] + "> successfully", Color.LightGreen);
-                        var players = Tools.FindPlayer(args.Parameters[1]);
+                        var players = TShock.Utils.FindPlayer(args.Parameters[1]);
                         if (players.Count == 0)
                         {
                             //args.Player.SendMessage("Invalid player!", Color.Red);
@@ -2559,15 +2796,15 @@ namespace TShockAPI
                         case "meteor":
                             if (TShock.Users.Buy(args.Player.Name, 20))
                             {
-                                var items = Tools.GetItemByIdOrName("123");
+                                var items = TShock.Utils.GetItemByIdOrName("123");
                                 var helmet = items[0];
                                 args.Player.GiveItem(helmet.type, helmet.name, helmet.width, helmet.height, 1);
                                 
-                                items = Tools.GetItemByIdOrName("124");
+                                items = TShock.Utils.GetItemByIdOrName("124");
                                 var suite = items[0];
                                 args.Player.GiveItem(suite.type, suite.name, suite.width, suite.height, 1);
 
-                                items = Tools.GetItemByIdOrName("125");
+                                items = TShock.Utils.GetItemByIdOrName("125");
                                 var Leggings = items[0];
                                 args.Player.GiveItem(Leggings.type, Leggings.name, Leggings.width, Leggings.height, 1);
 
@@ -2585,15 +2822,15 @@ namespace TShockAPI
                         case "shadow":
                             if (TShock.Users.Buy(args.Player.Name, 29))
                             {
-                                var items = Tools.GetItemByIdOrName("102");
+                                var items = TShock.Utils.GetItemByIdOrName("102");
                                 var helmet = items[0];
                                 args.Player.GiveItem(helmet.type, helmet.name, helmet.width, helmet.height, 1);
 
-                                items = Tools.GetItemByIdOrName("101");
+                                items = TShock.Utils.GetItemByIdOrName("101");
                                 var suite = items[0];
                                 args.Player.GiveItem(suite.type, suite.name, suite.width, suite.height, 1);
 
-                                items = Tools.GetItemByIdOrName("100");
+                                items = TShock.Utils.GetItemByIdOrName("100");
                                 var Leggings = items[0];
                                 args.Player.GiveItem(Leggings.type, Leggings.name, Leggings.width, Leggings.height, 1);
 
@@ -2611,15 +2848,15 @@ namespace TShockAPI
                         case "jungle":
                             if (TShock.Users.Buy(args.Player.Name, 23))
                             {
-                                var items = Tools.GetItemByIdOrName("228");
+                                var items = TShock.Utils.GetItemByIdOrName("228");
                                 var helmet = items[0];
                                 args.Player.GiveItem(helmet.type, helmet.name, helmet.width, helmet.height, 1);
 
-                                items = Tools.GetItemByIdOrName("229");
+                                items = TShock.Utils.GetItemByIdOrName("229");
                                 var suite = items[0];
                                 args.Player.GiveItem(suite.type, suite.name, suite.width, suite.height, 1);
 
-                                items = Tools.GetItemByIdOrName("230");
+                                items = TShock.Utils.GetItemByIdOrName("230");
                                 var Leggings = items[0];
                                 args.Player.GiveItem(Leggings.type, Leggings.name, Leggings.width, Leggings.height, 1);
 
@@ -2637,15 +2874,15 @@ namespace TShockAPI
                         case "necro":
                             if (TShock.Users.Buy(args.Player.Name, 26))
                             {
-                                var items = Tools.GetItemByIdOrName("151");
+                                var items = TShock.Utils.GetItemByIdOrName("151");
                                 var helmet = items[0];
                                 args.Player.GiveItem(helmet.type, helmet.name, helmet.width, helmet.height, 1);
 
-                                items = Tools.GetItemByIdOrName("152");
+                                items = TShock.Utils.GetItemByIdOrName("152");
                                 var suite = items[0];
                                 args.Player.GiveItem(suite.type, suite.name, suite.width, suite.height, 1);
 
-                                items = Tools.GetItemByIdOrName("153");
+                                items = TShock.Utils.GetItemByIdOrName("153");
                                 var Leggings = items[0];
                                 args.Player.GiveItem(Leggings.type, Leggings.name, Leggings.width, Leggings.height, 1);
 
@@ -2663,15 +2900,15 @@ namespace TShockAPI
                         case "molten":
                             if (TShock.Users.Buy(args.Player.Name, 35))
                             {
-                                var items = Tools.GetItemByIdOrName("231");
+                                var items = TShock.Utils.GetItemByIdOrName("231");
                                 var helmet = items[0];
                                 args.Player.GiveItem(helmet.type, helmet.name, helmet.width, helmet.height, 1);
 
-                                items = Tools.GetItemByIdOrName("232");
+                                items = TShock.Utils.GetItemByIdOrName("232");
                                 var suite = items[0];
                                 args.Player.GiveItem(suite.type, suite.name, suite.width, suite.height, 1);
 
-                                items = Tools.GetItemByIdOrName("233");
+                                items = TShock.Utils.GetItemByIdOrName("233");
                                 var Leggings = items[0];
                                 args.Player.GiveItem(Leggings.type, Leggings.name, Leggings.width, Leggings.height, 1);
 
@@ -2692,7 +2929,7 @@ namespace TShockAPI
                                string id= "163";
                                if (TShock.Users.Buy(args.Player.Name, price))
                             {
-                                var items = Tools.GetItemByIdOrName(id);
+                                var items = TShock.Utils.GetItemByIdOrName(id);
                                 var weapon = items[0];
                                 args.Player.GiveItem(weapon.type, weapon.name, weapon.width, weapon.height, 1);
 
@@ -2702,7 +2939,7 @@ namespace TShockAPI
                             }
                             else
                             {
-                                var items = Tools.GetItemByIdOrName(id);
+                                var items = TShock.Utils.GetItemByIdOrName(id);
                                 var weapon = items[0];
                                 args.Player.SendMessage("You need " + price + " RCoins to buy " + weapon.name + ".", Color.Red);
                                 return;
@@ -2714,7 +2951,7 @@ namespace TShockAPI
                              id = "220";
                              if (TShock.Users.Buy(args.Player.Name, price))
                             {
-                                var items = Tools.GetItemByIdOrName(id);
+                                var items = TShock.Utils.GetItemByIdOrName(id);
                                 var weapon = items[0];
                                 args.Player.GiveItem(weapon.type, weapon.name, weapon.width, weapon.height, 1);
 
@@ -2724,7 +2961,7 @@ namespace TShockAPI
                             }
                             else
                             {
-                                var items = Tools.GetItemByIdOrName(id);
+                                var items = TShock.Utils.GetItemByIdOrName(id);
                                 var weapon = items[0];
                                 args.Player.SendMessage("You need " + price + " RCoins to buy " + weapon.name + ".", Color.Red);
                                 return;
@@ -2735,7 +2972,7 @@ namespace TShockAPI
                              price = 37;   
                             if (TShock.Users.Buy(args.Player.Name, price))
                             {
-                                var items = Tools.GetItemByIdOrName("274");
+                                var items = TShock.Utils.GetItemByIdOrName("274");
                                 var weapon = items[0];
                                 args.Player.GiveItem(weapon.type, weapon.name, weapon.width, weapon.height, 1);
 
@@ -2745,7 +2982,7 @@ namespace TShockAPI
                             }
                             else
                             {
-                                var items = Tools.GetItemByIdOrName("274");
+                                var items = TShock.Utils.GetItemByIdOrName("274");
                                 var weapon = items[0];
                                 args.Player.SendMessage("You need " + price + " RCoins to buy " + weapon.name + ".", Color.Red);
                                 return;
@@ -2756,7 +2993,7 @@ namespace TShockAPI
                              price = 24;   
                             if (TShock.Users.Buy(args.Player.Name, price))
                             {
-                                var items = Tools.GetItemByIdOrName("44");
+                                var items = TShock.Utils.GetItemByIdOrName("44");
                                 var weapon = items[0];
                                 args.Player.GiveItem(weapon.type, weapon.name, weapon.width, weapon.height, 1);
 
@@ -2766,7 +3003,7 @@ namespace TShockAPI
                             }
                             else
                             {
-                                var items = Tools.GetItemByIdOrName("44");
+                                var items = TShock.Utils.GetItemByIdOrName("44");
                                 var weapon = items[0];
                                 args.Player.SendMessage("You need " + price + " RCoins to buy " + weapon.name + ".", Color.Red);
                                 return;
@@ -2777,7 +3014,7 @@ namespace TShockAPI
                              price = 39;   
                             if (TShock.Users.Buy(args.Player.Name, price))
                             {
-                                var items = Tools.GetItemByIdOrName("120");
+                                var items = TShock.Utils.GetItemByIdOrName("120");
                                 var weapon = items[0];
                                 args.Player.GiveItem(weapon.type, weapon.name, weapon.width, weapon.height, 1);
 
@@ -2787,7 +3024,7 @@ namespace TShockAPI
                             }
                             else
                             {
-                                var items = Tools.GetItemByIdOrName("120");
+                                var items = TShock.Utils.GetItemByIdOrName("120");
                                 var weapon = items[0];
                                 args.Player.SendMessage("You need " + price + " RCoins to buy " + weapon.name + ".", Color.Red);
                                 return;
@@ -2798,7 +3035,7 @@ namespace TShockAPI
                              price = 35;   
                             if (TShock.Users.Buy(args.Player.Name, price))
                             {
-                                var items = Tools.GetItemByIdOrName("191");
+                                var items = TShock.Utils.GetItemByIdOrName("191");
                                 var weapon = items[0];
                                 args.Player.GiveItem(weapon.type, weapon.name, weapon.width, weapon.height, 1);
 
@@ -2808,7 +3045,7 @@ namespace TShockAPI
                             }
                             else
                             {
-                                var items = Tools.GetItemByIdOrName("191");
+                                var items = TShock.Utils.GetItemByIdOrName("191");
                                 var weapon = items[0];
                                 args.Player.SendMessage("You need " + price + " RCoins to buy " + weapon.name + ".", Color.Red);
                                 return;
@@ -2819,7 +3056,7 @@ namespace TShockAPI
                              price = 42;   
                             if (TShock.Users.Buy(args.Player.Name, price))
                             {
-                                var items = Tools.GetItemByIdOrName("119");
+                                var items = TShock.Utils.GetItemByIdOrName("119");
                                 var weapon = items[0];
                                 args.Player.GiveItem(weapon.type, weapon.name, weapon.width, weapon.height, 1);
 
@@ -2829,7 +3066,7 @@ namespace TShockAPI
                             }
                             else
                             {
-                                var items = Tools.GetItemByIdOrName("119");
+                                var items = TShock.Utils.GetItemByIdOrName("119");
                                 var weapon = items[0];
                                 args.Player.SendMessage("You need " + price + " RCoins to buy " + weapon.name + ".", Color.Red);
                                 return;
@@ -2840,7 +3077,7 @@ namespace TShockAPI
                              price = 27;   
                             if (TShock.Users.Buy(args.Player.Name, price))
                             {
-                                var items = Tools.GetItemByIdOrName("127");
+                                var items = TShock.Utils.GetItemByIdOrName("127");
                                 var weapon = items[0];
                                 args.Player.GiveItem(weapon.type, weapon.name, weapon.width, weapon.height, 1);
 
@@ -2850,7 +3087,7 @@ namespace TShockAPI
                             }
                             else
                             {
-                                var items = Tools.GetItemByIdOrName("127");
+                                var items = TShock.Utils.GetItemByIdOrName("127");
                                 var weapon = items[0];
                                 args.Player.SendMessage("You need " + price + " RCoins to buy " + weapon.name + ".", Color.Red);
                                 return;
@@ -2861,7 +3098,7 @@ namespace TShockAPI
                              price = 33;   
                             if (TShock.Users.Buy(args.Player.Name, price))
                             {
-                                var items = Tools.GetItemByIdOrName("219");
+                                var items = TShock.Utils.GetItemByIdOrName("219");
                                 var weapon = items[0];
                                 args.Player.GiveItem(weapon.type, weapon.name, weapon.width, weapon.height, 1);
 
@@ -2871,7 +3108,7 @@ namespace TShockAPI
                             }
                             else
                             {
-                                var items = Tools.GetItemByIdOrName("219");
+                                var items = TShock.Utils.GetItemByIdOrName("219");
                                 var weapon = items[0];
                                 args.Player.SendMessage("You need " + price + " RCoins to buy " + weapon.name + ".", Color.Red);
                                 return;
@@ -2882,7 +3119,7 @@ namespace TShockAPI
                              price = 25;   
                             if (TShock.Users.Buy(args.Player.Name, price))
                             {
-                                var items = Tools.GetItemByIdOrName("65");
+                                var items = TShock.Utils.GetItemByIdOrName("65");
                                 var weapon = items[0];
                                 args.Player.GiveItem(weapon.type, weapon.name, weapon.width, weapon.height, 1);
 
@@ -2892,7 +3129,7 @@ namespace TShockAPI
                             }
                             else
                             {
-                                var items = Tools.GetItemByIdOrName("65");
+                                var items = TShock.Utils.GetItemByIdOrName("65");
                                 var weapon = items[0];
                                 args.Player.SendMessage("You need " + price + " RCoins to buy " + weapon.name + ".", Color.Red);
                                 return;
@@ -2903,7 +3140,7 @@ namespace TShockAPI
                              price = 54;   
                             if (TShock.Users.Buy(args.Player.Name, price))
                             {
-                                var items = Tools.GetItemByIdOrName("112");
+                                var items = TShock.Utils.GetItemByIdOrName("112");
                                 var weapon = items[0];
                                 args.Player.GiveItem(weapon.type, weapon.name, weapon.width, weapon.height, 1);
 
@@ -2913,7 +3150,7 @@ namespace TShockAPI
                             }
                             else
                             {
-                                var items = Tools.GetItemByIdOrName("112");
+                                var items = TShock.Utils.GetItemByIdOrName("112");
                                 var weapon = items[0];
                                 args.Player.SendMessage("You need " + price + " RCoins to buy " + weapon.name + ".", Color.Red);
                                 return;
@@ -2924,7 +3161,7 @@ namespace TShockAPI
                              price = 32;   
                             if (TShock.Users.Buy(args.Player.Name, price))
                             {
-                                var items = Tools.GetItemByIdOrName("113");
+                                var items = TShock.Utils.GetItemByIdOrName("113");
                                 var weapon = items[0];
                                 args.Player.GiveItem(weapon.type, weapon.name, weapon.width, weapon.height, 1);
 
@@ -2934,7 +3171,7 @@ namespace TShockAPI
                             }
                             else
                             {
-                                var items = Tools.GetItemByIdOrName("113");
+                                var items = TShock.Utils.GetItemByIdOrName("113");
                                 var weapon = items[0];
                                 args.Player.SendMessage("You need " + price + " RCoins to buy " + weapon.name + ".", Color.Red);
                                 return;
@@ -2945,7 +3182,7 @@ namespace TShockAPI
                              price = 44;   
                             if (TShock.Users.Buy(args.Player.Name, price))
                             {
-                                var items = Tools.GetItemByIdOrName("218");
+                                var items = TShock.Utils.GetItemByIdOrName("218");
                                 var weapon = items[0];
                                 args.Player.GiveItem(weapon.type, weapon.name, weapon.width, weapon.height, 1);
 
@@ -2955,7 +3192,7 @@ namespace TShockAPI
                             }
                             else
                             {
-                                var items = Tools.GetItemByIdOrName("218");
+                                var items = TShock.Utils.GetItemByIdOrName("218");
                                 var weapon = items[0];
                                 args.Player.SendMessage("You need " + price + " RCoins to buy " + weapon.name + ".", Color.Red);
                                 return;
@@ -2966,7 +3203,7 @@ namespace TShockAPI
                              price = 27;   
                             if (TShock.Users.Buy(args.Player.Name, price))
                             {
-                                var items = Tools.GetItemByIdOrName("165");
+                                var items = TShock.Utils.GetItemByIdOrName("165");
                                 var weapon = items[0];
                                 args.Player.GiveItem(weapon.type, weapon.name, weapon.width, weapon.height, 1);
 
@@ -2976,7 +3213,7 @@ namespace TShockAPI
                             }
                             else
                             {
-                                var items = Tools.GetItemByIdOrName("165");
+                                var items = TShock.Utils.GetItemByIdOrName("165");
                                 var weapon = items[0];
                                 args.Player.SendMessage("You need " + price + " RCoins to buy " + weapon.name + ".", Color.Red);
                                 return;
@@ -2987,7 +3224,7 @@ namespace TShockAPI
                              price = 24;   
                             if (TShock.Users.Buy(args.Player.Name, price))
                             {
-                                var items = Tools.GetItemByIdOrName("157");
+                                var items = TShock.Utils.GetItemByIdOrName("157");
                                 var weapon = items[0];
                                 args.Player.GiveItem(weapon.type, weapon.name, weapon.width, weapon.height, 1);
 
@@ -2997,7 +3234,7 @@ namespace TShockAPI
                             }
                             else
                             {
-                                var items = Tools.GetItemByIdOrName("157");
+                                var items = TShock.Utils.GetItemByIdOrName("157");
                                 var weapon = items[0];
                                 args.Player.SendMessage("You need " + price + " RCoins to buy " + weapon.name + ".", Color.Red);
                                 return;
@@ -3008,7 +3245,7 @@ namespace TShockAPI
                              price = 45;   
                             if (TShock.Users.Buy(args.Player.Name, price))
                             {
-                                var items = Tools.GetItemByIdOrName("272");
+                                var items = TShock.Utils.GetItemByIdOrName("272");
                                 var weapon = items[0];
                                 args.Player.GiveItem(weapon.type, weapon.name, weapon.width, weapon.height, 1);
 
@@ -3018,7 +3255,7 @@ namespace TShockAPI
                             }
                             else
                             {
-                                var items = Tools.GetItemByIdOrName("272");
+                                var items = TShock.Utils.GetItemByIdOrName("272");
                                 var weapon = items[0];
                                 args.Player.SendMessage("You need " + price + " RCoins to buy " + weapon.name + ".", Color.Red);
                                 return;
@@ -3029,7 +3266,7 @@ namespace TShockAPI
                              price = 28;   
                             if (TShock.Users.Buy(args.Player.Name, price))
                             {
-                                var items = Tools.GetItemByIdOrName("155");
+                                var items = TShock.Utils.GetItemByIdOrName("155");
                                 var weapon = items[0];
                                 args.Player.GiveItem(weapon.type, weapon.name, weapon.width, weapon.height, 1);
 
@@ -3039,7 +3276,7 @@ namespace TShockAPI
                             }
                             else
                             {
-                                var items = Tools.GetItemByIdOrName("155");
+                                var items = TShock.Utils.GetItemByIdOrName("155");
                                 var weapon = items[0];
                                 args.Player.SendMessage("You need " + price + " RCoins to buy " + weapon.name + ".", Color.Red);
                                 return;
@@ -3050,7 +3287,7 @@ namespace TShockAPI
                              price = 38;   
                             if (TShock.Users.Buy(args.Player.Name, price))
                             {
-                                var items = Tools.GetItemByIdOrName("190");
+                                var items = TShock.Utils.GetItemByIdOrName("190");
                                 var weapon = items[0];
                                 args.Player.GiveItem(weapon.type, weapon.name, weapon.width, weapon.height, 1);
 
@@ -3060,7 +3297,7 @@ namespace TShockAPI
                             }
                             else
                             {
-                                var items = Tools.GetItemByIdOrName("190");
+                                var items = TShock.Utils.GetItemByIdOrName("190");
                                 var weapon = items[0];
                                 args.Player.SendMessage("You need " + price + " RCoins to buy " + weapon.name + ".", Color.Red);
                                 return;
@@ -3071,7 +3308,7 @@ namespace TShockAPI
                              price = 46;   
                             if (TShock.Users.Buy(args.Player.Name, price))
                             {
-                                var items = Tools.GetItemByIdOrName("121");
+                                var items = TShock.Utils.GetItemByIdOrName("121");
                                 var weapon = items[0];
                                 args.Player.GiveItem(weapon.type, weapon.name, weapon.width, weapon.height, 1);
 
@@ -3081,7 +3318,7 @@ namespace TShockAPI
                             }
                             else
                             {
-                                var items = Tools.GetItemByIdOrName("121");
+                                var items = TShock.Utils.GetItemByIdOrName("121");
                                 var weapon = items[0];
                                 args.Player.SendMessage("You need " + price + " RCoins to buy " + weapon.name + ".", Color.Red);
                                 return;
@@ -3092,7 +3329,7 @@ namespace TShockAPI
                              price = 52;   
                             if (TShock.Users.Buy(args.Player.Name, price))
                             {
-                                var items = Tools.GetItemByIdOrName("273");
+                                var items = TShock.Utils.GetItemByIdOrName("273");
                                 var weapon = items[0];
                                 args.Player.GiveItem(weapon.type, weapon.name, weapon.width, weapon.height, 1);
 
@@ -3102,7 +3339,7 @@ namespace TShockAPI
                             }
                             else
                             {
-                                var items = Tools.GetItemByIdOrName("273");
+                                var items = TShock.Utils.GetItemByIdOrName("273");
                                 var weapon = items[0];
                                 args.Player.SendMessage("You need " + price + " RCoins to buy " + weapon.name + ".", Color.Red);
                                 return;
@@ -3115,7 +3352,7 @@ namespace TShockAPI
                             id = "185";
                             if (TShock.Users.Buy(args.Player.Name, price))
                             {
-                                var items = Tools.GetItemByIdOrName(id);
+                                var items = TShock.Utils.GetItemByIdOrName(id);
                                 var weapon = items[0];
                                 args.Player.GiveItem(weapon.type, weapon.name, weapon.width, weapon.height, 1);
 
@@ -3125,7 +3362,7 @@ namespace TShockAPI
                             }
                             else
                             {
-                                var items = Tools.GetItemByIdOrName(id);
+                                var items = TShock.Utils.GetItemByIdOrName(id);
                                 var weapon = items[0];
                                 args.Player.SendMessage("You need " + price + " RCoins to buy " + weapon.name + ".", Color.Red);
                                 return;
@@ -3137,7 +3374,7 @@ namespace TShockAPI
                             id = "160";
                             if (TShock.Users.Buy(args.Player.Name, price))
                             {
-                                var items = Tools.GetItemByIdOrName(id);
+                                var items = TShock.Utils.GetItemByIdOrName(id);
                                 var item = items[0];
                                 args.Player.GiveItem(item.type, item.name, item.width, item.height, 1);
 
@@ -3147,7 +3384,7 @@ namespace TShockAPI
                             }
                             else
                             {
-                                var items = Tools.GetItemByIdOrName(id);
+                                var items = TShock.Utils.GetItemByIdOrName(id);
                                 var item = items[0];
                                 args.Player.SendMessage("You need " + price + " RCoins to buy " + item.name + ".", Color.Red);
                                 return;
@@ -3159,7 +3396,7 @@ namespace TShockAPI
                             id = "285";
                             if (TShock.Users.Buy(args.Player.Name, price))
                             {
-                                var items = Tools.GetItemByIdOrName(id);
+                                var items = TShock.Utils.GetItemByIdOrName(id);
                                 var item = items[0];
                                 args.Player.GiveItem(item.type, item.name, item.width, item.height, 1);
 
@@ -3169,7 +3406,7 @@ namespace TShockAPI
                             }
                             else
                             {
-                                var items = Tools.GetItemByIdOrName(id);
+                                var items = TShock.Utils.GetItemByIdOrName(id);
                                 var item = items[0];
                                 args.Player.SendMessage("You need " + price + " RCoins to buy " + item.name + ".", Color.Red);
                                 return;
@@ -3181,7 +3418,7 @@ namespace TShockAPI
                             id = "212";
                             if (TShock.Users.Buy(args.Player.Name, price))
                             {
-                                var items = Tools.GetItemByIdOrName(id);
+                                var items = TShock.Utils.GetItemByIdOrName(id);
                                 var weapon = items[0];
                                 args.Player.GiveItem(weapon.type, weapon.name, weapon.width, weapon.height, 1);
 
@@ -3191,7 +3428,7 @@ namespace TShockAPI
                             }
                             else
                             {
-                                var items = Tools.GetItemByIdOrName(id);
+                                var items = TShock.Utils.GetItemByIdOrName(id);
                                 var weapon = items[0];
                                 args.Player.SendMessage("You need " + price + " RCoins to buy " + weapon.name + ".", Color.Red);
                                 return;
@@ -3203,7 +3440,7 @@ namespace TShockAPI
                             id = "53";
                             if (TShock.Users.Buy(args.Player.Name, price))
                             {
-                                var items = Tools.GetItemByIdOrName(id);
+                                var items = TShock.Utils.GetItemByIdOrName(id);
                                 var item = items[0];
                                 args.Player.GiveItem(item.type, item.name, item.width, item.height, 1);
 
@@ -3213,7 +3450,7 @@ namespace TShockAPI
                             }
                             else
                             {
-                                var items = Tools.GetItemByIdOrName(id);
+                                var items = TShock.Utils.GetItemByIdOrName(id);
                                 var item = items[0];
                                 args.Player.SendMessage("You need " + price + " RCoins to buy " + item.name + ".", Color.Red);
                                 return;
@@ -3225,7 +3462,7 @@ namespace TShockAPI
                             id = "187";
                             if (TShock.Users.Buy(args.Player.Name, price))
                             {
-                                var items = Tools.GetItemByIdOrName(id);
+                                var items = TShock.Utils.GetItemByIdOrName(id);
                                 var item = items[0];
                                 args.Player.GiveItem(item.type, item.name, item.width, item.height, 1);
 
@@ -3235,7 +3472,7 @@ namespace TShockAPI
                             }
                             else
                             {
-                                var items = Tools.GetItemByIdOrName(id);
+                                var items = TShock.Utils.GetItemByIdOrName(id);
                                 var item = items[0];
                                 args.Player.SendMessage("You need " + price + " RCoins to buy " + item.name + ".", Color.Red);
                                 return;
@@ -3247,7 +3484,7 @@ namespace TShockAPI
                             id = "54";
                             if (TShock.Users.Buy(args.Player.Name, price))
                             {
-                                var items = Tools.GetItemByIdOrName(id);
+                                var items = TShock.Utils.GetItemByIdOrName(id);
                                 var weapon = items[0];
                                 args.Player.GiveItem(weapon.type, weapon.name, weapon.width, weapon.height, 1);
 
@@ -3257,7 +3494,7 @@ namespace TShockAPI
                             }
                             else
                             {
-                                var items = Tools.GetItemByIdOrName(id);
+                                var items = TShock.Utils.GetItemByIdOrName(id);
                                 var weapon = items[0];
                                 args.Player.SendMessage("You need " + price + " RCoins to buy " + weapon.name + ".", Color.Red);
                                 return;
@@ -3269,7 +3506,7 @@ namespace TShockAPI
                             id = "158";
                             if (TShock.Users.Buy(args.Player.Name, price))
                             {
-                                var items = Tools.GetItemByIdOrName(id);
+                                var items = TShock.Utils.GetItemByIdOrName(id);
                                 var item = items[0];
                                 args.Player.GiveItem(item.type, item.name, item.width, item.height, 1);
 
@@ -3279,7 +3516,7 @@ namespace TShockAPI
                             }
                             else
                             {
-                                var items = Tools.GetItemByIdOrName(id);
+                                var items = TShock.Utils.GetItemByIdOrName(id);
                                 var item = items[0];
                                 args.Player.SendMessage("You need " + price + " RCoins to buy " + item.name + ".", Color.Red);
                                 return;
@@ -3291,7 +3528,7 @@ namespace TShockAPI
                             id = "128";
                             if (TShock.Users.Buy(args.Player.Name, price))
                             {
-                                var items = Tools.GetItemByIdOrName(id);
+                                var items = TShock.Utils.GetItemByIdOrName(id);
                                 var item = items[0];
                                 args.Player.GiveItem(item.type, item.name, item.width, item.height, 1);
 
@@ -3301,7 +3538,7 @@ namespace TShockAPI
                             }
                             else
                             {
-                                var items = Tools.GetItemByIdOrName(id);
+                                var items = TShock.Utils.GetItemByIdOrName(id);
                                 var item = items[0];
                                 args.Player.SendMessage("You need " + price + " RCoins to buy " + item.name + ".", Color.Red);
                                 return;
@@ -3313,7 +3550,7 @@ namespace TShockAPI
                             id = "159";
                             if (TShock.Users.Buy(args.Player.Name, price))
                             {
-                                var items = Tools.GetItemByIdOrName(id);
+                                var items = TShock.Utils.GetItemByIdOrName(id);
                                 var weapon = items[0];
                                 args.Player.GiveItem(weapon.type, weapon.name, weapon.width, weapon.height, 1);
 
@@ -3323,7 +3560,7 @@ namespace TShockAPI
                             }
                             else
                             {
-                                var items = Tools.GetItemByIdOrName(id);
+                                var items = TShock.Utils.GetItemByIdOrName(id);
                                 var weapon = items[0];
                                 args.Player.SendMessage("You need " + price + " RCoins to buy " + weapon.name + ".", Color.Red);
                                 return;
@@ -3335,7 +3572,7 @@ namespace TShockAPI
                             id = "18";
                             if (TShock.Users.Buy(args.Player.Name, price))
                             {
-                                var items = Tools.GetItemByIdOrName(id);
+                                var items = TShock.Utils.GetItemByIdOrName(id);
                                 var item = items[0];
                                 args.Player.GiveItem(item.type, item.name, item.width, item.height, 1);
 
@@ -3345,7 +3582,7 @@ namespace TShockAPI
                             }
                             else
                             {
-                                var items = Tools.GetItemByIdOrName(id);
+                                var items = TShock.Utils.GetItemByIdOrName(id);
                                 var item = items[0];
                                 args.Player.SendMessage("You need " + price + " RCoins to buy " + item.name + ".", Color.Red);
                                 return;
@@ -3357,7 +3594,7 @@ namespace TShockAPI
                             id = "15";
                             if (TShock.Users.Buy(args.Player.Name, price))
                             {
-                                var items = Tools.GetItemByIdOrName(id);
+                                var items = TShock.Utils.GetItemByIdOrName(id);
                                 var item = items[0];
                                 args.Player.GiveItem(item.type, item.name, item.width, item.height, 1);
 
@@ -3367,7 +3604,7 @@ namespace TShockAPI
                             }
                             else
                             {
-                                var items = Tools.GetItemByIdOrName(id);
+                                var items = TShock.Utils.GetItemByIdOrName(id);
                                 var item = items[0];
                                 args.Player.SendMessage("You need " + price + " RCoins to buy " + item.name + ".", Color.Red);
                                 return;
@@ -3379,7 +3616,7 @@ namespace TShockAPI
                             id = "16";
                             if (TShock.Users.Buy(args.Player.Name, price))
                             {
-                                var items = Tools.GetItemByIdOrName(id);
+                                var items = TShock.Utils.GetItemByIdOrName(id);
                                 var item = items[0];
                                 args.Player.GiveItem(item.type, item.name, item.width, item.height, 1);
 
@@ -3389,7 +3626,7 @@ namespace TShockAPI
                             }
                             else
                             {
-                                var items = Tools.GetItemByIdOrName(id);
+                                var items = TShock.Utils.GetItemByIdOrName(id);
                                 var item = items[0];
                                 args.Player.SendMessage("You need " + price + " RCoins to buy " + item.name + ".", Color.Red);
                                 return;
@@ -3401,7 +3638,7 @@ namespace TShockAPI
                             id = "17";
                             if (TShock.Users.Buy(args.Player.Name, price))
                             {
-                                var items = Tools.GetItemByIdOrName(id);
+                                var items = TShock.Utils.GetItemByIdOrName(id);
                                 var weapon = items[0];
                                 args.Player.GiveItem(weapon.type, weapon.name, weapon.width, weapon.height, 1);
 
@@ -3411,7 +3648,7 @@ namespace TShockAPI
                             }
                             else
                             {
-                                var items = Tools.GetItemByIdOrName(id);
+                                var items = TShock.Utils.GetItemByIdOrName(id);
                                 var weapon = items[0];
                                 args.Player.SendMessage("You need " + price + " RCoins to buy " + weapon.name + ".", Color.Red);
                                 return;
@@ -3423,7 +3660,7 @@ namespace TShockAPI
                             id = "49";
                             if (TShock.Users.Buy(args.Player.Name, price))
                             {
-                                var items = Tools.GetItemByIdOrName(id);
+                                var items = TShock.Utils.GetItemByIdOrName(id);
                                 var item = items[0];
                                 args.Player.GiveItem(item.type, item.name, item.width, item.height, 1);
 
@@ -3433,7 +3670,7 @@ namespace TShockAPI
                             }
                             else
                             {
-                                var items = Tools.GetItemByIdOrName(id);
+                                var items = TShock.Utils.GetItemByIdOrName(id);
                                 var item = items[0];
                                 args.Player.SendMessage("You need " + price + " RCoins to buy " + item.name + ".", Color.Red);
                                 return;
@@ -3445,7 +3682,7 @@ namespace TShockAPI
                             id = "111";
                             if (TShock.Users.Buy(args.Player.Name, price))
                             {
-                                var items = Tools.GetItemByIdOrName(id);
+                                var items = TShock.Utils.GetItemByIdOrName(id);
                                 var item = items[0];
                                 args.Player.GiveItem(item.type, item.name, item.width, item.height, 1);
 
@@ -3455,7 +3692,7 @@ namespace TShockAPI
                             }
                             else
                             {
-                                var items = Tools.GetItemByIdOrName(id);
+                                var items = TShock.Utils.GetItemByIdOrName(id);
                                 var item = items[0];
                                 args.Player.SendMessage("You need " + price + " RCoins to buy " + item.name + ".", Color.Red);
                                 return;
@@ -3467,7 +3704,7 @@ namespace TShockAPI
                             id = "223";
                             if (TShock.Users.Buy(args.Player.Name, price))
                             {
-                                var items = Tools.GetItemByIdOrName(id);
+                                var items = TShock.Utils.GetItemByIdOrName(id);
                                 var weapon = items[0];
                                 args.Player.GiveItem(weapon.type, weapon.name, weapon.width, weapon.height, 1);
 
@@ -3477,7 +3714,7 @@ namespace TShockAPI
                             }
                             else
                             {
-                                var items = Tools.GetItemByIdOrName(id);
+                                var items = TShock.Utils.GetItemByIdOrName(id);
                                 var weapon = items[0];
                                 args.Player.SendMessage("You need " + price + " RCoins to buy " + weapon.name + ".", Color.Red);
                                 return;
@@ -3489,7 +3726,7 @@ namespace TShockAPI
                             id = "156";
                             if (TShock.Users.Buy(args.Player.Name, price))
                             {
-                                var items = Tools.GetItemByIdOrName(id);
+                                var items = TShock.Utils.GetItemByIdOrName(id);
                                 var item = items[0];
                                 args.Player.GiveItem(item.type, item.name, item.width, item.height, 1);
 
@@ -3499,7 +3736,7 @@ namespace TShockAPI
                             }
                             else
                             {
-                                var items = Tools.GetItemByIdOrName(id);
+                                var items = TShock.Utils.GetItemByIdOrName(id);
                                 var item = items[0];
                                 args.Player.SendMessage("You need " + price + " RCoins to buy " + item.name + ".", Color.Red);
                                 return;
@@ -3511,7 +3748,7 @@ namespace TShockAPI
                             id = "211";
                             if (TShock.Users.Buy(args.Player.Name, price))
                             {
-                                var items = Tools.GetItemByIdOrName(id);
+                                var items = TShock.Utils.GetItemByIdOrName(id);
                                 var item = items[0];
                                 args.Player.GiveItem(item.type, item.name, item.width, item.height, 1);
 
@@ -3521,7 +3758,7 @@ namespace TShockAPI
                             }
                             else
                             {
-                                var items = Tools.GetItemByIdOrName(id);
+                                var items = TShock.Utils.GetItemByIdOrName(id);
                                 var item = items[0];
                                 args.Player.SendMessage("You need " + price + " RCoins to buy " + item.name + ".", Color.Red);
                                 return;
@@ -3533,7 +3770,7 @@ namespace TShockAPI
                             id = "193";
                             if (TShock.Users.Buy(args.Player.Name, price))
                             {
-                                var items = Tools.GetItemByIdOrName(id);
+                                var items = TShock.Utils.GetItemByIdOrName(id);
                                 var item = items[0];
                                 args.Player.GiveItem(item.type, item.name, item.width, item.height, 1);
 
@@ -3543,7 +3780,7 @@ namespace TShockAPI
                             }
                             else
                             {
-                                var items = Tools.GetItemByIdOrName(id);
+                                var items = TShock.Utils.GetItemByIdOrName(id);
                                 var item = items[0];
                                 args.Player.SendMessage("You need " + price + " RCoins to buy " + item.name + ".", Color.Red);
                                 return;
@@ -3555,7 +3792,7 @@ namespace TShockAPI
                             id = "216";
                             if (TShock.Users.Buy(args.Player.Name, price))
                             {
-                                var items = Tools.GetItemByIdOrName(id);
+                                var items = TShock.Utils.GetItemByIdOrName(id);
                                 var item = items[0];
                                 args.Player.GiveItem(item.type, item.name, item.width, item.height, 1);
 
@@ -3565,7 +3802,7 @@ namespace TShockAPI
                             }
                             else
                             {
-                                var items = Tools.GetItemByIdOrName(id);
+                                var items = TShock.Utils.GetItemByIdOrName(id);
                                 var item = items[0];
                                 args.Player.SendMessage("You need " + price + " RCoins to buy " + item.name + ".", Color.Red);
                                 return;
@@ -3579,7 +3816,7 @@ namespace TShockAPI
                             cost = ((double)price / 250) * quantity;
                             if (TShock.Users.Buy(args.Player.Name, cost))
                             {
-                                var items = Tools.GetItemByIdOrName(id);
+                                var items = TShock.Utils.GetItemByIdOrName(id);
                                 var brick = items[0];
                                 args.Player.GiveItem(brick.type, brick.name, brick.width, brick.height, quantity);
 
@@ -3589,7 +3826,7 @@ namespace TShockAPI
                             }
                             else
                             {
-                                var items = Tools.GetItemByIdOrName(id);
+                                var items = TShock.Utils.GetItemByIdOrName(id);
                                 var brick = items[0];
                                 args.Player.SendMessage("You need " + cost + " RCoins to buy " + quantity + " " + brick.name + ".", Color.Red);
                                 return;
@@ -3602,7 +3839,7 @@ namespace TShockAPI
                             cost = ((double)price / 250) * quantity;
                             if (TShock.Users.Buy(args.Player.Name, cost))
                             {
-                                var items = Tools.GetItemByIdOrName(id);
+                                var items = TShock.Utils.GetItemByIdOrName(id);
                                 var brick = items[0];
                                 args.Player.GiveItem(brick.type, brick.name, brick.width, brick.height, quantity);
 
@@ -3612,7 +3849,7 @@ namespace TShockAPI
                             }
                             else
                             {
-                                var items = Tools.GetItemByIdOrName(id);
+                                var items = TShock.Utils.GetItemByIdOrName(id);
                                 var brick = items[0];
                                 args.Player.SendMessage("You need " + cost + " RCoins to buy " + quantity + " " + brick.name + ".", Color.Red);
                                 return;
@@ -3625,7 +3862,7 @@ namespace TShockAPI
                             cost = ((double)price / 250) * quantity;
                             if (TShock.Users.Buy(args.Player.Name, cost))
                             {
-                                var items = Tools.GetItemByIdOrName(id);
+                                var items = TShock.Utils.GetItemByIdOrName(id);
                                 var brick = items[0];
                                 args.Player.GiveItem(brick.type, brick.name, brick.width, brick.height, quantity);
 
@@ -3635,7 +3872,7 @@ namespace TShockAPI
                             }
                             else
                             {
-                                var items = Tools.GetItemByIdOrName(id);
+                                var items = TShock.Utils.GetItemByIdOrName(id);
                                 var brick = items[0];
                                 args.Player.SendMessage("You need " + cost + " RCoins to buy " + quantity + " " + brick.name + ".", Color.Red);
                                 return;
@@ -3648,7 +3885,7 @@ namespace TShockAPI
                             cost = ((double)price / 250) * quantity;
                             if (TShock.Users.Buy(args.Player.Name, cost))
                             {
-                                var items = Tools.GetItemByIdOrName(id);
+                                var items = TShock.Utils.GetItemByIdOrName(id);
                                 var brick = items[0];
                                 args.Player.GiveItem(brick.type, brick.name, brick.width, brick.height, quantity);
 
@@ -3658,7 +3895,7 @@ namespace TShockAPI
                             }
                             else
                             {
-                                var items = Tools.GetItemByIdOrName(id);
+                                var items = TShock.Utils.GetItemByIdOrName(id);
                                 var brick = items[0];
                                 args.Player.SendMessage("You need " + cost + " RCoins to buy " + quantity + " " + brick.name + ".", Color.Red);
                                 return;
@@ -3671,7 +3908,7 @@ namespace TShockAPI
                             cost = ((double)price / 250) * quantity;
                             if (TShock.Users.Buy(args.Player.Name, cost))
                             {
-                                var items = Tools.GetItemByIdOrName(id);
+                                var items = TShock.Utils.GetItemByIdOrName(id);
                                 var brick = items[0];
                                 args.Player.GiveItem(brick.type, brick.name, brick.width, brick.height, quantity);
 
@@ -3681,7 +3918,7 @@ namespace TShockAPI
                             }
                             else
                             {
-                                var items = Tools.GetItemByIdOrName(id);
+                                var items = TShock.Utils.GetItemByIdOrName(id);
                                 var brick = items[0];
                                 args.Player.SendMessage("You need " + cost + " RCoins to buy " + quantity + " " + brick.name + ".", Color.Red);
                                 return;
@@ -3694,7 +3931,7 @@ namespace TShockAPI
                             cost = ((double)price / 250) * quantity;
                             if (TShock.Users.Buy(args.Player.Name, cost))
                             {
-                                var items = Tools.GetItemByIdOrName(id);
+                                var items = TShock.Utils.GetItemByIdOrName(id);
                                 var brick = items[0];
                                 args.Player.GiveItem(brick.type, brick.name, brick.width, brick.height, quantity);
 
@@ -3704,7 +3941,7 @@ namespace TShockAPI
                             }
                             else
                             {
-                                var items = Tools.GetItemByIdOrName(id);
+                                var items = TShock.Utils.GetItemByIdOrName(id);
                                 var brick = items[0];
                                 args.Player.SendMessage("You need " + cost + " RCoins to buy " + quantity + " " + brick.name + ".", Color.Red);
                                 return;
@@ -3717,7 +3954,7 @@ namespace TShockAPI
                             cost = ((double)price / 250) * quantity;
                             if (TShock.Users.Buy(args.Player.Name, cost))
                             {
-                                var items = Tools.GetItemByIdOrName(id);
+                                var items = TShock.Utils.GetItemByIdOrName(id);
                                 var brick = items[0];
                                 args.Player.GiveItem(brick.type, brick.name, brick.width, brick.height, quantity);
 
@@ -3727,7 +3964,7 @@ namespace TShockAPI
                             }
                             else
                             {
-                                var items = Tools.GetItemByIdOrName(id);
+                                var items = TShock.Utils.GetItemByIdOrName(id);
                                 var brick = items[0];
                                 args.Player.SendMessage("You need " + cost + " RCoins to buy " + quantity + " " + brick.name + ".", Color.Red);
                                 return;
@@ -3740,7 +3977,7 @@ namespace TShockAPI
                             cost = ((double)price / 250) * quantity;
                             if (TShock.Users.Buy(args.Player.Name, cost))
                             {
-                                var items = Tools.GetItemByIdOrName(id);
+                                var items = TShock.Utils.GetItemByIdOrName(id);
                                 var brick = items[0];
                                 args.Player.GiveItem(brick.type, brick.name, brick.width, brick.height, quantity);
 
@@ -3750,7 +3987,7 @@ namespace TShockAPI
                             }
                             else
                             {
-                                var items = Tools.GetItemByIdOrName(id);
+                                var items = TShock.Utils.GetItemByIdOrName(id);
                                 var brick = items[0];
                                 args.Player.SendMessage("You need " + cost + " RCoins to buy " + quantity + " " + brick.name + ".", Color.Red);
                                 return;
@@ -3763,7 +4000,7 @@ namespace TShockAPI
                             cost = ((double)price / 250) * quantity;
                             if (TShock.Users.Buy(args.Player.Name, cost))
                             {
-                                var items = Tools.GetItemByIdOrName(id);
+                                var items = TShock.Utils.GetItemByIdOrName(id);
                                 var brick = items[0];
                                 args.Player.GiveItem(brick.type, brick.name, brick.width, brick.height, quantity);
 
@@ -3773,7 +4010,7 @@ namespace TShockAPI
                             }
                             else
                             {
-                                var items = Tools.GetItemByIdOrName(id);
+                                var items = TShock.Utils.GetItemByIdOrName(id);
                                 var brick = items[0];
                                 args.Player.SendMessage("You need " + cost + " RCoins to buy " + quantity + " " + brick.name + ".", Color.Red);
                                 return;
@@ -3786,7 +4023,7 @@ namespace TShockAPI
                             cost = ((double)price / 250) * quantity;
                             if (TShock.Users.Buy(args.Player.Name, cost))
                             {
-                                var items = Tools.GetItemByIdOrName(id);
+                                var items = TShock.Utils.GetItemByIdOrName(id);
                                 var brick = items[0];
                                 args.Player.GiveItem(brick.type, brick.name, brick.width, brick.height, quantity);
 
@@ -3796,7 +4033,7 @@ namespace TShockAPI
                             }
                             else
                             {
-                                var items = Tools.GetItemByIdOrName(id);
+                                var items = TShock.Utils.GetItemByIdOrName(id);
                                 var brick = items[0];
                                 args.Player.SendMessage("You need " + cost + " RCoins to buy " + quantity + " " + brick.name + ".", Color.Red);
                                 return;
@@ -3809,7 +4046,7 @@ namespace TShockAPI
                             cost = ((double)price / 250) * quantity;
                             if (TShock.Users.Buy(args.Player.Name, cost))
                             {
-                                var items = Tools.GetItemByIdOrName(id);
+                                var items = TShock.Utils.GetItemByIdOrName(id);
                                 var brick = items[0];
                                 args.Player.GiveItem(brick.type, brick.name, brick.width, brick.height, quantity);
 
@@ -3819,7 +4056,7 @@ namespace TShockAPI
                             }
                             else
                             {
-                                var items = Tools.GetItemByIdOrName(id);
+                                var items = TShock.Utils.GetItemByIdOrName(id);
                                 var brick = items[0];
                                 args.Player.SendMessage("You need " + cost + " RCoins to buy " + quantity + " " + brick.name + ".", Color.Red);
                                 return;
@@ -3832,7 +4069,7 @@ namespace TShockAPI
                             cost = ((double)price / 250) * quantity;
                             if (TShock.Users.Buy(args.Player.Name, cost))
                             {
-                                var items = Tools.GetItemByIdOrName(id);
+                                var items = TShock.Utils.GetItemByIdOrName(id);
                                 var brick = items[0];
                                 args.Player.GiveItem(brick.type, brick.name, brick.width, brick.height, quantity);
 
@@ -3842,7 +4079,7 @@ namespace TShockAPI
                             }
                             else
                             {
-                                var items = Tools.GetItemByIdOrName(id);
+                                var items = TShock.Utils.GetItemByIdOrName(id);
                                 var brick = items[0];
                                 args.Player.SendMessage("You need " + cost + " RCoins to buy " + quantity + " " + brick.name + ".", Color.Red);
                                 return;
@@ -4209,7 +4446,7 @@ namespace TShockAPI
             }
 
             string plStr = String.Join(" ", args.Parameters);
-            var players = Tools.FindPlayer(plStr);
+            var players = TShock.Utils.FindPlayer(plStr);
             if (players.Count == 0)
             {
                 args.Player.SendMessage("Invalid player!", Color.Red);
@@ -4248,7 +4485,7 @@ namespace TShockAPI
                     killcount++;
                 }
             }
-            Tools.Broadcast(string.Format("Killed {0} NPCs.", killcount));
+            TShock.Utils.Broadcast(string.Format("Killed {0} NPCs.", killcount));
         }
 
         private static void Item(CommandArgs args)
@@ -4265,7 +4502,7 @@ namespace TShockAPI
             }
             int itemAmount = 0;
             int.TryParse(args.Parameters[args.Parameters.Count - 1], out itemAmount);
-            var items = Tools.GetItemByIdOrName(args.Parameters[0]);
+            var items = TShock.Utils.GetItemByIdOrName(args.Parameters[0]);
             if (items.Count == 0)
             {
                 args.Player.SendMessage("Invalid item type!", Color.Red);
@@ -4316,7 +4553,7 @@ namespace TShockAPI
                 return;
             }
             int itemAmount = 0;
-            var items = Tools.GetItemByIdOrName(args.Parameters[0]);
+            var items = TShock.Utils.GetItemByIdOrName(args.Parameters[0]);
             args.Parameters.RemoveAt(0);
             string plStr = args.Parameters[0];
             args.Parameters.RemoveAt(0);
@@ -4337,7 +4574,7 @@ namespace TShockAPI
                 var item = items[0];
                 if (item.type >= 1 && item.type < Main.maxItemTypes)
                 {
-                    var players = Tools.FindPlayer(plStr);
+                    var players = TShock.Utils.FindPlayer(plStr);
                     if (players.Count == 0)
                     {
                         args.Player.SendMessage("Invalid player!", Color.Red);
@@ -4370,11 +4607,55 @@ namespace TShockAPI
             }
         }
 
+        public static void ClearItems(CommandArgs args)
+        {
+
+            int radius = 50;
+            if (args.Parameters.Count > 0)
+            {
+
+                if (args.Parameters[0].ToLower() == "all")
+                {
+
+                    radius = Int32.MaxValue / 16;
+
+                }
+                else
+                {
+
+                    try
+                    {
+
+                        radius = Convert.ToInt32(args.Parameters[0]);
+
+                    }
+                    catch (Exception) { args.Player.SendMessage("Please either enter the keyword \"all\", or the block radius you wish to delete all items from.", Color.Red); return; }
+
+                }
+
+            }
+            int count = 0;
+            for (int i = 0; i < 200; i++)
+            {
+
+                if ((Math.Sqrt(Math.Pow(Main.item[i].position.X - args.Player.X, 2) + Math.Pow(Main.item[i].position.Y - args.Player.Y, 2)) < radius * 16) && (Main.item[i].active))
+                {
+
+                    Main.item[i].active = false;
+                    NetMessage.SendData(0x15, -1, -1, "", i, 0f, 0f, 0f, 0);
+                    count++;
+                }
+
+            }
+            args.Player.SendMessage("All " + count.ToString() + " items within a radius of " + radius.ToString() + " have been deleted.");
+
+        }
+
         private static void Heal(CommandArgs args)
         {
             TSPlayer playerToHeal;
-            Item heart = Tools.GetItemById(58);
-            Item star = Tools.GetItemById(184);
+            Item heart = TShock.Utils.GetItemById(58);
+            Item star = TShock.Utils.GetItemById(184);
             if (args.Parameters.Count > 0)
             {
                 if (args.Parameters[0] == "all")
@@ -4403,7 +4684,7 @@ namespace TShockAPI
                 }
                 
                 string plStr = String.Join(" ", args.Parameters);
-                var players = Tools.FindPlayer(plStr);
+                var players = TShock.Utils.FindPlayer(plStr);
                 if (players.Count == 0)
                 {
                     args.Player.SendMessage("Invalid player!", Color.Red);
@@ -4455,7 +4736,7 @@ namespace TShockAPI
             int time = 60;
             if (!int.TryParse(args.Parameters[0], out id))
             {
-                var found = Tools.GetBuffByName(args.Parameters[0]);
+                var found = TShock.Utils.GetBuffByName(args.Parameters[0]);
                 if (found.Count == 0)
                 {
                     args.Player.SendMessage("Invalid buff name!", Color.Red);
@@ -4476,7 +4757,7 @@ namespace TShockAPI
                     time = 60;
                 args.Player.SetBuff(id, time * 60);
                 args.Player.SendMessage(string.Format("You have buffed yourself with {0}({1}) for {2} seconds!",
-                    Tools.GetBuffName(id), Tools.GetBuffDescription(id), (time)), Color.Green);
+                    TShock.Utils.GetBuffName(id), TShock.Utils.GetBuffDescription(id), (time)), Color.Green);
             }
             else
                 args.Player.SendMessage("Invalid buff ID!", Color.Red);
@@ -4491,7 +4772,7 @@ namespace TShockAPI
             }
             int id = 0;
             int time = 60;
-            var foundplr = Tools.FindPlayer(args.Parameters[0]);
+            var foundplr = TShock.Utils.FindPlayer(args.Parameters[0]);
             if (foundplr.Count == 0)
             {
                 args.Player.SendMessage("Invalid player!", Color.Red);
@@ -4506,7 +4787,7 @@ namespace TShockAPI
             {
                 if (!int.TryParse(args.Parameters[1], out id))
                 {
-                    var found = Tools.GetBuffByName(args.Parameters[1]);
+                    var found = TShock.Utils.GetBuffByName(args.Parameters[1]);
                     if (found.Count == 0)
                     {
                         args.Player.SendMessage("Invalid buff name!", Color.Red);
@@ -4527,9 +4808,9 @@ namespace TShockAPI
                         time = 60;
                     foundplr[0].SetBuff(id, time * 60);
                     args.Player.SendMessage(string.Format("You have buffed {0} with {1}({2}) for {3} seconds!",
-                        foundplr[0].Name, Tools.GetBuffName(id), Tools.GetBuffDescription(id), (time)), Color.Green);
+                        foundplr[0].Name, TShock.Utils.GetBuffName(id), TShock.Utils.GetBuffDescription(id), (time)), Color.Green);
                     foundplr[0].SendMessage(string.Format("{0} has buffed you with {1}({2}) for {3} seconds!",
-                        args.Player.Name, Tools.GetBuffName(id), Tools.GetBuffDescription(id), (time)), Color.Green);
+                        args.Player.Name, TShock.Utils.GetBuffName(id), TShock.Utils.GetBuffDescription(id), (time)), Color.Green);
                 }
                 else
                     args.Player.SendMessage("Invalid buff ID!", Color.Red);
@@ -4599,8 +4880,10 @@ namespace TShockAPI
                     args.Player.SendMessage("Unknown plant!", Color.Red);
                     return;
             }
-            args.Player.SendMessage("You have grown a " + name, Color.Green);
+            args.Player.SendTileSquare(x, y);
+            args.Player.SendMessage("Tried to grow a " + name, Color.Green);
         }
+
         #endregion Cheat Comamnds
     }
 }

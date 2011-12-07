@@ -109,7 +109,7 @@ namespace TShockAPI.DB
                 if (!TShock.Groups.GroupExists(user.Group))
                     throw new GroupNotExistsException(user.Group);
 
-                if (database.Query("INSERT INTO Users (Username, Password, UserGroup, IP, LastLogin, PlayingTime, RCoins) VALUES (@0, @1, @2, @3, @4, @5, @6);", user.Name, Tools.HashPassword(user.Password), user.Group, user.Address, Convert.ToString(DateTime.Now.ToFileTime()), 0, 0) < 1)
+                if (database.Query("INSERT INTO Users (Username, Password, UserGroup, IP, LastLogin, PlayingTime, RCoins) VALUES (@0, @1, @2, @3, @4, @5, @6);", user.Name, TShock.Utils.HashPassword(user.Password), user.Group, user.Address, Convert.ToString(DateTime.Now.ToFileTime()), 0, 0) < 1)
                     throw new UserExistsException(user.Name);
             }
             catch (Exception ex)
@@ -223,7 +223,7 @@ namespace TShockAPI.DB
             try
             {
                 var user = TShock.Users.GetUserByName(Name);
-                var player = Tools.FindPlayer(Name);
+                var player = TShock.Utils.FindPlayer(Name);
                 var plr = player[0];
                 
                 using (var reader = database.QueryReader("SELECT * FROM Users WHERE LOWER (Username) = @0;", Name.ToLower()))
@@ -410,7 +410,7 @@ namespace TShockAPI.DB
         {
             try
             {
-                if (database.Query("UPDATE Users SET Password = @0 WHERE LOWER (Username) = @1;", Tools.HashPassword(password), user.Name.ToLower()) == 0)
+                if (database.Query("UPDATE Users SET Password = @0 WHERE LOWER (Username) = @1;", TShock.Utils.HashPassword(password), user.Name.ToLower()) == 0)
                     throw new UserNotExistException(user.Name);
             }
             catch (Exception ex)
@@ -495,7 +495,7 @@ namespace TShockAPI.DB
                     if (reader.Read())
                     {
                         string group = reader.Get<string>("UserGroup");
-                        return Tools.GetGroup(group);
+                        return TShock.Utils.GetGroup(group);
                     }
                 }
             }
@@ -503,7 +503,7 @@ namespace TShockAPI.DB
             {
                 Log.ConsoleError("GetGroupForIP SQL returned an error: " + ex);
             }
-            return Tools.GetGroup("default");
+            return TShock.Utils.GetGroup("default");
         }
 
         public Group GetGroupForIPExpensive(string ip)
@@ -514,9 +514,9 @@ namespace TShockAPI.DB
                 {
                     while (reader.Read())
                     {
-                        if (Tools.GetIPv4Address(reader.Get<string>("IP")) == ip)
+                        if (TShock.Utils.GetIPv4Address(reader.Get<string>("IP")) == ip)
                         {
-                            return Tools.GetGroup(reader.Get<string>("UserGroup"));
+                            return TShock.Utils.GetGroup(reader.Get<string>("UserGroup"));
                         }
                     }
                 }
@@ -525,7 +525,7 @@ namespace TShockAPI.DB
             {
                 Log.ConsoleError("GetGroupForIP SQL returned an error: " + ex);
             }
-            return Tools.GetGroup("default");
+            return TShock.Utils.GetGroup("default");
         }
 
 

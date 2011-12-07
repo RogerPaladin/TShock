@@ -4,10 +4,9 @@ using System.ComponentModel;
 using System.IO;
 using System.Net.Sockets;
 using System.Text;
-using Microsoft.Xna.Framework;
 using Terraria;
-using TerrariaAPI;
-using TerrariaAPI.Hooks;
+
+using Hooks;
 
 namespace TShockAPI
 {
@@ -90,7 +89,7 @@ namespace TShockAPI
             Compressed = new int[52];
         }
 
-        void GameHooks_Update(GameTime obj)
+        void GameHooks_Update()
         {
             FlushAll();
         }

@@ -20,7 +20,7 @@ using System.IO;
 
 namespace TShockAPI
 {
-    public class FileTools
+    public class FileTool
     {
         internal static string RulesPath { get { return Path.Combine(TShock.SavePath, "rules.txt"); } }
         internal static string MotdPath { get { return Path.Combine(TShock.SavePath, "motd.txt"); } }
@@ -91,7 +91,7 @@ namespace TShockAPI
             using (var tr = new StreamReader(WhitelistPath))
             {
                 string whitelist = tr.ReadToEnd();
-                ip = Tools.GetRealIP(ip);
+                ip = TShock.Utils.GetRealIP(ip);
                 bool contains = whitelist.Contains(ip);
                 if (!contains)
                 {
@@ -99,7 +99,7 @@ namespace TShockAPI
                     {
                         if (string.IsNullOrWhiteSpace(line))
                             continue;
-                        contains = Tools.GetIPv4Address(line).Equals(ip);
+                        contains = TShock.Utils.GetIPv4Address(line).Equals(ip);
                         if (contains)
                             return true;
                     }

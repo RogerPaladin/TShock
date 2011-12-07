@@ -135,6 +135,9 @@ namespace TShockAPI
         [Description("User can spawn items")]
         public static readonly string item;
 
+        [Description("User can clear item drops.")]
+        public static readonly string clearitems;
+
         [Description("")]
         public static readonly string heal;
 
@@ -161,7 +164,10 @@ namespace TShockAPI
 
         [Description("User can heal all players")]
         public static readonly string canhealall;
-        
+
+        [Description("User can change hardmode state.")]
+        public static readonly string hardmode;
+
         static Permissions()
         {
             foreach (var field in typeof(Permissions).GetFields())
