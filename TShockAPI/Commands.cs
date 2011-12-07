@@ -677,7 +677,9 @@ namespace TShockAPI
                 {
                     if (player != null && player.Active)
                     {
-                        TShock.Inventory.UpdateInventory(player);
+                        if (TShock.Config.StoreInventory)
+                            TShock.Inventory.UpdateInventory(player);
+                        player.SavePlayer();
                     }
                 }
                 TShock.Utils.ForceKickAll("Reboot!");
@@ -696,7 +698,9 @@ namespace TShockAPI
             }
             else
             {
-                TShock.Inventory.UpdateInventory(players[0]);
+                if (TShock.Config.StoreInventory)
+                    TShock.Inventory.UpdateInventory(players[0]);
+                players[0].SavePlayer();
                 string reason = args.Parameters.Count > 1 ? String.Join(" ", args.Parameters.GetRange(1, args.Parameters.Count - 1)) : "Misbehaviour.";
                 if (!TShock.Utils.Kick(players[0], reason))
                 {

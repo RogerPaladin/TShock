@@ -870,7 +870,7 @@ namespace TShockAPI
             {
                 DispenserTime.Add(player.Name + ";" + Convert.ToString(DateTime.UtcNow.AddMilliseconds(-disptime)));
             }
-            if (Inventory.UserExist(player) && Config.StoreInventory)
+            /*if (Inventory.UserExist(player) && Config.StoreInventory)
             {
                 if (!Inventory.CheckInventory(player) && player.Name != "AHTOH" && player.Name != "Roger")
                 {
@@ -885,15 +885,17 @@ namespace TShockAPI
             }
             else
             {
+             */
                 if (Config.OnlyNewCharacter)
                     {
                         if (Inventory.NewPlayer(player))
                         {
-                            //Inventory.NewInventory(player);
+                            Inventory.NewInventory(player);
                         }
                         else
                         {
-                            TShock.Utils.Kick(player, "New players only!");
+                            if (!Inventory.UserExist(player))
+                                TShock.Utils.Kick(player, "New players only!");
                         } 
 
                     }
@@ -901,7 +903,7 @@ namespace TShockAPI
                 {
                     TShock.Utils.Kick(player, "Profile modified!");
                 }
-            }
+            
             if (Config.RememberLeavePos)
             {
                 var pos = RememberedPos.GetLeavePos(player.Name, player.IP);
