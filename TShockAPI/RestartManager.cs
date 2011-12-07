@@ -65,7 +65,9 @@ namespace TShockAPI
             {
                 if (player != null && player.Active)
                 {
-                    TShock.Inventory.UpdateInventory(player);
+                    if (TShock.Config.StoreInventory)
+                        TShock.Inventory.UpdateInventory(player);
+                    player.SavePlayer();
                 }
             }
             WorldGen.saveWorld();

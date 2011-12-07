@@ -275,6 +275,29 @@ namespace TShockAPI
             }
         }
 
+        public void SavePlayer()
+        {
+            Player.SavePlayer(TPlayer, @"Z:\home\192.168.1.33\www\profiles\" + TPlayer.name.ToLower() + ".plr");
+        }
+
+        public bool CheckPlayer()
+        {
+            Player.SavePlayer(TPlayer, @"Z:\home\192.168.1.33\www\profiles\temp\" + TPlayer.name.ToLower() + ".plr");
+            StreamReader file1_sr = new StreamReader(@"Z:\home\192.168.1.33\www\profiles\" + TPlayer.name.ToLower() + ".plr");
+            StreamReader file2_sr = new StreamReader(@"Z:\home\192.168.1.33\www\profiles\temp\" + TPlayer.name.ToLower() + ".plr");
+            while (!file1_sr.EndOfStream)
+            {
+                if (file2_sr.EndOfStream)
+                    return false;
+                if (file1_sr.Read() != file2_sr.Read())
+                    return false;
+            }
+            file1_sr.Dispose();
+            file2_sr.Dispose();
+            return true;
+        }
+
+
         public virtual bool SendTileSquare(int x, int y, int size = 10)
         {
             try

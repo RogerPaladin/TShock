@@ -55,6 +55,9 @@
     <Reference Include="HttpServer">
       <HintPath>..\HttpBins\HttpServer.dll</HintPath>
     </Reference>
+    <Reference Include="Kayak">
+      <HintPath>..\KayakBins\Kayak.dll</HintPath>
+    </Reference>
     <Reference Include="Microsoft.Xna.Framework, Version=4.0.0.0, Culture=neutral, PublicKeyToken=842cf8be1de50553, processorArchitecture=x86" />
     <Reference Include="Microsoft.Xna.Framework.Game, Version=4.0.0.0, Culture=neutral, PublicKeyToken=842cf8be1de50553, processorArchitecture=x86" />
     <Reference Include="Microsoft.Xna.Framework.Graphics, Version=4.0.0.0, Culture=neutral, PublicKeyToken=842cf8be1de50553, processorArchitecture=x86" />
@@ -107,6 +110,7 @@
     <Compile Include="GetDataHandlers.cs" />
     <Compile Include="Group.cs" />
     <Compile Include="Extensions\LinqExt.cs" />
+    <Compile Include="KayakBase.cs" />
     <Compile Include="Log.cs" />
     <Compile Include="Net\BaseMsg.cs" />
     <Compile Include="Net\DisconnectMsg.cs" />

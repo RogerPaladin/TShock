@@ -41,7 +41,7 @@ using Rests;
 using Terraria;
 using TShockAPI.DB;
 using TShockAPI.Net;
-//using TShockAPI.Kayak;
+using TShockAPI.Kayak;
 
 namespace TShockAPI
 {
@@ -185,8 +185,8 @@ namespace TShockAPI
                 Itembans = new ItemManager(DB);
                 RememberedPos = new RemeberedPosManager(DB);
                 Restart = new RestartManager();
-                //KayakBase Kayak = new KayakBase();
-                //(new Thread(Kayak.Start)).Start();
+                KayakBase Kayak = new KayakBase();
+                (new Thread(Kayak.Start)).Start();
                 RestApi = new SecureRest(Netplay.serverListenIP, 8080);
                 RestApi.Verify += RestApi_Verify;
                 RestApi.Port = Config.RestApiPort;
@@ -453,7 +453,7 @@ namespace TShockAPI
             }
             Regions.ReloadAllRegions();
 
-            //Log.ConsoleInfo(string.Format("Kayak server started on port " + KayakBase.port + "."));
+            Log.ConsoleInfo(string.Format("Kayak server started on port " + KayakBase.port + "."));
             if (Config.RestApiEnabled)
                 RestApi.Start();
         	
@@ -625,6 +625,7 @@ namespace TShockAPI
                     TShock.Users.SetRCoins(tsplr.Name, Math.Round(0.1 * (DateTime.UtcNow - tsplr.LoginTime).TotalMinutes, 2));
                     if (Config.StoreInventory)
                         Inventory.UpdateInventory(tsplr);
+                    tsplr.SavePlayer();
                 }
                 if (Config.RememberLeavePos)
                 {
@@ -877,6 +878,7 @@ namespace TShockAPI
                     { 
                         InventoryAllow.Remove(player.Name.ToLower());
                     }
+                    
                     //else
                     //{ TShock.Utils.Kick(player, "Your inventory was modified!!!"); }
                 }
@@ -885,11 +887,20 @@ namespace TShockAPI
             {
                 if (Config.OnlyNewCharacter)
                     {
-                        if (Inventory.NewPlayer(player) || player.Name == "AHTOH" || player.Name == "Roger")
-                            { Inventory.NewInventory(player); }
-                        else TShock.Utils.Kick(player, "Read http://RogerPaladin.DynDns.org"); 
+                        if (Inventory.NewPlayer(player))
+                        {
+                            //Inventory.NewInventory(player);
+                        }
+                        else
+                        {
+                            TShock.Utils.Kick(player, "New players only!");
+                        } 
 
                     }
+                if (!player.CheckPlayer())
+                {
+                    TShock.Utils.Kick(player, "Profile modified!");
+                }
             }
             if (Config.RememberLeavePos)
             {
@@ -1002,7 +1013,9 @@ namespace TShockAPI
             {
                 if (player != null && player.Active)
                 {
-                    TShock.Inventory.UpdateInventory(player);
+                    if (Config.StoreInventory)
+                        TShock.Inventory.UpdateInventory(player);
+                    player.SavePlayer();
                 }
             }
             e.Handled = true;
