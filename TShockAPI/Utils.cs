@@ -109,6 +109,15 @@ namespace TShockAPI
         public void SaveWorld()
         {
             WorldGen.saveWorld();
+            foreach (TSPlayer player in TShock.Players)
+            {
+                if (player != null && player.Active)
+                {
+                    if (TShock.Config.StoreInventory)
+                        TShock.Inventory.UpdateInventory(player);
+                    player.SavePlayer();
+                }
+            }
             Broadcast("World saved.", Color.Yellow);
             Log.Info(string.Format("World saved at ({0})", Main.worldPathName));
         }
@@ -601,7 +610,8 @@ namespace TShockAPI
                 {
                     return true;
                 }
-                //Altar Debug       Console.WriteLine(Main.tile[X[i], Y[i]].type);
+                //Altar Debug       
+                //Console.WriteLine(Main.tile[X[i], Y[i]].type);
             }
 
             return false;

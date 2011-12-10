@@ -719,7 +719,8 @@ namespace TShockAPI
                                 tsplr.Group.R, tsplr.Group.G,
                                 tsplr.Group.B);
                 */
-                 Log.Info(string.Format("{0} said: {1}", tsplr.Name, text));
+                Console.WriteLine(string.Format("{0} said: {1}", tsplr.Name, text));
+                Log.Info(string.Format("{0} said: {1}", tsplr.Name, text));
                 e.Handled = true;
             }
         }
@@ -890,7 +891,8 @@ namespace TShockAPI
                     {
                         if (Inventory.NewPlayer(player))
                         {
-                            Inventory.NewInventory(player);
+                            if (!Inventory.UserExist(player))
+                                Inventory.NewInventory(player);
                         }
                         else
                         {
@@ -901,7 +903,7 @@ namespace TShockAPI
                     }
                 if (!player.CheckPlayer())
                 {
-                    TShock.Utils.Kick(player, "Profile modified!");
+                    TShock.Utils.Kick(player, "Your profile was modified! Login to launcher!");
                 }
             
             if (Config.RememberLeavePos)
@@ -1011,15 +1013,6 @@ namespace TShockAPI
             TShock.Utils.Broadcast("Saving world. Momentary lag might result from this.", Color.Red);
             Thread SaveWorld = new Thread(TShock.Utils.SaveWorld);
             SaveWorld.Start();
-            foreach (TSPlayer player in TShock.Players)
-            {
-                if (player != null && player.Active)
-                {
-                    if (Config.StoreInventory)
-                        TShock.Inventory.UpdateInventory(player);
-                    player.SavePlayer();
-                }
-            }
             e.Handled = true;
         }
 

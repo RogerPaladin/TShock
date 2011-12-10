@@ -69,16 +69,6 @@ namespace TShockAPI
                 Thread SaveWorld = new Thread(TShock.Utils.SaveWorld);
                 SaveWorld.Start();
 
-                foreach (TSPlayer player in TShock.Players)
-                {
-                    if (player != null && player.Active)
-                    {
-                        if (TShock.Config.StoreInventory)
-                            TShock.Inventory.UpdateInventory(player);
-                        player.SavePlayer();
-                    }
-                }
-
                 while (SaveWorld.ThreadState == ThreadState.Running)
                     Thread.Sleep(50);
                 Console.WriteLine("World backed up");

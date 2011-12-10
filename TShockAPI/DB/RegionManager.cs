@@ -613,7 +613,7 @@ namespace TShockAPI.DB
                 if (r.Name.ToLower().Equals(name.ToLower()))
                     return r;
             }
-            return new Region();
+            return null;
         }
 
         public Region ZacksGetRegionByName(String name)

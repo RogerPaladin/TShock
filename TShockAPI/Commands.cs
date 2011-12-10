@@ -1783,15 +1783,7 @@ namespace TShockAPI
             TShock.Utils.Broadcast("Server map saving, potential lag spike");
             Thread SaveWorld = new Thread(TShock.Utils.SaveWorld);
             SaveWorld.Start();
-            foreach (TSPlayer player in TShock.Players)
-            {
-                if (player != null && player.Active)
-                {
-                    if (TShock.Config.StoreInventory)
-                    TShock.Inventory.UpdateInventory(player);
-                    player.SavePlayer();
-                }
-            }
+
         }
 
         private static void Settle(CommandArgs args)
