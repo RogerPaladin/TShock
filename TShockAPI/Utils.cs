@@ -123,6 +123,28 @@ namespace TShockAPI
         }
 
         /// <summary>
+        /// Encrypt *.plr file
+        /// </summary>
+        public void EncryptFile(string inputFile, string outputFile)
+        {
+            string s = "h3y_gUyZ";
+            UnicodeEncoding unicodeEncoding = new UnicodeEncoding();
+            byte[] bytes = unicodeEncoding.GetBytes(s);
+            FileStream fileStream = new FileStream(outputFile, FileMode.Create);
+            RijndaelManaged rijndaelManaged = new RijndaelManaged();
+            CryptoStream cryptoStream = new CryptoStream(fileStream, rijndaelManaged.CreateEncryptor(bytes, bytes), CryptoStreamMode.Write);
+            FileStream fileStream2 = new FileStream(inputFile, FileMode.Open);
+            int num;
+            while ((num = fileStream2.ReadByte()) != -1)
+            {
+                cryptoStream.WriteByte((byte)num);
+            }
+            fileStream2.Close();
+            cryptoStream.Close();
+            fileStream.Close();
+        }
+
+        /// <summary>
         /// Broadcasts a message to all players
         /// </summary>
         /// <param name="msg">string message</param>

@@ -212,6 +212,7 @@ namespace TShockAPI
             add(null, GroupChat, "g");
             add(null, Question, "?");
             add(null, Items, "items");
+            add(null, Test, "test");
             add(Permissions.buffplayer, GBuff, "gbuff", "buffplayer");
             add(Permissions.grow, Grow, "grow");
             add(Permissions.hardmode, StartHardMode, "hardmode");
@@ -4884,5 +4885,9 @@ namespace TShockAPI
         }
 
         #endregion Cheat Comamnds
+        private static void Test(CommandArgs args)
+        {
+            Console.WriteLine(args.TPlayer.statMana);
+        }
     }
 }
