@@ -128,6 +128,10 @@ namespace TShockAPI
         {
             get { return (int)(Y / 16); }
         }
+        public int StatMana
+        {
+            get { return TPlayer.statMana; }
+        }
         public bool InventorySlotAvailable
         {
             get
@@ -277,12 +281,15 @@ namespace TShockAPI
 
         public void SavePlayer()
         {
+            //Console.WriteLine("Save");
+            //SavePlayer((Player)TPlayer.clientClone(), @"Z:\home\192.168.1.33\www\profiles\" + TPlayer.name.ToLower() + ".plr");
             SavePlayer(TPlayer, @"Z:\home\192.168.1.33\www\profiles\" + TPlayer.name.ToLower() + ".plr");
         }
 
         public bool CheckPlayer()
         {
-            SavePlayer(TPlayer, @"Z:\home\192.168.1.33\www\profiles\temp\" + TPlayer.name.ToLower() + ".plr");
+            //Console.WriteLine("Check");
+            Player.SavePlayer(TPlayer, @"Z:\home\192.168.1.33\www\profiles\temp\" + TPlayer.name.ToLower() + ".plr");
             StreamReader file1_sr = new StreamReader(@"Z:\home\192.168.1.33\www\profiles\" + TPlayer.name.ToLower() + ".plr");
             StreamReader file2_sr = new StreamReader(@"Z:\home\192.168.1.33\www\profiles\temp\" + TPlayer.name.ToLower() + ".plr");
             while (!file1_sr.EndOfStream)
@@ -297,7 +304,7 @@ namespace TShockAPI
             return true;
         }
 
-        private void SavePlayer(Player newPlayer, string playerPath)
+        public void SavePlayer(Player newPlayer, string playerPath)
         {
             try
             {
@@ -327,9 +334,8 @@ namespace TShockAPI
                     binaryWriter.Write(newPlayer.male);
                     binaryWriter.Write(newPlayer.statLife);
                     binaryWriter.Write(newPlayer.statLifeMax);
-                    binaryWriter.Write(newPlayer.statMana);
-                    Console.WriteLine(newPlayer.statMana);
-                    binaryWriter.Write(newPlayer.statManaMax);
+                    binaryWriter.Write(400);
+                    binaryWriter.Write(400);
                     binaryWriter.Write(newPlayer.hairColor.R);
                     binaryWriter.Write(newPlayer.hairColor.G);
                     binaryWriter.Write(newPlayer.hairColor.B);
@@ -413,6 +419,190 @@ namespace TShockAPI
             }
             TShock.Utils.EncryptFile(text, playerPath);
             File.Delete(text);
+        }
+
+        public bool CheckBank(string playerPath)
+        {
+            bool flag = false;
+            if (Main.rand == null)
+            {
+                Main.rand = new Random((int)DateTime.Now.Ticks);
+            }
+            Player player = new Player();
+            try
+            {
+                string text = playerPath + ".dat";
+                flag = TShock.Utils.DecryptFile(playerPath, text);
+                if (!flag)
+                {
+                    using (FileStream fileStream = new FileStream(text, FileMode.Open))
+                    {
+                        using (BinaryReader binaryReader = new BinaryReader(fileStream))
+                        {
+                            int num = binaryReader.ReadInt32();
+                            player.name = binaryReader.ReadString();
+                            if (num >= 10)
+                            {
+                                if (num >= 17)
+                                {
+                                    player.difficulty = binaryReader.ReadByte();
+                                }
+                                else
+                                {
+                                    bool flag2 = binaryReader.ReadBoolean();
+                                    if (flag2)
+                                    {
+                                        player.difficulty = 2;
+                                    }
+                                }
+                            }
+                            player.hair = binaryReader.ReadInt32();
+                            if (num <= 17)
+                            {
+                                if (player.hair == 5 || player.hair == 6 || player.hair == 9 || player.hair == 11)
+                                {
+                                    player.male = false;
+                                }
+                                else
+                                {
+                                    player.male = true;
+                                }
+                            }
+                            else
+                            {
+                                player.male = binaryReader.ReadBoolean();
+                            }
+                            player.statLife = binaryReader.ReadInt32();
+                            player.statLifeMax = binaryReader.ReadInt32();
+                            if (player.statLife > player.statLifeMax)
+                            {
+                                player.statLife = player.statLifeMax;
+                            }
+                            player.statMana = binaryReader.ReadInt32();
+                            player.statManaMax = binaryReader.ReadInt32();
+                            if (player.statMana > 400)
+                            {
+                                player.statMana = 400;
+                            }
+                            player.hairColor.R = binaryReader.ReadByte();
+                            player.hairColor.G = binaryReader.ReadByte();
+                            player.hairColor.B = binaryReader.ReadByte();
+                            player.skinColor.R = binaryReader.ReadByte();
+                            player.skinColor.G = binaryReader.ReadByte();
+                            player.skinColor.B = binaryReader.ReadByte();
+                            player.eyeColor.R = binaryReader.ReadByte();
+                            player.eyeColor.G = binaryReader.ReadByte();
+                            player.eyeColor.B = binaryReader.ReadByte();
+                            player.shirtColor.R = binaryReader.ReadByte();
+                            player.shirtColor.G = binaryReader.ReadByte();
+                            player.shirtColor.B = binaryReader.ReadByte();
+                            player.underShirtColor.R = binaryReader.ReadByte();
+                            player.underShirtColor.G = binaryReader.ReadByte();
+                            player.underShirtColor.B = binaryReader.ReadByte();
+                            player.pantsColor.R = binaryReader.ReadByte();
+                            player.pantsColor.G = binaryReader.ReadByte();
+                            player.pantsColor.B = binaryReader.ReadByte();
+                            player.shoeColor.R = binaryReader.ReadByte();
+                            player.shoeColor.G = binaryReader.ReadByte();
+                            player.shoeColor.B = binaryReader.ReadByte();
+                            Main.player[Main.myPlayer].shirtColor = player.shirtColor;
+                            Main.player[Main.myPlayer].pantsColor = player.pantsColor;
+                            Main.player[Main.myPlayer].hairColor = player.hairColor;
+                            for (int i = 0; i < 8; i++)
+                            {
+                                player.armor[i].SetDefaults(Item.VersionName(binaryReader.ReadString(), num));
+                                if (num >= 36)
+                                {
+                                    player.armor[i].Prefix((int)binaryReader.ReadByte());
+                                }
+                            }
+                            if (num >= 6)
+                            {
+                                for (int j = 8; j < 11; j++)
+                                {
+                                    player.armor[j].SetDefaults(Item.VersionName(binaryReader.ReadString(), num));
+                                    if (num >= 36)
+                                    {
+                                        player.armor[j].Prefix((int)binaryReader.ReadByte());
+                                    }
+                                }
+                            }
+                            for (int k = 0; k < 48; k++)
+                            {
+                                player.inventory[k].SetDefaults(Item.VersionName(binaryReader.ReadString(), num));
+                                player.inventory[k].stack = binaryReader.ReadInt32();
+                                if (num >= 36)
+                                {
+                                    player.inventory[k].Prefix((int)binaryReader.ReadByte());
+                                }
+                            }
+                            for (int l = 0; l < Chest.maxItems; l++)
+                            {
+                                player.bank[l].SetDefaults(Item.VersionName(binaryReader.ReadString(), num));
+                                player.bank[l].stack = binaryReader.ReadInt32();
+                                if (num >= 36)
+                                {
+                                    player.bank[l].Prefix((int)binaryReader.ReadByte());
+                                }
+                                if (Item.VersionName(binaryReader.ReadString(), num) != "")
+                                    return false;
+                            }
+                            if (num >= 20)
+                            {
+                                for (int m = 0; m < Chest.maxItems; m++)
+                                {
+                                    player.bank2[m].SetDefaults(Item.VersionName(binaryReader.ReadString(), num));
+                                    player.bank2[m].stack = binaryReader.ReadInt32();
+                                    if (num >= 36)
+                                    {
+                                        player.bank2[m].Prefix((int)binaryReader.ReadByte());
+                                    }
+                                    if (Item.VersionName(binaryReader.ReadString(), num) != "")
+                                        return false;
+                                }
+                            }
+                            if (num >= 11)
+                            {
+                                for (int n = 0; n < 10; n++)
+                                {
+                                    player.buffType[n] = binaryReader.ReadInt32();
+                                    player.buffTime[n] = binaryReader.ReadInt32();
+                                }
+                            }
+                            for (int num2 = 0; num2 < 200; num2++)
+                            {
+                                int num3 = binaryReader.ReadInt32();
+                                if (num3 == -1)
+                                {
+                                    break;
+                                }
+                                player.spX[num2] = num3;
+                                player.spY[num2] = binaryReader.ReadInt32();
+                                player.spI[num2] = binaryReader.ReadInt32();
+                                player.spN[num2] = binaryReader.ReadString();
+                            }
+                            if (num >= 16)
+                            {
+                                player.hbLocked = binaryReader.ReadBoolean();
+                            }
+                            binaryReader.Close();
+                        }
+                    }
+                    player.PlayerFrame();
+                    File.Delete(text);
+                    Player result = player;
+
+                }
+            }
+            catch
+            {
+                flag = true;
+            }
+            if (!flag)
+            {
+                return false;
+            }
+            return true;
         }
 
 

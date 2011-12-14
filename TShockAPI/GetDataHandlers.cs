@@ -115,6 +115,8 @@ namespace TShockAPI
                 {PacketTypes.SignNew, HandleSign},
                 {PacketTypes.PlayerSlot, HandlePlayerSlot},
                 {PacketTypes.TileGetSection, HandleGetSection},
+                {PacketTypes.PlayerMana, HandlePlayerMana},
+                {PacketTypes.PlayerHp, HandlePlayerHp},
             };
         }
 
@@ -364,6 +366,20 @@ namespace TShockAPI
                 {
                     args.Player.SendMessage("You do not have permission to place meteorite.", Color.Red);
                     TShock.Utils.SendLogs(string.Format("{0} tried to place meteorite", args.Player.Name), Color.Red);
+                    args.Player.SendTileSquare(x, y);
+                    return true;
+                }
+                if (tiletype == 29 && !args.Player.Group.HasPermission(Permissions.adminstatus))
+                {
+                    args.Player.SendMessage("You do not have permission to place piggy bank.", Color.Red);
+                    TShock.Utils.SendLogs(string.Format("{0} tried to place piggy bank", args.Player.Name), Color.Red);
+                    args.Player.SendTileSquare(x, y);
+                    return true;
+                }
+                if (tiletype == 97 && !args.Player.Group.HasPermission(Permissions.adminstatus))
+                {
+                    args.Player.SendMessage("You do not have permission to place safe.", Color.Red);
+                    TShock.Utils.SendLogs(string.Format("{0} tried to place safe", args.Player.Name), Color.Red);
                     args.Player.SendTileSquare(x, y);
                     return true;
                 }
@@ -918,6 +934,22 @@ namespace TShockAPI
                 return true;
             }
             args.Player.RequestedSection = true;
+            return false;
+        }
+        private static bool HandlePlayerMana(GetDataHandlerArgs args)
+        {
+            byte id = args.Data.ReadInt8();
+            var Mana = args.Data.ReadInt16();
+            var MaxMana = args.Data.ReadInt16();
+            //Console.WriteLine("Mana: " + Mana);
+            return false;
+        }
+        private static bool HandlePlayerHp(GetDataHandlerArgs args)
+        {
+            byte id = args.Data.ReadInt8();
+            var Life = args.Data.ReadInt16();
+            var MaxLife = args.Data.ReadInt16();
+            //Console.WriteLine("Life: " + Life);
             return false;
         }
     }

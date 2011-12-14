@@ -213,28 +213,55 @@ namespace TShockAPI.DB
         }
         public bool NewPlayer(TSPlayer player)
         {
-            string[] inv;
-            inv = new string[41];
-            for (int i = 0; i < 40; i++)
+            string[] inv, bank1, bank2, armor;
+            inv = new string[49];
+            bank1 = new string[21];
+            bank2 = new string[21];
+            armor = new string[12];
+            for (int i = 0; i < 48; i++)
             {
                 inv[i] = player.TPlayer.inventory[i].name + ":" + player.TPlayer.inventory[i].stack;
             }
-                        if ("Copper Shortsword:1" == inv[0] && "Copper Pickaxe:1" == inv[1] && "Copper Axe:1" == inv[2] && ":0" == inv[3] && ":0" == inv[4] &&
-                            ":0" == inv[5] && ":0" == inv[6] && ":0" == inv[7] && ":0" == inv[8] && ":0" == inv[9] &&
-                            ":0" == inv[10] && ":0" == inv[11] && ":0" == inv[12] && ":0" == inv[13] && ":0" == inv[14] &&
-                            ":0" == inv[15] && ":0" == inv[16] && ":0" == inv[17] && ":0" == inv[18] && ":0" == inv[19] &&
-                            ":0" == inv[20] && ":0" == inv[21] && ":0" == inv[22] && ":0" == inv[23] && ":0" == inv[24] &&
-                            ":0" == inv[25] && ":0" == inv[26] && ":0" == inv[27] && ":0" == inv[28] && ":0" == inv[29] &&
-                            ":0" == inv[30] && ":0" == inv[31] && ":0" == inv[32] && ":0" == inv[33] && ":0" == inv[34] &&
-                            ":0" == inv[35] && ":0" == inv[36] && ":0" == inv[37] && ":0" == inv[38] && ":0" == inv[39])
-                        {
-                            return true;
-                        }
-                        else
-                        {
-                            return false;
-                        }
-          }
+            for (int k = 0; k < 20; k++)
+            {
+                    bank1[k] = player.TPlayer.bank[k].name + ":" + player.TPlayer.bank[k].stack;
+                    bank2[k] = player.TPlayer.bank2[k].name + ":" + player.TPlayer.bank2[k].stack;
+            }
+              if ("Copper Shortsword:1" == inv[0] && "Copper Pickaxe:1" == inv[1] && "Copper Axe:1" == inv[2])
+              {
+              }
+                else
+              {
+                return false;
+              }
+
+              for (int i = 3; i < 48; i++)
+            {
+                if (":0" != inv[i])
+                {
+                    return false;
+                }
+            }
+            for (int i = 0; i < 20; i++)
+            {
+                bank1[i] = player.TPlayer.bank[i].name + ":" + player.TPlayer.bank[i].stack;
+                bank2[i] = player.TPlayer.bank2[i].name + ":" + player.TPlayer.bank2[i].stack;
+                if (":0" != bank1[i] || ":0" != bank2[i])
+                {
+                    return false;
+                }
+            }
+            for (int i = 0; i < 11; i++)
+            {
+                armor[i] = player.TPlayer.armor[i].name;
+                if ("" != armor[i])
+                {
+                    return false;
+                }
+
+            }
+            return true;
+        }
         public void DelInventory(string PlayerName)
         {
             database.Query("DELETE FROM Inventory WHERE LOWER (Username) = @0;", PlayerName.ToLower());

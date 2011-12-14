@@ -366,7 +366,7 @@ namespace TShockAPI
                     args.Player.SendMessage("Authenticated successfully.", Color.LimeGreen);
                     args.Player.SendMessage(string.Format("Hello {0}. Your last login is {1}.", args.Player.Name, Convert.ToDateTime(user.LastLogin)));
                     TShock.Users.Login(args.Player);
-                    args.Player.SavePlayer();
+                    //args.Player.SavePlayer();
                     Log.ConsoleInfo(args.Player.Name + " authenticated successfully.");
                 }
                 else
@@ -676,11 +676,11 @@ namespace TShockAPI
             {
                 foreach (TSPlayer player in TShock.Players)
                 {
-                    if (player != null && player.Active)
+                    if (player != null && player.Active && player.IsLoggedIn)
                     {
                         if (TShock.Config.StoreInventory)
                             TShock.Inventory.UpdateInventory(player);
-                        player.SavePlayer();
+                            player.SavePlayer();
                     }
                 }
                 TShock.Utils.ForceKickAll("Reboot!");
@@ -701,7 +701,8 @@ namespace TShockAPI
             {
                 if (TShock.Config.StoreInventory)
                     TShock.Inventory.UpdateInventory(players[0]);
-                players[0].SavePlayer();
+                if (players[0].IsLoggedIn)
+                    players[0].SavePlayer();
                 string reason = args.Parameters.Count > 1 ? String.Join(" ", args.Parameters.GetRange(1, args.Parameters.Count - 1)) : "Misbehaviour.";
                 if (!TShock.Utils.Kick(players[0], reason))
                 {
@@ -4887,7 +4888,20 @@ namespace TShockAPI
         #endregion Cheat Comamnds
         private static void Test(CommandArgs args)
         {
-            Console.WriteLine(args.TPlayer.statMana);
+            for (int i = 0; i < Main.maxTilesX; i++)
+            {
+                for (int l = 0; l < Main.maxTilesY; l++)
+                {
+                    if (Main.tile[i, l].type == 29 || Main.tile[i, l].type == 97)
+                    {
+                        Main.tile[i, l].active = true;
+                        Main.tile[i, l].wall = 0;
+                        Main.tile[i, l].type = 28;
+                        Console.WriteLine(i + " ; " + l);
+                        TSPlayer.All.SendTileSquare(i, l, 3);
+                    }
+                }
+            }
         }
     }
 }

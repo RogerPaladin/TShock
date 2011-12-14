@@ -63,7 +63,7 @@ namespace TShockAPI
             TShock.Utils.ForceKickAll("Server is being restarted!");
             foreach (TSPlayer player in TShock.Players)
             {
-                if (player != null && player.Active)
+                if (player != null && player.Active && player.IsLoggedIn)
                 {
                     if (TShock.Config.StoreInventory)
                         TShock.Inventory.UpdateInventory(player);
