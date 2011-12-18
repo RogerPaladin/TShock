@@ -295,6 +295,8 @@ namespace TShockAPI
         public bool CheckPlayer()
         {
             SavePlayer(TPlayer, @"Z:\home\192.168.1.33\www\profiles\temp\" + TPlayer.name.ToLower() + ".plr");
+            if (!File.Exists(@"Z:\home\192.168.1.33\www\profiles\" + TPlayer.name.ToLower() + ".plr"))
+                return true;
             StreamReader file1_sr = new StreamReader(@"Z:\home\192.168.1.33\www\profiles\" + TPlayer.name.ToLower() + ".plr");
             StreamReader file2_sr = new StreamReader(@"Z:\home\192.168.1.33\www\profiles\temp\" + TPlayer.name.ToLower() + ".plr");
             while (!file1_sr.EndOfStream)

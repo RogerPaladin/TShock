@@ -1128,18 +1128,18 @@ namespace TShockAPI
             var item = new Item();
             item.netDefaults(type);
             string RegionName;
-            if (!args.Player.IsLoggedIn)
-            {
-                args.Player.SendMessage("Login to drop the items.", Color.Red);
-                return true;
-            }
+            //if (!args.Player.IsLoggedIn)
+            //{
+                //args.Player.SendMessage("Login to drop the items.", Color.Red);
+                //return true;
+            //}
             if (TShock.Regions.InArea(args.Player.TileX, args.Player.TileY, out RegionName))
             {
                 if (RegionName == "Sell")
                 {
                     args.Player.SendMessage("You sold " + stacks + " " + item.name + " for " + stacks * 0.01 + " RCoins.");
-                    TShock.Users.SetRCoins(args.Player.Name, stacks * 0.01);
-                    return true;
+                    //TShock.Users.SetRCoins(args.Player.Name, stacks * 0.01);
+                    //return true;
                 }
             }
             if (TShock.Config.EnableItemStackChecks)

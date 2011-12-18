@@ -366,7 +366,7 @@ namespace TShockAPI
                     args.Player.SendMessage("Authenticated successfully.", Color.LimeGreen);
                     args.Player.SendMessage(string.Format("Hello {0}. Your last login is {1}.", args.Player.Name, Convert.ToDateTime(user.LastLogin)));
                     TShock.Users.Login(args.Player);
-                    //args.Player.SavePlayer();
+                    args.Player.SavePlayer();
                     Log.ConsoleInfo(args.Player.Name + " authenticated successfully.");
                 }
                 else
