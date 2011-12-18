@@ -1137,8 +1137,8 @@ namespace TShockAPI
             {
                 if (RegionName == "Sell")
                 {
-                    args.Player.SendMessage("You sold " + stacks + " " + item.name + " for " + stacks * 0.1 + " RCoins.");
-                    TShock.Users.SetRCoins(args.Player.Name, stacks * 0.1);
+                    args.Player.SendMessage("You sold " + stacks + " " + item.name + " for " + stacks * 0.01 + " RCoins.");
+                    TShock.Users.SetRCoins(args.Player.Name, stacks * 0.01);
                     return true;
                 }
             }

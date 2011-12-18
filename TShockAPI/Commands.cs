@@ -2786,7 +2786,7 @@ namespace TShockAPI
                     if (args.Parameters.Count < 2)
                     {
                         args.Player.SendMessage("Invalid syntax! Proper syntax: /buy item [items]", Color.Red);
-                        args.Player.SendMessage("To see list of items type /items [armor/weapon/item/brick]", Color.Red);
+                        args.Player.SendMessage("To see list of items type /items [armor/weapon/item/block/other]", Color.Red);
                         return;
                     }
                     if (args.Parameters.Count == 3)
@@ -2926,7 +2926,7 @@ namespace TShockAPI
                         
                             #region bluemoon
                         case "bluemoon":
-                               int price = 33;
+                               double price = 33;
                                string id= "163";
                                if (TShock.Users.Buy(args.Player.Name, price))
                             {
@@ -4086,6 +4086,168 @@ namespace TShockAPI
                                 return;
                             }
                         #endregion                        
+
+                            #region cursedflame
+                        case "cursedflame":
+                            price = 20;
+                            id = "Cursed flame";
+                            cost = Math.Round(((double)price / 99) * quantity, 2);
+                            if (TShock.Users.Buy(args.Player.Name, cost))
+                            {
+                                var items = TShock.Utils.GetItemByIdOrName(id);
+                                var soul = items[0];
+                                args.Player.GiveItem(soul.type, soul.name, soul.width, soul.height, quantity);
+
+                                args.Player.SendMessage("You spent " + cost + " RCoins.", Color.BlanchedAlmond);
+                                args.Player.SendMessage("You buy " + quantity + " " + soul.name + " successfully.", Color.Green);
+                                return;
+                            }
+                            else
+                            {
+                                var items = TShock.Utils.GetItemByIdOrName(id);
+                                var soul = items[0];
+                                args.Player.SendMessage("You need " + cost + " RCoins to buy " + quantity + " " + soul.name + ".", Color.Red);
+                                return;
+                            }
+                        #endregion
+                            #region souloflight
+                        case "souloflight":
+                            price = 125;
+                            id = "Soul of Light";
+                            cost = ((double)price / 250) * quantity;
+                            if (TShock.Users.Buy(args.Player.Name, cost))
+                            {
+                                var items = TShock.Utils.GetItemByIdOrName(id);
+                                var soul = items[0];
+                                args.Player.GiveItem(soul.type, soul.name, soul.width, soul.height, quantity);
+
+                                args.Player.SendMessage("You spent " + cost + " RCoins.", Color.BlanchedAlmond);
+                                args.Player.SendMessage("You buy " + quantity + " " + soul.name + " successfully.", Color.Green);
+                                return;
+                            }
+                            else
+                            {
+                                var items = TShock.Utils.GetItemByIdOrName(id);
+                                var soul = items[0];
+                                args.Player.SendMessage("You need " + cost + " RCoins to buy " + quantity + " " + soul.name + ".", Color.Red);
+                                return;
+                            }
+                        #endregion
+                            #region soulofnight
+                        case "soulofnight":
+                            price = 125;
+                            id = "Soul of Night";
+                            cost = ((double)price / 250) * quantity;
+                            if (TShock.Users.Buy(args.Player.Name, cost))
+                            {
+                                var items = TShock.Utils.GetItemByIdOrName(id);
+                                var soul = items[0];
+                                args.Player.GiveItem(soul.type, soul.name, soul.width, soul.height, quantity);
+
+                                args.Player.SendMessage("You spent " + cost + " RCoins.", Color.BlanchedAlmond);
+                                args.Player.SendMessage("You buy " + quantity + " " + soul.name + " successfully.", Color.Green);
+                                return;
+                            }
+                            else
+                            {
+                                var items = TShock.Utils.GetItemByIdOrName(id);
+                                var soul = items[0];
+                                args.Player.SendMessage("You need " + cost + " RCoins to buy " + quantity + " " + soul.name + ".", Color.Red);
+                                return;
+                            }
+                        #endregion
+                            #region soulofflight
+                        case "soulofflight":
+                            price = 100;
+                            id = "Soul of Flight";
+                            cost = ((double)price / 250) * quantity;
+                            if (TShock.Users.Buy(args.Player.Name, cost))
+                            {
+                                var items = TShock.Utils.GetItemByIdOrName(id);
+                                var soul = items[0];
+                                args.Player.GiveItem(soul.type, soul.name, soul.width, soul.height, quantity);
+
+                                args.Player.SendMessage("You spent " + cost + " RCoins.", Color.BlanchedAlmond);
+                                args.Player.SendMessage("You buy " + quantity + " " + soul.name + " successfully.", Color.Green);
+                                return;
+                            }
+                            else
+                            {
+                                var items = TShock.Utils.GetItemByIdOrName(id);
+                                var soul = items[0];
+                                args.Player.SendMessage("You need " + cost + " RCoins to buy " + quantity + " " + soul.name + ".", Color.Red);
+                                return;
+                            }
+                        #endregion
+                            #region soulofsight
+                        case "soulofsight":
+                            price = 175;
+                            id = "Soul of Sight";
+                            cost = ((double)price / 250) * quantity;
+                            if (TShock.Users.Buy(args.Player.Name, cost))
+                            {
+                                var items = TShock.Utils.GetItemByIdOrName(id);
+                                var soul = items[0];
+                                args.Player.GiveItem(soul.type, soul.name, soul.width, soul.height, quantity);
+
+                                args.Player.SendMessage("You spent " + cost + " RCoins.", Color.BlanchedAlmond);
+                                args.Player.SendMessage("You buy " + quantity + " " + soul.name + " successfully.", Color.Green);
+                                return;
+                            }
+                            else
+                            {
+                                var items = TShock.Utils.GetItemByIdOrName(id);
+                                var soul = items[0];
+                                args.Player.SendMessage("You need " + cost + " RCoins to buy " + quantity + " " + soul.name + ".", Color.Red);
+                                return;
+                            }
+                        #endregion
+                            #region soulofmight
+                        case "soulofmight":
+                            price = 175;
+                            id = "Soul of Might";
+                            cost = ((double)price / 250) * quantity;
+                            if (TShock.Users.Buy(args.Player.Name, cost))
+                            {
+                                var items = TShock.Utils.GetItemByIdOrName(id);
+                                var soul = items[0];
+                                args.Player.GiveItem(soul.type, soul.name, soul.width, soul.height, quantity);
+
+                                args.Player.SendMessage("You spent " + cost + " RCoins.", Color.BlanchedAlmond);
+                                args.Player.SendMessage("You buy " + quantity + " " + soul.name + " successfully.", Color.Green);
+                                return;
+                            }
+                            else
+                            {
+                                var items = TShock.Utils.GetItemByIdOrName(id);
+                                var soul = items[0];
+                                args.Player.SendMessage("You need " + cost + " RCoins to buy " + quantity + " " + soul.name + ".", Color.Red);
+                                return;
+                            }
+                        #endregion
+                            #region souloffright
+                        case "souloffright":
+                            price = 200;
+                            id = "Soul of Fright";
+                            cost = ((double)price / 250) * quantity;
+                            if (TShock.Users.Buy(args.Player.Name, cost))
+                            {
+                                var items = TShock.Utils.GetItemByIdOrName(id);
+                                var soul = items[0];
+                                args.Player.GiveItem(soul.type, soul.name, soul.width, soul.height, quantity);
+
+                                args.Player.SendMessage("You spent " + cost + " RCoins.", Color.BlanchedAlmond);
+                                args.Player.SendMessage("You buy " + quantity + " " + soul.name + " successfully.", Color.Green);
+                                return;
+                            }
+                            else
+                            {
+                                var items = TShock.Utils.GetItemByIdOrName(id);
+                                var soul = items[0];
+                                args.Player.SendMessage("You need " + cost + " RCoins to buy " + quantity + " " + soul.name + ".", Color.Red);
+                                return;
+                            }
+                        #endregion
                         
                         default:
                                 args.Player.SendMessage("Invalid item name.", Color.Red);
@@ -4235,7 +4397,7 @@ namespace TShockAPI
         {
             if (args.Parameters.Count == 0)
             {
-                args.Player.SendMessage("Invalid syntax! Proper syntax: /items [armor/weapon/item/block]", Color.Red);
+                args.Player.SendMessage("Invalid syntax! Proper syntax: /items [armor/weapon/item/block/other]", Color.Red);
                 return;
             }
 
@@ -4429,6 +4591,46 @@ namespace TShockAPI
                             if (BrickSet.Count > (15 * page))
                             {
                                 args.Player.SendMessage(string.Format("Type /items block {0} for more items.", (page + 1)), Color.Yellow);
+                            }
+                            return;
+                #endregion
+                #region other
+                case "other":
+                            page = 1;
+                            if (args.Parameters.Count == 2)
+                                int.TryParse(args.Parameters[1], out page);
+                            var other = new List<String>();
+                            other.Add("cursedflame(20)");
+                            other.Add("souloflight(125)");
+                            other.Add("soulofnight(125)");
+                            other.Add("soulofflight(100)");
+                            other.Add("soulofsight(175)");
+                            other.Add("soulofmight(175)");
+                            other.Add("souloffright(200)");
+
+                            sb = new StringBuilder();
+                            if (other.Count > (15 * (page - 1)))
+                            {
+                                for (int j = (15 * (page - 1)); j < (15 * page); j++)
+                                {
+                                    if (sb.Length != 0)
+                                        sb.Append(", ");
+                                    sb.Append(other[j]);
+                                    if (j == other.Count - 1)
+                                    {
+                                        args.Player.SendMessage(sb.ToString(), Color.Yellow);
+                                        break;
+                                    }
+                                    if ((j + 1) % 5 == 0)
+                                    {
+                                        args.Player.SendMessage(sb.ToString(), Color.Yellow);
+                                        sb.Clear();
+                                    }
+                                }
+                            }
+                            if (other.Count > (15 * page))
+                            {
+                                args.Player.SendMessage(string.Format("Type /items other {0} for more items.", (page + 1)), Color.Yellow);
                             }
                             return;
                 #endregion
