@@ -169,7 +169,7 @@ namespace TShockAPI
             {
                 if (socket.tcpClient.Client != null && socket.tcpClient.Client.Poll(0, SelectMode.SelectWrite))
                 {
-                    socket.tcpClient.Client.Send(buffer, offset, count, SocketFlags.None);
+                        socket.tcpClient.Client.Send(buffer, offset, count, SocketFlags.None);
                     return true;
                 }
             }
@@ -177,6 +177,9 @@ namespace TShockAPI
             {
             }
             catch (SocketException)
+            {
+            }
+            catch (IOException)
             {
             }
             return false;

@@ -1,4 +1,4 @@
-﻿/*
+/*
 TShock, a server mod for Terraria
 Copyright (C) 2011 The TShock Team
 
@@ -392,7 +392,50 @@ namespace TShockAPI
             }
             return found;
         }
+        public string GetPrefixById(int id)
+        {
+            var item = new Item();
+            item.SetDefaults(0);
+            item.prefix = (byte)id;
+            item.AffixName();
+            return item.name.Trim();
+        }
 
+        public List<int> GetPrefixByName(string name)
+        {
+            Item item = new Item();
+            item.SetDefaults(0);
+            for (int i = 1; i < 83; i++)
+            {
+                item.prefix = (byte)i;
+                if (item.AffixName().Trim() == name)
+                    return new List<int> { i };
+            }
+            var found = new List<int>();
+            for (int i = 1; i < 83; i++)
+            {
+                try
+                {
+                    item.prefix = (byte)i;
+                    if (item.AffixName().Trim().ToLower() == name.ToLower())
+                        return new List<int> { i };
+                    if (item.AffixName().Trim().ToLower().StartsWith(name.ToLower()))
+                        found.Add(i);
+                }
+                catch { }
+            }
+            return found;
+        }
+
+        public List<int> GetPrefixByIdOrName(string idOrName)
+        {
+            int type = -1;
+            if (int.TryParse(idOrName, out type) && type > 0 && type < 84)
+            {
+                return new List<int> { type };
+            }
+            return GetPrefixByName(idOrName);
+        }
         /// <summary>
         /// Kicks all player from the server without checking for immunetokick permission.
         /// </summary>
@@ -885,5 +928,14 @@ namespace TShockAPI
         }
 
 
+        public int SearchProjectile(short identity)
+        {
+            for (int i = 0; i < Main.maxProjectiles; i++)
+            {
+                if (Main.projectile[i].identity == identity)
+                    return i;
+            }
+            return 1000;
+        }
     }
 }

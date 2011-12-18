@@ -60,6 +60,7 @@ namespace TShockAPI
         public bool IsLoggedIn;
         public int UserID = -1;
         public bool HasBeenNaggedAboutLoggingIn;
+        public bool TPAllow = true;
         public bool TpLock = false;
         Player FakePlayer;
         public bool RequestedSection = false;
@@ -67,7 +68,11 @@ namespace TShockAPI
         public bool ForceSpawn = false;
         public string Country = "??";
         public int Difficulty;
-
+        private string CacheIP;
+        public Vector2 LastTilePos;
+        public string CurrentRegion;
+        public bool InRegion = false;
+        
         public bool RealPlayer
         {
             get { return Index >= 0 && Index < Main.maxNetPlayers && Main.player[Index] != null; }
@@ -80,7 +85,10 @@ namespace TShockAPI
         {
             get
             {
-                return RealPlayer ? TShock.Utils.GetRealIP(Netplay.serverSock[Index].tcpClient.Client.RemoteEndPoint.ToString()) : "";
+                if (string.IsNullOrEmpty(CacheIP))
+                    return CacheIP = RealPlayer ? (Netplay.serverSock[Index].tcpClient.Connected ? TShock.Utils.GetRealIP(Netplay.serverSock[Index].tcpClient.Client.RemoteEndPoint.ToString()) : "") : "";
+                else
+                    return CacheIP;
             }
         }
         /// <summary>
@@ -616,15 +624,16 @@ namespace TShockAPI
             return false;
         }
 
-        public virtual void GiveItem(int type, string name, int width, int height, int stack)
+        public virtual void GiveItem(int type, string name, int width, int height, int stack, int prefix = 0)
         {
-            int itemid = Item.NewItem((int)X, (int)Y, width, height, type, stack, true);
+            int itemid = Item.NewItem((int)X, (int)Y, width, height, type, stack, true, prefix);
             // This is for special pickaxe/hammers/swords etc
             Main.item[itemid].SetDefaults(name);
             // The set default overrides the wet and stack set by NewItem
             Main.item[itemid].wet = Collision.WetCollision(Main.item[itemid].position, Main.item[itemid].width, Main.item[itemid].height);
             Main.item[itemid].stack = stack;
             Main.item[itemid].owner = Index;
+            Main.item[itemid].prefix = (byte) prefix;
             NetMessage.SendData((int)PacketTypes.ItemDrop, -1, -1, "", itemid, 0f, 0f, 0f);
             NetMessage.SendData((int)PacketTypes.ItemOwner, -1, -1, "", itemid, 0f, 0f, 0f);
         }
@@ -635,11 +644,6 @@ namespace TShockAPI
         }
 
         public virtual void SendMessage(string msg, Color color)
-        {
-            SendMessage(msg, color.R, color.G, color.B);
-        }
-
-        public virtual void SendMessage(string msg, Microsoft.Xna.Framework.Color color)
         {
             SendMessage(msg, color.R, color.G, color.B);
         }

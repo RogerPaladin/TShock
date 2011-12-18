@@ -48,7 +48,7 @@ namespace TShockAPI
     [APIVersion(1, 10)]
     public class TShock : TerrariaPlugin
     {
-        public static readonly Version VersionNum = Assembly.GetExecutingAssembly().GetName().Version;
+		public static readonly Version VersionNum = Assembly.GetExecutingAssembly().GetName().Version;
         public static readonly string VersionCodename = "1.1 broke our API";
 
         public static string SavePath = "tshock";
@@ -113,9 +113,13 @@ namespace TShockAPI
             Order = 0;
         }
 
+
+
         [System.Diagnostics.CodeAnalysis.SuppressMessage("Microsoft.Security", "CA2122:DoNotIndirectlyExposeMethodsWithLinkDemands")]
         public override void Initialize()
         {
+            HandleCommandLine(Environment.GetCommandLineArgs());
+
             if (!Directory.Exists(SavePath))
                 Directory.CreateDirectory(SavePath);
 
@@ -128,7 +132,6 @@ namespace TShockAPI
 
             try
             {
-
                 if (File.Exists(Path.Combine(SavePath, "tshock.pid")))
                 {
                     Log.ConsoleInfo("TShock was improperly shut down. Please avoid this in the future, world corruption may result from this.");
@@ -139,7 +142,7 @@ namespace TShockAPI
                 ConfigFile.ConfigRead += OnConfigRead;
                 FileTool.SetupConfig();
 
-                HandleCommandLine(Environment.GetCommandLineArgs());
+                HandleCommandLine_Port(Environment.GetCommandLineArgs());
 
                 if (Config.StorageType.ToLower() == "sqlite")
                 {
@@ -236,6 +239,7 @@ namespace TShockAPI
                 TShock.Backups.Backup();
                 Process.GetCurrentProcess().Kill();
             }
+
         }
 
     	private void callHome()
@@ -402,6 +406,13 @@ namespace TShockAPI
                         Log.ConsoleInfo("World path has been set to " + path);
                     }
                 }
+            }
+        }
+
+        private void HandleCommandLine_Port(string[] parms)
+        {
+            for (int i = 0; i < parms.Length; i++)
+            {
                 if (parms[i].ToLower() == "-port")
                 {
                     int port = Convert.ToInt32(parms[++i]);
@@ -481,14 +492,14 @@ namespace TShockAPI
 
             if (Backups.IsBackupTime)
                 Backups.Backup();
-            
+
             if (Restart.PrepareToRestart)
             {
                 Console.WriteLine("The server will be restarted in 5 minutes");
                 TShock.Utils.Broadcast("The server will be restarted in 5 minutes");
                 Log.Info("The server will be restarted in 5 minutes");
             }
-        
+
             //call these every second, not every update
             if ((DateTime.UtcNow - LastCheck).TotalSeconds >= 1)
             {
@@ -512,60 +523,83 @@ namespace TShockAPI
                                 player.TilesDestroyed.Clear();
                             }
                         }
-
-                        if ((DateTime.UtcNow - StackCheatChecker).TotalMilliseconds > 5000)
+#region Thx2Twitchy
+                        if (player.LastTilePos != new Vector2(player.TileX, player.TileY))
                         {
-                            StackCheatChecker = DateTime.UtcNow;
-                            if (player.StackCheat(out item, out itemcount))
+                            bool InRegion = false;
+                            string RegionName;
+                            if(TShock.Regions.InArea(player.TileX, player.TileY, out RegionName))
                             {
-                                TShock.Utils.Broadcast(string.Format("{0} cheater!!! {1} x {2}", player.Name, item, itemcount), Color.Yellow);
-                                //TShock.Utils.Ban(player, "Stack Cheat.", "Server", Convert.ToString(DateTime.Now));
-                                TShock.Utils.ForceKick(player, string.Format("Stack Cheat. {0} x {1}", item, itemcount));
+                                if (player.CurrentRegion != RegionName)
+                                {
+                                    player.CurrentRegion = RegionName;
+                                    player.InRegion = true;
+                                    player.SendMessage("Entering " + player.CurrentRegion + " region.", Color.Magenta);
+                                }
+                                InRegion = true;
+                            }
+                            if (!InRegion && player.InRegion)
+                            {
+                                player.SendMessage("Leaving " + player.CurrentRegion + " region.", Color.Magenta);    
+                                player.CurrentRegion = "";
+                                player.InRegion = false;
+                            }
+                                player.LastTilePos = new Vector2(player.TileX, player.TileY);
                             }
                         }
-                        
-                        if (!player.Group.HasPermission(Permissions.usebanneditem))
-                        {
-                            var inv = player.TPlayer.inventory;
-
-                            for (int i = 0; i < inv.Length; i++)
-                            {
-                                if (inv[i] != null && Itembans.ItemIsBanned(inv[i].name))
+#endregion
+                                if ((DateTime.UtcNow - StackCheatChecker).TotalMilliseconds > 5000)
                                 {
-                                    player.Disconnect("Using banned item: " + inv[i].name + ", remove it and rejoin");
-                                    break;
+                                    StackCheatChecker = DateTime.UtcNow;
+                                    if (player.StackCheat(out item, out itemcount))
+                                    {
+                                        TShock.Utils.Broadcast(string.Format("{0} cheater!!! {1} x {2}", player.Name, item, itemcount), Color.Yellow);
+                                        //TShock.Utils.Ban(player, "Stack Cheat.", "Server", Convert.ToString(DateTime.Now));
+                                        TShock.Utils.ForceKick(player, string.Format("Stack Cheat. {0} x {1}", item, itemcount));
+                                    }
+                                }
+
+                                if (!player.Group.HasPermission(Permissions.usebanneditem))
+                                {
+                                    var inv = player.TPlayer.inventory;
+
+                                    for (int i = 0; i < inv.Length; i++)
+                                    {
+                                        if (inv[i] != null && Itembans.ItemIsBanned(inv[i].name))
+                                        {
+                                            player.Disconnect("Using banned item: " + inv[i].name + ", remove it and rejoin");
+                                            break;
+                                        }
+                                    }
+                                }
+
+                                if (!player.IsLoggedIn)
+                                {
+                                    if ((DateTime.UtcNow - player.Interval).TotalMilliseconds > 5000)
+                                    {
+                                        player.SendMessage(string.Format("Login in {0} seconds", TShock.Config.TimeToLogin * 60 - Math.Round((DateTime.UtcNow - player.LoginTime).TotalSeconds, 0)), Color.Red);
+                                        player.Interval = DateTime.UtcNow;
+                                    }
+                                    if ((DateTime.UtcNow - player.LoginTime).TotalMinutes >= TShock.Config.TimeToLogin)
+                                    {
+                                        TShock.Utils.Broadcast(player.Name + " Not logged in.", Color.Yellow);
+                                        TShock.Utils.Kick(player, "Not logged in.");
+                                    }
+
+                                }
+                                /*if (CheckPlayerCollision(player.TileX, player.TileY))
+                                    player.SendMessage("You are currently nocliping!", Color.Red);*/
+                                if (Restart.IsRestartTime)
+                                    Restart.Restart();
+
+                                if (player.ForceSpawn && (DateTime.Now - player.LastDeath).Seconds >= 3)
+                                {
+                                    player.Spawn();
+                                    player.ForceSpawn = false;
                                 }
                             }
                         }
-
-                        if (!player.IsLoggedIn)
-                        {
-                            if ((DateTime.UtcNow - player.Interval).TotalMilliseconds > 5000)
-                            {
-                                player.SendMessage(string.Format("Login in {0} seconds", TShock.Config.TimeToLogin * 60 - Math.Round((DateTime.UtcNow - player.LoginTime).TotalSeconds, 0)), Color.Red);
-                                player.Interval = DateTime.UtcNow;
-                            }
-                            if ((DateTime.UtcNow - player.LoginTime).TotalMinutes >= TShock.Config.TimeToLogin)
-                            {
-                                TShock.Utils.Broadcast(player.Name + " Not logged in.", Color.Yellow);
-                                TShock.Utils.Kick(player, "Not logged in.");
-                            }
-
-                        }
-                        /*if (CheckPlayerCollision(player.TileX, player.TileY))
-                            player.SendMessage("You are currently nocliping!", Color.Red);*/
-                            if (Restart.IsRestartTime)
-                                Restart.Restart();
-                        
-                        if (player.ForceSpawn && (DateTime.Now - player.LastDeath).Seconds >= 3)
-                        {
-                            player.Spawn();
-                            player.ForceSpawn = false;
-                        }
                     }
-                }
-            }
-        }
         private void OnJoin(int ply, HandledEventArgs handler)
         {
             var player = new TSPlayer(ply);
@@ -579,6 +613,7 @@ namespace TShockAPI
             }
             */
             player.Group = TShock.Utils.GetGroup("default");
+            player.LastTilePos = new Vector2(player.TileX, player.TileY);
             if (TShock.Utils.ActivePlayers() + 1 > Config.MaxSlots && !player.Group.HasPermission(Permissions.reservedslot))
             {
                 TShock.Utils.ForceKick(player, Config.ServerFullReason);
@@ -847,6 +882,9 @@ namespace TShockAPI
             {
                 var code = Geo.TryGetCountryCode(IPAddress.Parse(player.IP));
                 player.Country = code == null ? "N/A" : MaxMind.GeoIPCountry.GetCountryNameByCode(code);
+                if (code == "A1")
+                    if (TShock.Config.KickProxyUsers)
+                        TShock.Utils.Kick(player, "Proxies are not allowed");
                 Log.Info(string.Format("{0} ({1}) from '{2}' group from '{3}' joined.", player.Name, player.IP, player.Group.Name, player.Country));
                 TShock.Utils.Broadcast(player.Name + " is from the " + player.Country, Color.Yellow);
             }

@@ -224,7 +224,6 @@ namespace TShockAPI.DB
             double rcoins = 0;
             try
             {
-                var user = TShock.Users.GetUserByName(Name);
                 var player = TShock.Utils.FindPlayer(Name);
                 var plr = player[0];
                 
