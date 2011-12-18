@@ -45,7 +45,7 @@ using TShockAPI.Kayak;
 
 namespace TShockAPI
 {
-    [APIVersion(1, 9)]
+    [APIVersion(1, 10)]
     public class TShock : TerrariaPlugin
     {
         public static readonly Version VersionNum = Assembly.GetExecutingAssembly().GetName().Version;
@@ -232,7 +232,9 @@ namespace TShockAPI
             {
                 Log.Error("Fatal Startup Exception");
                 Log.Error(ex.ToString());
-                Environment.Exit(1);
+                //Environment.Exit(1);
+                TShock.Backups.Backup();
+                Process.GetCurrentProcess().Kill();
             }
         }
 
@@ -886,8 +888,8 @@ namespace TShockAPI
             }
             else
             {
-             */
-                if (Config.OnlyNewCharacter)
+             */  
+            if (Config.OnlyNewCharacter)
                     {
                         if (Inventory.NewPlayer(player))
                         {

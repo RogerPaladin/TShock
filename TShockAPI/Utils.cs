@@ -682,5 +682,208 @@ namespace TShockAPI
             string[] time = result.Split(';');
             return time[1];
         }
+
+        public static Player LoadPlayer(string playerPath)
+        {
+            bool flag = false;
+            if (Main.rand == null)
+            {
+                Main.rand = new Random((int)DateTime.Now.Ticks);
+            }
+            Player player = new Player();
+            try
+            {
+                string outputFile = playerPath + ".dat";
+                flag = TShock.Utils.DecryptFile(playerPath, outputFile);
+                if (!flag)
+                {
+                    using (FileStream stream = new FileStream(outputFile, FileMode.Open))
+                    {
+                        using (BinaryReader reader = new BinaryReader(stream))
+                        {
+                            int release = reader.ReadInt32();
+                            player.name = reader.ReadString();
+                            if (release >= 10)
+                            {
+                                if (release >= 0x11)
+                                {
+                                    player.difficulty = reader.ReadByte();
+                                }
+                                else if (reader.ReadBoolean())
+                                {
+                                    player.difficulty = 2;
+                                }
+                            }
+                            player.hair = reader.ReadInt32();
+                            if (release <= 0x11)
+                            {
+                                if (((player.hair == 5) || (player.hair == 6)) || ((player.hair == 9) || (player.hair == 11)))
+                                {
+                                    player.male = false;
+                                }
+                                else
+                                {
+                                    player.male = true;
+                                }
+                            }
+                            else
+                            {
+                                player.male = reader.ReadBoolean();
+                            }
+                            player.statLife = reader.ReadInt32();
+                            player.statLifeMax = reader.ReadInt32();
+                            if (player.statLife > player.statLifeMax)
+                            {
+                                player.statLife = player.statLifeMax;
+                            }
+                            player.statMana = reader.ReadInt32();
+                            player.statManaMax = reader.ReadInt32();
+                            if (player.statMana > 400)
+                            {
+                                player.statMana = 400;
+                            }
+                            player.hairColor.R = reader.ReadByte();
+                            player.hairColor.G = reader.ReadByte();
+                            player.hairColor.B = reader.ReadByte();
+                            player.skinColor.R = reader.ReadByte();
+                            player.skinColor.G = reader.ReadByte();
+                            player.skinColor.B = reader.ReadByte();
+                            player.eyeColor.R = reader.ReadByte();
+                            player.eyeColor.G = reader.ReadByte();
+                            player.eyeColor.B = reader.ReadByte();
+                            player.shirtColor.R = reader.ReadByte();
+                            player.shirtColor.G = reader.ReadByte();
+                            player.shirtColor.B = reader.ReadByte();
+                            player.underShirtColor.R = reader.ReadByte();
+                            player.underShirtColor.G = reader.ReadByte();
+                            player.underShirtColor.B = reader.ReadByte();
+                            player.pantsColor.R = reader.ReadByte();
+                            player.pantsColor.G = reader.ReadByte();
+                            player.pantsColor.B = reader.ReadByte();
+                            player.shoeColor.R = reader.ReadByte();
+                            player.shoeColor.G = reader.ReadByte();
+                            player.shoeColor.B = reader.ReadByte();
+                            //Main.player[Main.myPlayer].shirtColor = player.shirtColor;
+                            //Main.player[Main.myPlayer].pantsColor = player.pantsColor;
+                            //Main.player[Main.myPlayer].hairColor = player.hairColor;
+                            for (int i = 0; i < 8; i++)
+                            {
+                                player.armor[i].SetDefaults(Item.VersionName(reader.ReadString(), release));
+                                if (release >= 0x24)
+                                {
+                                    player.armor[i].Prefix(reader.ReadByte());
+                                }
+                            }
+                            if (release >= 6)
+                            {
+                                for (int n = 8; n < 11; n++)
+                                {
+                                    player.armor[n].SetDefaults(Item.VersionName(reader.ReadString(), release));
+                                    if (release >= 0x24)
+                                    {
+                                        player.armor[n].Prefix(reader.ReadByte());
+                                    }
+                                }
+                            }
+                            for (int j = 0; j < 0x2c; j++)
+                            {
+                                player.inventory[j].SetDefaults(Item.VersionName(reader.ReadString(), release));
+                                player.inventory[j].stack = reader.ReadInt32();
+                                if (release >= 0x24)
+                                {
+                                    player.inventory[j].Prefix(reader.ReadByte());
+                                }
+                            }
+                            if (release >= 15)
+                            {
+                                for (int num5 = 0x2c; num5 < 0x30; num5++)
+                                {
+                                    player.inventory[num5].SetDefaults(Item.VersionName(reader.ReadString(), release));
+                                    player.inventory[num5].stack = reader.ReadInt32();
+                                    if (release >= 0x24)
+                                    {
+                                        player.inventory[num5].Prefix(reader.ReadByte());
+                                    }
+                                }
+                            }
+                            for (int k = 0; k < Chest.maxItems; k++)
+                            {
+                                player.bank[k].SetDefaults(Item.VersionName(reader.ReadString(), release));
+                                player.bank[k].stack = reader.ReadInt32();
+                                if (release >= 0x24)
+                                {
+                                    player.bank[k].Prefix(reader.ReadByte());
+                                }
+                            }
+                            if (release >= 20)
+                            {
+                                for (int num7 = 0; num7 < Chest.maxItems; num7++)
+                                {
+                                    player.bank2[num7].SetDefaults(Item.VersionName(reader.ReadString(), release));
+                                    player.bank2[num7].stack = reader.ReadInt32();
+                                    if (release >= 0x24)
+                                    {
+                                        player.bank2[num7].Prefix(reader.ReadByte());
+                                    }
+                                }
+                            }
+                            if (release >= 11)
+                            {
+                                for (int num8 = 0; num8 < 10; num8++)
+                                {
+                                    player.buffType[num8] = reader.ReadInt32();
+                                    player.buffTime[num8] = reader.ReadInt32();
+                                }
+                            }
+                            for (int m = 0; m < 200; m++)
+                            {
+                                int num10 = reader.ReadInt32();
+                                if (num10 == -1)
+                                {
+                                    break;
+                                }
+                                player.spX[m] = num10;
+                                player.spY[m] = reader.ReadInt32();
+                                player.spI[m] = reader.ReadInt32();
+                                player.spN[m] = reader.ReadString();
+                            }
+                            if (release >= 0x10)
+                            {
+                                player.hbLocked = reader.ReadBoolean();
+                            }
+                            reader.Close();
+                        }
+                    }
+                    player.PlayerFrame();
+                    File.Delete(outputFile);
+                    return player;
+                }
+            }
+            catch
+            {
+                flag = true;
+            }
+            if (flag)
+            {
+                try
+                {
+                    string path = playerPath + ".bak";
+                    if (File.Exists(path))
+                    {
+                        File.Delete(playerPath);
+                        File.Move(path, playerPath);
+                        return LoadPlayer(playerPath);
+                    }
+                    return new Player();
+                }
+                catch
+                {
+                    return new Player();
+                }
+            }
+            return new Player();
+        }
+
+
     }
 }

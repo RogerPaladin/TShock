@@ -115,8 +115,7 @@ namespace TShockAPI
                 {PacketTypes.SignNew, HandleSign},
                 {PacketTypes.PlayerSlot, HandlePlayerSlot},
                 {PacketTypes.TileGetSection, HandleGetSection},
-                {PacketTypes.PlayerMana, HandlePlayerMana},
-                {PacketTypes.PlayerHp, HandlePlayerHp},
+                {PacketTypes.ItemDrop, HandleItemDrop},
             };
         }
 
@@ -565,7 +564,7 @@ namespace TShockAPI
                 args.Player.TileThreshold++;
                 var coords = new Vector2(x, y);
                 if (!args.Player.TilesDestroyed.ContainsKey(coords))
-                    args.Player.TilesDestroyed.Add(coords, Main.tile[x, y].Data);
+                    args.Player.TilesDestroyed.Add(coords, Main.tile[x, y]);
             }
 
             if ((DateTime.UtcNow - args.Player.LastExplosive).TotalMilliseconds < 1000)
@@ -936,15 +935,7 @@ namespace TShockAPI
             args.Player.RequestedSection = true;
             return false;
         }
-        private static bool HandlePlayerMana(GetDataHandlerArgs args)
-        {
-            byte id = args.Data.ReadInt8();
-            var Mana = args.Data.ReadInt16();
-            var MaxMana = args.Data.ReadInt16();
-            //Console.WriteLine("Mana: " + Mana);
-            return false;
-        }
-        private static bool HandlePlayerHp(GetDataHandlerArgs args)
+        private static bool HandleItemDrop(GetDataHandlerArgs args)
         {
             byte id = args.Data.ReadInt8();
             var Life = args.Data.ReadInt16();
