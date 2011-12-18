@@ -69,7 +69,7 @@ namespace TShockAPI
         public string Country = "??";
         public int Difficulty;
         private string CacheIP;
-        public Vector2 LastTilePos;
+        public Vector2 LastTilePos = new Vector2(-1,-1);
         public string CurrentRegion;
         public bool InRegion = false;
         

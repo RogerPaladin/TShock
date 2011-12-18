@@ -327,6 +327,15 @@ namespace TShockAPI
                     File.Delete(Path.Combine(SavePath, "tshock.pid"));
                 }
                 RestApi.Dispose();
+                foreach (TSPlayer player in TShock.Players)
+                {
+                    if (player != null && player.Active && player.IsLoggedIn)
+                    {
+                        if (TShock.Config.StoreInventory)
+                            TShock.Inventory.UpdateInventory(player);
+                        player.SavePlayer();
+                    }
+                }
             }
 
             base.Dispose(disposing);
@@ -523,12 +532,12 @@ namespace TShockAPI
                                 player.TilesDestroyed.Clear();
                             }
                         }
-#region Thx2Twitchy
+                        #region Thx2Twitchy
                         if (player.LastTilePos != new Vector2(player.TileX, player.TileY))
                         {
                             bool InRegion = false;
                             string RegionName;
-                            if(TShock.Regions.InArea(player.TileX, player.TileY, out RegionName))
+                            if (TShock.Regions.InArea(player.TileX, player.TileY, out RegionName))
                             {
                                 if (player.CurrentRegion != RegionName)
                                 {
@@ -540,66 +549,66 @@ namespace TShockAPI
                             }
                             if (!InRegion && player.InRegion)
                             {
-                                player.SendMessage("Leaving " + player.CurrentRegion + " region.", Color.Magenta);    
+                                player.SendMessage("Leaving " + player.CurrentRegion + " region.", Color.Magenta);
                                 player.CurrentRegion = "";
                                 player.InRegion = false;
                             }
-                                player.LastTilePos = new Vector2(player.TileX, player.TileY);
+                            player.LastTilePos = new Vector2(player.TileX, player.TileY);
+                        }
+                        #endregion
+                        if ((DateTime.UtcNow - StackCheatChecker).TotalMilliseconds > 5000)
+                        {
+                            StackCheatChecker = DateTime.UtcNow;
+                            if (player.StackCheat(out item, out itemcount))
+                            {
+                                TShock.Utils.Broadcast(string.Format("{0} cheater!!! {1} x {2}", player.Name, item, itemcount), Color.Yellow);
+                                //TShock.Utils.Ban(player, "Stack Cheat.", "Server", Convert.ToString(DateTime.Now));
+                                TShock.Utils.ForceKick(player, string.Format("Stack Cheat. {0} x {1}", item, itemcount));
                             }
                         }
-#endregion
-                                if ((DateTime.UtcNow - StackCheatChecker).TotalMilliseconds > 5000)
+
+                        if (!player.Group.HasPermission(Permissions.usebanneditem))
+                        {
+                            var inv = player.TPlayer.inventory;
+
+                            for (int i = 0; i < inv.Length; i++)
+                            {
+                                if (inv[i] != null && Itembans.ItemIsBanned(inv[i].name))
                                 {
-                                    StackCheatChecker = DateTime.UtcNow;
-                                    if (player.StackCheat(out item, out itemcount))
-                                    {
-                                        TShock.Utils.Broadcast(string.Format("{0} cheater!!! {1} x {2}", player.Name, item, itemcount), Color.Yellow);
-                                        //TShock.Utils.Ban(player, "Stack Cheat.", "Server", Convert.ToString(DateTime.Now));
-                                        TShock.Utils.ForceKick(player, string.Format("Stack Cheat. {0} x {1}", item, itemcount));
-                                    }
-                                }
-
-                                if (!player.Group.HasPermission(Permissions.usebanneditem))
-                                {
-                                    var inv = player.TPlayer.inventory;
-
-                                    for (int i = 0; i < inv.Length; i++)
-                                    {
-                                        if (inv[i] != null && Itembans.ItemIsBanned(inv[i].name))
-                                        {
-                                            player.Disconnect("Using banned item: " + inv[i].name + ", remove it and rejoin");
-                                            break;
-                                        }
-                                    }
-                                }
-
-                                if (!player.IsLoggedIn)
-                                {
-                                    if ((DateTime.UtcNow - player.Interval).TotalMilliseconds > 5000)
-                                    {
-                                        player.SendMessage(string.Format("Login in {0} seconds", TShock.Config.TimeToLogin * 60 - Math.Round((DateTime.UtcNow - player.LoginTime).TotalSeconds, 0)), Color.Red);
-                                        player.Interval = DateTime.UtcNow;
-                                    }
-                                    if ((DateTime.UtcNow - player.LoginTime).TotalMinutes >= TShock.Config.TimeToLogin)
-                                    {
-                                        TShock.Utils.Broadcast(player.Name + " Not logged in.", Color.Yellow);
-                                        TShock.Utils.Kick(player, "Not logged in.");
-                                    }
-
-                                }
-                                /*if (CheckPlayerCollision(player.TileX, player.TileY))
-                                    player.SendMessage("You are currently nocliping!", Color.Red);*/
-                                if (Restart.IsRestartTime)
-                                    Restart.Restart();
-
-                                if (player.ForceSpawn && (DateTime.Now - player.LastDeath).Seconds >= 3)
-                                {
-                                    player.Spawn();
-                                    player.ForceSpawn = false;
+                                    player.Disconnect("Using banned item: " + inv[i].name + ", remove it and rejoin");
+                                    break;
                                 }
                             }
+                        }
+
+                        if (!player.IsLoggedIn)
+                        {
+                            if ((DateTime.UtcNow - player.Interval).TotalMilliseconds > 5000)
+                            {
+                                player.SendMessage(string.Format("Login in {0} seconds", TShock.Config.TimeToLogin * 60 - Math.Round((DateTime.UtcNow - player.LoginTime).TotalSeconds, 0)), Color.Red);
+                                player.Interval = DateTime.UtcNow;
+                            }
+                            if ((DateTime.UtcNow - player.LoginTime).TotalMinutes >= TShock.Config.TimeToLogin)
+                            {
+                                TShock.Utils.Broadcast(player.Name + " Not logged in.", Color.Yellow);
+                                TShock.Utils.Kick(player, "Not logged in.");
+                            }
+
+                        }
+                        /*if (CheckPlayerCollision(player.TileX, player.TileY))
+                            player.SendMessage("You are currently nocliping!", Color.Red);*/
+                        if (Restart.IsRestartTime)
+                            Restart.Restart();
+
+                        if (player.ForceSpawn && (DateTime.Now - player.LastDeath).Seconds >= 3)
+                        {
+                            player.Spawn();
+                            player.ForceSpawn = false;
                         }
                     }
+                }
+            }
+        }
         private void OnJoin(int ply, HandledEventArgs handler)
         {
             var player = new TSPlayer(ply);
@@ -613,7 +622,6 @@ namespace TShockAPI
             }
             */
             player.Group = TShock.Utils.GetGroup("default");
-            player.LastTilePos = new Vector2(player.TileX, player.TileY);
             if (TShock.Utils.ActivePlayers() + 1 > Config.MaxSlots && !player.Group.HasPermission(Permissions.reservedslot))
             {
                 TShock.Utils.ForceKick(player, Config.ServerFullReason);
