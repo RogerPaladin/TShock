@@ -19,7 +19,8 @@ namespace TShockAPI
 
         public void RegisterRestfulCommands()
         {
-            Rest.Register(new RestCommand("/status", Status) { RequiresToken = false });
+            //Rest.Register(new RestCommand("/status", Status) { RequiresToken = false });
+            Rest.Register(new RestCommand("/status", StatusNew) { RequiresToken = false });
             Rest.Register(new RestCommand("/tokentest", TokenTest) { RequiresToken = true });
 
             Rest.Register(new RestCommand("/users/read/{user}/info", UserInfo) { RequiresToken = true });
@@ -32,6 +33,9 @@ namespace TShockAPI
 
 
             Rest.Register(new RestCommand("/lists/players", UserList) { RequiresToken = true });
+
+            Rest.Register(new RestCommand("/chat/{user}/{type}/{text}", UserChat) { RequiresToken = false });
+            Rest.Register(new RestCommand("/chat/{user}/W/{player}/{text}", Whisper) { RequiresToken = false });
 
             Rest.Register(new RestCommand("/world/read", WorldRead) { RequiresToken = true });
             Rest.Register(new RestCommand("/world/meteor", WorldMeteor) { RequiresToken = true });
@@ -65,6 +69,47 @@ namespace TShockAPI
             ret["players"] = currentPlayers;
 
             return ret;
+        }
+
+        object StatusNew(RestVerbs verbs, IParameterCollection parameters)
+        {
+            if (TShock.Config.EnableTokenEndpointAuthentication)
+                return new RestObject("403") { Error = "Server settings require a token for this API call." };
+
+            int count = 0;
+            string Admins = String.Empty;
+            string Players = String.Empty;
+            string Vips = String.Empty;
+            foreach (TSPlayer player in TShock.Players)
+            {
+                if (player != null && player.Active)
+                {
+                    count++;
+                    if (player.Group.HasPermission(Permissions.adminstatus))
+                    {
+                        Admins = string.Format("{0}, {1}", Admins, player.Name);
+                    }
+                    else
+                    {
+                        Players = string.Format("{0}, {1}", Players, player.Name);
+                    }
+                }
+
+            }
+            if (Players.Length > 1)
+                Players = Players.Remove(0, 1);
+            if (Vips.Length > 1)
+                Vips = Vips.Remove(0, 1);
+            if (Admins.Length > 1)
+                Admins = Admins.Remove(0, 1);
+            var body = string.Format(
+                "{0}/{2}/{3}/",
+                Players,
+                Vips,
+                Admins,
+                count);
+            var ret = new RestObject("200");
+            return body;
         }
 
         #endregion
@@ -444,5 +489,88 @@ namespace TShockAPI
             return null;
         }
         #endregion
+
+        object UserChat(RestVerbs verbs, IParameterCollection parameters)
+        {
+            var user = TShock.Users.GetUserByName(verbs["user"]);
+
+            if (user == null)
+            {
+                return "Fail! User not found in DB";
+            }
+
+            switch (verbs["type"])
+            {
+                case "All":
+                    foreach (TSPlayer Player in TShock.Players)
+                    {
+                        if (Player != null && Player.Active)
+                        {
+                            Player.SendMessage("[S](ToAll)<" + user.Name + ">" + verbs["text"], Color.Gold);
+                        }
+                    }
+                    TShock.Chat.AddMessage(user.Name, "", verbs["text"]);    
+                    Console.WriteLine(string.Format("[S]{0} said: {1}", verbs["user"], verbs["text"]));
+                    Log.Info(string.Format("[S]{0} said: {1}", verbs["user"], verbs["text"]));
+                    return "Success";
+                
+                case "Group":
+                    foreach (TSPlayer Player in TShock.Players)
+                    {
+                        if (Player != null && Player.Active && user.Group == Player.Group.Name)
+                        {
+                            Player.SendMessage("[S](To {2})<{0}> {1}".SFormat(user.Name, verbs["text"], user.Group));
+                        }
+                    }
+                    TShock.Chat.AddMessage(user.Name, "/" + user.Group, verbs["text"]);
+                    Console.WriteLine("[S](To {2})<{0}> {1}".SFormat(user.Name, verbs["text"], user.Group));
+                    Log.Info("[S](To {2})<{0}> {1}".SFormat(user.Name, verbs["text"], user.Group));
+                    return "Success";
+                 
+                case "Trade":
+                    foreach (TSPlayer Player in TShock.Players)
+                    {
+                        if (Player != null && Player.Active)
+                        {
+                            Player.SendMessage("[S](Trade)<" + user.Name + ">" + verbs["text"], Color.PaleGoldenrod);
+                        }
+                    }
+                    TShock.Chat.AddMessage(user.Name, "/Trade", verbs["text"]);
+                    Console.WriteLine("[S](Trade)<" + user.Name + ">" + verbs["text"]);
+                    Log.Info("[S](Trade)<" + user.Name + ">" + verbs["text"]);
+                    return "Success";
+                    }
+
+            return "Success";
+        }
+
+        object Whisper(RestVerbs verbs, IParameterCollection parameters)
+        {
+            var user = TShock.Users.GetUserByName(verbs["user"]);
+            var player = TShock.Users.GetUserByName(verbs["player"]);
+
+            if (user == null || player == null)
+            {
+                return "Fail! User not found in DB";
+            }
+
+            var players = TShock.Utils.FindPlayer(player.Name);
+            if (players.Count == 0)
+            {
+            }
+            else
+            {
+                var plr = players[0];
+                plr.SendMessage("[S](Whisper From)" + "<" + user.Name + "> " + verbs["text"], Color.MediumPurple);
+            }
+
+            TShock.Chat.AddMessage(user.Name, player.Name, verbs["text"]);
+            Console.WriteLine(string.Format("[S]{0} said to {2}: {1}", user.Name, verbs["text"], player.Name));
+            Log.Info(string.Format("[S]{0} said to {2}: {1}", user.Name, verbs["text"], player.Name));
+            
+            return "Success";
+
+
+        }
     }
 }

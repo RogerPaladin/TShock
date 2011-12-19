@@ -27,7 +27,7 @@ namespace TShockAPI.DB
 {
     public class UserManager
     {
-        private IDbConnection database;
+        public IDbConnection database;
 
         public UserManager(IDbConnection db)
         {

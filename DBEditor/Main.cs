@@ -7,10 +7,11 @@ using System.Linq;
 using System.Text;
 using System.IO;
 using System.Security.Cryptography;
-using Community.CsharpSqlite.SQLiteClient;
+//using Community.CsharpSqlite.SQLiteClient;
 using MySql.Data.MySqlClient;
 
 using System.Windows.Forms;
+using Mono.Data.Sqlite;
 
 namespace TShockDBEditor
 {

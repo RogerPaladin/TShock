@@ -33,7 +33,7 @@ using System.IO;
 using System.Net;
 using System.Reflection;
 using System.Threading;
-using Community.CsharpSqlite.SQLiteClient;
+using Mono.Data.Sqlite;
 using Hooks;
 using MySql.Data.MySqlClient;
 using Newtonsoft.Json;
@@ -41,7 +41,7 @@ using Rests;
 using Terraria;
 using TShockAPI.DB;
 using TShockAPI.Net;
-using TShockAPI.Kayak;
+//using TShockAPI.Kayak;
 
 namespace TShockAPI
 {
@@ -61,6 +61,7 @@ namespace TShockAPI
         public static BackupManager Backups;
         public static GroupManager Groups;
         public static UserManager Users;
+        public static ChatManager Chat;
         public static InventoryManager Inventory;
         public static ItemManager Itembans;
         public static RemeberedPosManager RememberedPos;
@@ -181,6 +182,7 @@ namespace TShockAPI
                 Bans = new BanManager(DB);
                 Warps = new WarpManager(DB);
                 Users = new UserManager(DB);
+                Chat = new ChatManager(DB);
                 Groups = new GroupManager(DB);
                 Inventory = new InventoryManager(DB);
                 Groups.LoadPermisions();
@@ -188,8 +190,6 @@ namespace TShockAPI
                 Itembans = new ItemManager(DB);
                 RememberedPos = new RemeberedPosManager(DB);
                 Restart = new RestartManager();
-                KayakBase Kayak = new KayakBase();
-                (new Thread(Kayak.Start)).Start();
                 RestApi = new SecureRest(Netplay.serverListenIP, 8080);
                 RestApi.Verify += RestApi_Verify;
                 RestApi.Port = Config.RestApiPort;
@@ -475,7 +475,6 @@ namespace TShockAPI
             }
             Regions.ReloadAllRegions();
 
-            Log.ConsoleInfo(string.Format("Kayak server started on port " + KayakBase.port + "."));
             if (Config.RestApiEnabled)
                 RestApi.Start();
         	
@@ -737,6 +736,7 @@ namespace TShockAPI
             }
             else
             {
+                Chat.AddMessage(tsplr.Name, "", text);
                 rect = new Rectangle((tsplr.TileX - 50), (tsplr.TileY - 50), 100, 100);
                 foreach (TSPlayer Player in TShock.Players)
                 {

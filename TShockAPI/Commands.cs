@@ -2463,6 +2463,7 @@ namespace TShockAPI
                 return;
             }
             int playerTeam = args.Player.Team;
+            string Players = String.Empty;
             if (playerTeam != 0)
             {
                 string msg = string.Format("<{0}> {1}", args.Player.Name, String.Join(" ", args.Parameters));
@@ -2470,7 +2471,9 @@ namespace TShockAPI
                 {
                     if (player != null && player.Active && player.Team == playerTeam)
                         player.SendMessage(msg, Main.teamColor[playerTeam].R, Main.teamColor[playerTeam].G, Main.teamColor[playerTeam].B);
+                    Players = string.Format("{0}, {1}", Players, player.Name);
                 }
+                TShock.Chat.AddMessage(args.Player.Name, Players, args.Parameters.ToString());
             }
             else
             {
@@ -2513,6 +2516,7 @@ namespace TShockAPI
                 args.Player.SendMessage("(Whisper To)" + "<" + plr.Name + "> " + msg, Color.MediumPurple);
                 plr.LastWhisper = args.Player;
                 args.Player.LastWhisper = plr;
+                TShock.Chat.AddMessage(args.Player.Name, plr.Name, msg);
             }
         }
 
@@ -2523,6 +2527,7 @@ namespace TShockAPI
                 var msg = string.Join(" ", args.Parameters);
                 args.Player.LastWhisper.SendMessage("(Whisper From)" + "<" + args.Player.Name + "> " + msg, Color.MediumPurple);
                 args.Player.SendMessage("(Whisper To)" + "<" + args.Player.LastWhisper.Name + "> " + msg, Color.MediumPurple);
+                TShock.Chat.AddMessage(args.Player.Name, args.Player.LastWhisper.Name, msg);
             }
             else
                 args.Player.SendMessage("You haven't previously received any whispers. Please use /whisper to whisper to other people.", Color.Red);
@@ -2562,6 +2567,7 @@ namespace TShockAPI
 
             TShock.Utils.Broadcast(TShock.Config.AdminChatPrefix + "<" + args.Player.Name + ">" + message,
                  (byte)TShock.Config.SuperAdminChatRGB[0], (byte)TShock.Config.SuperAdminChatRGB[1], (byte)TShock.Config.SuperAdminChatRGB[2]);
+            TShock.Chat.AddMessage(args.Player.Name, "/Admin", message);
             return;
         }
 
@@ -2575,6 +2581,7 @@ namespace TShockAPI
             }
 
             TShock.Utils.Broadcast("(Trade)<" + args.Player.Name + ">" + message, Color.PaleGoldenrod);
+            TShock.Chat.AddMessage(args.Player.Name, "/Trade", message);
             return;
         }
 
@@ -2589,6 +2596,7 @@ namespace TShockAPI
             if (TShock.Users.Buy(args.Player.Name, 0.5))
             {
                 TShock.Utils.Broadcast("(ToAll)<" + args.Player.Name + ">" + message, Color.Gold);
+                TShock.Chat.AddMessage(args.Player.Name, "/all", message);
                 return;
             }
             else
@@ -2615,6 +2623,7 @@ namespace TShockAPI
                                                                     args.Player.Group.B);
                 }
             }
+            TShock.Chat.AddMessage(args.Player.Name, "/" + args.Player.Group.Name, message);
         }
 
         private static void Question(CommandArgs args)
@@ -2635,6 +2644,7 @@ namespace TShockAPI
                     Player.LastWhisper = args.Player;
                 }
             }
+            TShock.Chat.AddMessage(args.Player.Name, "/question", message);
             Log.ConsoleInfo(string.Format("[Question]<{0}> {1}".SFormat(args.Player.Name, message)));
             if (count == 0)
             { 
