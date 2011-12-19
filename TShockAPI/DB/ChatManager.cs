@@ -14,9 +14,9 @@ namespace TShockAPI.DB
 
                 var table = new SqlTable("chat",
                     new SqlColumn("ID", MySqlDbType.Int32) { Primary = true, AutoIncrement = true },
-                    new SqlColumn("From", MySqlDbType.VarChar),
-                    new SqlColumn("To", MySqlDbType.VarChar),
-                    new SqlColumn("Message", MySqlDbType.VarChar)
+                    new SqlColumn("Username", MySqlDbType.VarChar, 32),
+                    new SqlColumn("ToUsername", MySqlDbType.VarChar, 32),
+                    new SqlColumn("Message", MySqlDbType.VarChar, 32)
                     );
                 var creator = new SqlTableCreator(db, db.GetSqlType() == SqlType.Sqlite ? (IQueryBuilder)new SqliteQueryCreator() : new MysqlQueryCreator());
                 creator.EnsureExists(table);
@@ -26,7 +26,8 @@ namespace TShockAPI.DB
             {
                 try
                 {
-                    database.Query("INSERT INTO chat (From, To, Message) VALUES (@0, @1, @2);", From, To, Message);
+                    database.Query("INSERT INTO Chat (Username, ToUsername, Message) VALUES (@0, @1, @2);", From, To, Message);
+                
                 }
                 catch (Exception ex)
                 {
