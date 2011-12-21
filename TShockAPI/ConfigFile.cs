@@ -59,6 +59,12 @@ namespace TShockAPI
         public bool KickExplosives = true;
         [Description("Explosives won't break blocks")]
         public bool DisableExplosives = true;
+        [Description("Bans players who attempt to place corruption.")]
+        public bool BanCorruption = true;
+        [Description("Kicks players who attempt to place corruption.")]
+        public bool KickCorruption = true;
+        [Description("Cant corrupt blocks")]
+        public bool DisableCorruption = true;
         [Description("Prevents tiles from being placed within SpawnProtectionRadius of the default spawn.")]
         public bool SpawnProtection = true;
         [Description("Radius from spawn tile for SpawnProtection.")]
@@ -143,6 +149,8 @@ namespace TShockAPI
         public string UpdatePlayerAbuseReason = "Update Player abuse";
         [Description("")]
         public string ExplosiveAbuseReason = "Throwing an explosive device.";
+        [Description("")]
+        public string CorruptionAbuseReason = "Corruption placed.";
         [Description("")]
         public string KillMeAbuseReason = "Trying to execute KillMe on someone else.";
         [Description("")]

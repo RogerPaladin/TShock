@@ -45,6 +45,7 @@ namespace TShockAPI
         public int AwaitingTempPoint { get; set; }
         public bool AwaitingName { get; set; }
         public DateTime LastExplosive { get; set; }
+        public DateTime LastCorruption { get; set; }
         public DateTime LastTileChangeNotify { get; set; }
         public DateTime LoginTime { get; set; }
         public DateTime Interval { get; set; }

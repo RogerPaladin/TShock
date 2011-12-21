@@ -497,6 +497,13 @@ namespace TShockAPI
                     args.Player.SendTileSquare(x, y);
                     return true;
                 }
+                if (tiletype == 23 /*Corrupt Seeds*/ && !args.Player.Group.HasPermission(Permissions.cancorruption) || tiletype == 109 /*Hallowed Seeds*/ && !args.Player.Group.HasPermission(Permissions.cancorruption))
+                {
+                    args.Player.SendMessage("You do not have permission to place corruptions.", Color.Red);
+                    TShock.Utils.SendLogs(string.Format("{0} tried to place corruption", args.Player.Name), Color.Red);
+                    args.Player.SendTileSquare(x, y);
+                    return true;
+                }
                 if (tiletype == 29 && !args.Player.Group.HasPermission(Permissions.adminstatus))
                 {
                     args.Player.SendMessage("You do not have permission to place piggy bank.", Color.Red);
@@ -780,7 +787,6 @@ namespace TShockAPI
             short dmg = args.Data.ReadInt16();
             byte owner = args.Data.ReadInt8();
             byte type = args.Data.ReadInt8();
-
             var index = TShock.Utils.SearchProjectile(ident);
 
             if (index > Main.maxProjectiles || index < 0)
@@ -828,6 +834,25 @@ namespace TShockAPI
                 else
                     return TShock.Utils.HandleExplosivesUser(args.Player, TShock.Config.ExplosiveAbuseReason);
             }
+
+            if (type == 69 /*Holy water*/ || type == 70 /*Unholy Water*/)
+            {
+                Log.Debug(string.Format("Corruption(PlyXY:{0}_{1}, Type:{2})", args.Player.TileX, args.Player.TileY, type));
+                if (TShock.Config.DisableCorruption && (!args.Player.Group.HasPermission(Permissions.usecorruption) && !args.Player.Group.HasPermission(Permissions.ignoregriefdetection)))
+                {
+                    //Main.projectile[index].SetDefaults(0);
+                    Main.projectile[index].type = 0;
+                    //Main.projectile[index].owner = 255;
+                    //Main.projectile[index].position = new Vector2(0f, 0f);
+                    Main.projectile[index].identity = ident;
+                    args.Player.SendData(PacketTypes.ProjectileNew, "", index);
+                    args.Player.SendMessage("Corruptions are disabled!", Color.Red);
+                    args.Player.LastCorruption = DateTime.UtcNow;
+                    return true;
+                }
+                else
+                    return TShock.Utils.HandleCorruptionUser(args.Player, TShock.Config.CorruptionAbuseReason);
+            }
             if (args.Player.Index != owner)//ignores projectiles whose senders aren't the same as their owners
             {
                 TShock.Players[args.Player.Index].SendData(PacketTypes.ProjectileNew, "", index);//update projectile on senders end so he knows it didnt get created
@@ -842,7 +867,7 @@ namespace TShockAPI
             }
             return false;
         }
-
+        
         private static bool HandlePlayerKillMe(GetDataHandlerArgs args)
         {
             byte id = args.Data.ReadInt8();

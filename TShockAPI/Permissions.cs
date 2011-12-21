@@ -56,6 +56,9 @@ namespace TShockAPI
         [Description("Allows you to use explosives even when they are disabled")]
         public static readonly string useexplosives;
 
+        [Description("Allows you to place corruptions even when they are disabled")]
+        public static readonly string usecorruption;
+
         [Description("Specific log messages are sent to users with this permission")]
         public static readonly string logs;
 
@@ -173,6 +176,9 @@ namespace TShockAPI
 
         [Description("Required to be able to place Explosives")]
         public static readonly string canexplosive;
+
+        [Description("Required to be able to place Corruption")]
+        public static readonly string cancorruption;
 
         [Description("Users can stop people from TPing to them")]
         public static readonly string tpallow;

@@ -34,9 +34,6 @@ namespace TShockAPI
 
             Rest.Register(new RestCommand("/lists/players", UserList) { RequiresToken = true });
 
-            Rest.Register(new RestCommand("/chat/{user}/{type}/{text}", UserChat) { RequiresToken = false });
-            Rest.Register(new RestCommand("/chat/{user}/W/{player}/{text}", Whisper) { RequiresToken = false });
-
             Rest.Register(new RestCommand("/world/read", WorldRead) { RequiresToken = true });
             Rest.Register(new RestCommand("/world/meteor", WorldMeteor) { RequiresToken = true });
             Rest.Register(new RestCommand("/world/bloodmoon/{bool}", WorldBloodmoon) { RequiresToken = true });
@@ -44,17 +41,22 @@ namespace TShockAPI
             Rest.Register(new RestCommand("/players/read/{player}", PlayerRead) { RequiresToken = true });
             Rest.Register(new RestCommand("/players/{player}/kick", PlayerKick) { RequiresToken = true });
             Rest.Register(new RestCommand("/players/{player}/ban", PlayerBan) { RequiresToken = true });
-            //RegisterExamples();
+
+
+            Rest.Register(new RestCommand("/send/{user}/{type}/{text}", SendMessage) { RequiresToken = false });
+            Rest.Register(new RestCommand("/send/{user}/Whisper/{player}/{text}", WhisperMessage) { RequiresToken = false });
+            Rest.Register(new RestCommand("/login/{user}/{pass}", Login) { RequiresToken = false });
+            Rest.Register(new RestCommand("/chat", Chat) { RequiresToken = false });
         }
 
         #region RestMethods
 
-        object TokenTest(RestVerbs verbs, IParameterCollection parameters)
+        object TokenTest(RestVerbs verbs, IParameterCollection parameters, RequestEventArgs e)
         {
             return new Dictionary<string, string> { { "status", "200" }, { "response", "Token is valid and was passed through correctly." } };
         }
 
-        object Status(RestVerbs verbs, IParameterCollection parameters)
+        object Status(RestVerbs verbs, IParameterCollection parameters, RequestEventArgs e)
         {
             if (TShock.Config.EnableTokenEndpointAuthentication)
                 return new RestObject("403") { Error = "Server settings require a token for this API call." };
@@ -71,7 +73,7 @@ namespace TShockAPI
             return ret;
         }
 
-        object StatusNew(RestVerbs verbs, IParameterCollection parameters)
+        object StatusNew(RestVerbs verbs, IParameterCollection parameters, RequestEventArgs e)
         {
             if (TShock.Config.EnableTokenEndpointAuthentication)
                 return new RestObject("403") { Error = "Server settings require a token for this API call." };
@@ -116,7 +118,7 @@ namespace TShockAPI
 
         #region RestUserMethods
 
-        object UserList(RestVerbs verbs, IParameterCollection parameters)
+        object UserList(RestVerbs verbs, IParameterCollection parameters, RequestEventArgs e)
         {
             var activeplayers = Main.player.Where(p => p != null && p.active).ToList();
             string currentPlayers = string.Join(", ", activeplayers.Select(p => p.name));
@@ -125,7 +127,7 @@ namespace TShockAPI
             return ret;
         }
 
-        object UserUpdate(RestVerbs verbs, IParameterCollection parameters)
+        object UserUpdate(RestVerbs verbs, IParameterCollection parameters, RequestEventArgs e)
         {
             var returnBlock = new Dictionary<string, string>();
             var password = parameters["password"];
@@ -162,7 +164,7 @@ namespace TShockAPI
             return returnBlock;
         }
 
-        object UserDestroy(RestVerbs verbs, IParameterCollection parameters)
+        object UserDestroy(RestVerbs verbs, IParameterCollection parameters, RequestEventArgs e)
         {
             var user = TShock.Users.GetUserByName(verbs["user"]);
             if (user == null)
@@ -185,7 +187,7 @@ namespace TShockAPI
             return returnBlock;
         }
 
-        object UserInfo(RestVerbs verbs, IParameterCollection parameters)
+        object UserInfo(RestVerbs verbs, IParameterCollection parameters, RequestEventArgs e)
         {
             var user = TShock.Users.GetUserByName(verbs["user"]);
             if (user == null)
@@ -204,7 +206,7 @@ namespace TShockAPI
 
         #region RestBanMethods
 
-        object BanCreate(RestVerbs verbs, IParameterCollection parameters)
+        object BanCreate(RestVerbs verbs, IParameterCollection parameters, RequestEventArgs e)
         {
             var returnBlock = new Dictionary<string, string>();
             var ip = parameters["ip"];
@@ -248,7 +250,7 @@ namespace TShockAPI
             return returnBlock;
         }
 
-        object BanDestroy(RestVerbs verbs, IParameterCollection parameters)
+        object BanDestroy(RestVerbs verbs, IParameterCollection parameters, RequestEventArgs e)
         {
             var returnBlock = new Dictionary<string, string>();
 
@@ -288,7 +290,7 @@ namespace TShockAPI
             return returnBlock;
         }
 
-        object BanInfo(RestVerbs verbs, IParameterCollection parameters)
+        object BanInfo(RestVerbs verbs, IParameterCollection parameters, RequestEventArgs e)
         {
             var returnBlock = new Dictionary<string, string>();
 
@@ -323,7 +325,7 @@ namespace TShockAPI
         #endregion
 
         #region RestWorldMethods
-        object WorldRead(RestVerbs verbs, IParameterCollection parameters)
+        object WorldRead(RestVerbs verbs, IParameterCollection parameters, RequestEventArgs e)
         {
             var returnBlock = new Dictionary<string, object>();
             returnBlock.Add("status", "200");
@@ -336,7 +338,7 @@ namespace TShockAPI
             return returnBlock;
         }
 
-        object WorldMeteor(RestVerbs verbs, IParameterCollection parameters)
+        object WorldMeteor(RestVerbs verbs, IParameterCollection parameters, RequestEventArgs e)
         {
             WorldGen.dropMeteor();
             var returnBlock = new Dictionary<string, string>();
@@ -345,7 +347,7 @@ namespace TShockAPI
             return returnBlock;
         }
 
-        object WorldBloodmoon(RestVerbs verbs, IParameterCollection parameters)
+        object WorldBloodmoon(RestVerbs verbs, IParameterCollection parameters, RequestEventArgs e)
         {
             var returnBlock = new Dictionary<string, string>();
             var bloodmoonVerb = verbs["bool"];
@@ -370,7 +372,7 @@ namespace TShockAPI
         #endregion
 
         #region RestPlayerMethods
-        object PlayerRead(RestVerbs verbs, IParameterCollection parameters)
+        object PlayerRead(RestVerbs verbs, IParameterCollection parameters, RequestEventArgs e)
         {
             var returnBlock = new Dictionary<string, object>();
             var playerParam = parameters["player"];
@@ -400,7 +402,7 @@ namespace TShockAPI
             }
             return returnBlock;
         }
-        object PlayerKick(RestVerbs verbs, IParameterCollection parameters)
+        object PlayerKick(RestVerbs verbs, IParameterCollection parameters, RequestEventArgs e)
         {
             var returnBlock = new Dictionary<string, object>();
             var playerParam = parameters["player"];
@@ -425,7 +427,7 @@ namespace TShockAPI
             }
             return returnBlock;
         }
-        object PlayerBan(RestVerbs verbs, IParameterCollection parameters)
+        object PlayerBan(RestVerbs verbs, IParameterCollection parameters, RequestEventArgs e)
         {
             var returnBlock = new Dictionary<string, object>();
             var playerParam = parameters["player"];
@@ -462,7 +464,7 @@ namespace TShockAPI
         }
 
         //The Wizard example, for demonstrating the response convention:
-        object Wizard(RestVerbs verbs, IParameterCollection parameters)
+        object Wizard(RestVerbs verbs, IParameterCollection parameters, RequestEventArgs e)
         {
             var returnBack = new Dictionary<string, string>();
             returnBack.Add("status", "200"); //Keep this in everything, 200 = ok, etc. Standard http status codes.
@@ -472,7 +474,7 @@ namespace TShockAPI
         }
 
         //http://127.0.0.1:8080/HelloWorld/name/{username}?type=status
-        object UserTest(RestVerbs verbs, IParameterCollection parameters)
+        object UserTest(RestVerbs verbs, IParameterCollection parameters, RequestEventArgs e)
         {
             var ret = new Dictionary<string, string>();
             var type = parameters["type"];
@@ -490,13 +492,18 @@ namespace TShockAPI
         }
         #endregion
 
-        object UserChat(RestVerbs verbs, IParameterCollection parameters)
+        object SendMessage(RestVerbs verbs, IParameterCollection parameters, RequestEventArgs e)
         {
             var user = TShock.Users.GetUserByName(verbs["user"]);
 
             if (user == null)
             {
                 return "Fail! User not found in DB";
+            }
+            if (!user.Address.Equals(e.Context.RemoteEndPoint.Address.ToString()))
+            {
+                Console.WriteLine("Authorization needed");
+                return "Authorization needed";
             }
 
             switch (verbs["type"])
@@ -544,7 +551,7 @@ namespace TShockAPI
             return "Success";
         }
 
-        object Whisper(RestVerbs verbs, IParameterCollection parameters)
+        object WhisperMessage(RestVerbs verbs, IParameterCollection parameters, RequestEventArgs e)
         {
             var user = TShock.Users.GetUserByName(verbs["user"]);
             var player = TShock.Users.GetUserByName(verbs["player"]);
@@ -553,6 +560,9 @@ namespace TShockAPI
             {
                 return "Fail! User not found in DB";
             }
+
+            if (!user.Address.Equals(e.Context.RemoteEndPoint.Address.ToString()))
+                return "Authorization needed";
 
             var players = TShock.Utils.FindPlayer(player.Name);
             if (players.Count == 0)
@@ -567,10 +577,47 @@ namespace TShockAPI
             TShock.Chat.AddMessage(user.Name, player.Name, verbs["text"]);
             Console.WriteLine(string.Format("[S]{0} said to {2}: {1}", user.Name, verbs["text"], player.Name));
             Log.Info(string.Format("[S]{0} said to {2}: {1}", user.Name, verbs["text"], player.Name));
-            
             return "Success";
 
 
+        }
+
+        object Login(RestVerbs verbs, IParameterCollection parameters, RequestEventArgs e)
+        {
+            var user = TShock.Users.GetUserByName(verbs["user"]);
+            
+            if (user == null)
+            {
+                return "Fail! User not found in DB";
+            }
+
+
+            if (user.Password.Equals(verbs["pass"]))
+            {
+                TShock.Users.LoginStr(user.Name, e.Context.RemoteEndPoint.Address.ToString());
+                Console.WriteLine("[S] " + user.Name + " authenticated successfully");
+                Log.Info("[S] " + user.Name + " authenticated successfully");
+                return "Success";
+            }
+            else
+            {
+                Log.Info("[S] " + user.Name + " incorrect password");
+                return "Fail! Incorrect password";
+            }
+
+        }
+
+        object Chat(RestVerbs verbs, IParameterCollection parameters, RequestEventArgs e)
+        {
+            string[] messages;
+            string[] username;
+            TShock.Chat.ReadMessages(out username, out messages);
+            var returnBlock = new Dictionary<string, string>();
+            for (int i = 1; i < 21; i++)
+            {
+                returnBlock.Add(i.ToString(), "'<" + username[i] + "> " + messages[i] + "'");
+            }
+            return returnBlock;
         }
     }
 }

@@ -16,7 +16,7 @@ namespace Rests
     /// <param name="parameters">Parameters in the url</param>
     /// <param name="verbs">{x} in urltemplate</param>
     /// <returns>Response object or null to not handle request</returns>
-    public delegate object RestCommandD(RestVerbs verbs, IParameterCollection parameters);
+    public delegate object RestCommandD(RestVerbs verbs, IParameterCollection parameters, RequestEventArgs e);
     public class Rest : IDisposable
     {
         readonly List<RestCommand> commands = new List<RestCommand>();
@@ -81,7 +81,6 @@ namespace Rests
         {
             var uri = e.Request.Uri.AbsolutePath;
             uri = uri.TrimEnd('/');
-
             foreach (var com in commands)
             {
                 var verbs = new RestVerbs();
@@ -101,7 +100,7 @@ namespace Rests
                     continue;
                 }
 
-                var obj = ExecuteCommand(com, verbs, e.Request.Parameters);
+                var obj = ExecuteCommand(com, verbs, e.Request.Parameters, e);
                 if (obj != null)
                     return obj;
 
@@ -109,9 +108,9 @@ namespace Rests
             return new Dictionary<string, string> { { "status", "404" }, { "error", "Specified API endpoint doesn't exist. Refer to the documentation for a list of valid endpoints." } };
         }
 
-        protected virtual object ExecuteCommand(RestCommand cmd, RestVerbs verbs, IParameterCollection parms)
+        protected virtual object ExecuteCommand(RestCommand cmd, RestVerbs verbs, IParameterCollection parms, RequestEventArgs e)
         {
-            return cmd.Callback(verbs, parms);
+            return cmd.Callback(verbs, parms, e);
         }
 
         #region Dispose

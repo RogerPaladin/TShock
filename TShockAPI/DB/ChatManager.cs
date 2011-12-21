@@ -24,6 +24,7 @@ namespace TShockAPI.DB
 
             public void AddMessage(string From, string To, string Message)
             {
+                Message = Message.Replace("'", "`");
                 try
                 {
                     database.Query("INSERT INTO Chat (Username, ToUsername, Message) VALUES (@0, @1, @2);", From, To, Message);
@@ -33,6 +34,30 @@ namespace TShockAPI.DB
                 {
                     Log.Error(ex.ToString());
                 }
+            }
+            public bool ReadMessages(out string[] username, out string[] messages, string From = "", string To = "")
+            {
+                messages = new string[21];
+                username = new string[21];
+                int i = 20;
+                try
+                {
+                    using (var reader = database.QueryReader("Select * FROM chat WHERE ToUsername = '' ORDER BY ID DESC LIMIT 20"))
+                    {
+                        while (reader.Read())
+                        {
+                            messages[i] = reader.Get<string>("Message");
+                            username[i] = reader.Get<string>("Username");
+                            i--;
+                        }
+                    }
+                    return true;
+                }
+                catch (Exception ex)
+                {
+                    Log.Error(ex.ToString());
+                }
+                return false;
             }
         }
     }

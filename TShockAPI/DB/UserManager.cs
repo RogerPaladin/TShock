@@ -179,7 +179,7 @@ namespace TShockAPI.DB
         }
         
         /// <summary>
-        /// Sets the login time for a given username
+        /// Sets the login time for a given player
         /// </summary>
         /// <param name="user">TSplayer user</param>
         public void Login(TSPlayer user)
@@ -195,6 +195,22 @@ namespace TShockAPI.DB
             }
         }
 
+        /// <summary>
+        /// Sets the login time for a given username
+        /// </summary>
+        /// <param name="user">string username</param>
+        public void LoginStr(string username, string IP)
+        {
+            try
+            {
+                if (database.Query("UPDATE Users SET LastLogin = @0, IP = @1 WHERE LOWER (Username) = @2;", Convert.ToString(DateTime.Now.ToFileTime()), IP, username.ToLower()) == 0)
+                    throw new UserNotExistException(username);
+            }
+            catch (Exception ex)
+            {
+                throw new UserManagerException("Login SQL returned an error", ex);
+            }
+        }
         /// <summary>
         /// Sets the total played time for a given username
         /// </summary>

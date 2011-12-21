@@ -27,7 +27,7 @@ namespace Rests
             Register(new RestCommand("/token/destroy/{token}", DestroyToken) { RequiresToken = true });
         }
 
-        object DestroyToken(RestVerbs verbs, IParameterCollection parameters)
+        object DestroyToken(RestVerbs verbs, IParameterCollection parameters, RequestEventArgs e)
         {
             var token = verbs["token"];
             try
@@ -41,7 +41,7 @@ namespace Rests
             return new Dictionary<string, string> { { "status", "200" }, { "response", "Requested token was successfully destroyed." } };
         }
 
-        object NewToken(RestVerbs verbs, IParameterCollection parameters)
+        object NewToken(RestVerbs verbs, IParameterCollection parameters, RequestEventArgs e)
         {
             var user = verbs["username"];
             var pass = verbs["password"];
@@ -73,7 +73,7 @@ namespace Rests
 
 
 
-        protected override object ExecuteCommand(RestCommand cmd, RestVerbs verbs, IParameterCollection parms)
+        protected override object ExecuteCommand(RestCommand cmd, RestVerbs verbs, IParameterCollection parms, RequestEventArgs e)
         {
             if (cmd.RequiresToken)
             {
@@ -85,7 +85,7 @@ namespace Rests
                 if (!Tokens.TryGetValue(strtoken, out token))
                     return new Dictionary<string, string> { { "status", "403" }, { "error", "Not authorized. The specified API endpoint requires a token, but the provided token was not valid." } };
             }
-            return base.ExecuteCommand(cmd, verbs, parms);
+            return base.ExecuteCommand(cmd, verbs, parms, e);
         }
     }
 }

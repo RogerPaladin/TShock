@@ -533,6 +533,11 @@ namespace TShockAPI
             return HandleBadPlayer(player, Permissions.ignoregriefdetection, TShock.Config.BanExplosives, TShock.Config.KickExplosives, reason);
         }
 
+        public bool HandleCorruptionUser(TSPlayer player, string reason)
+        {
+            return HandleBadPlayer(player, Permissions.ignoregriefdetection, TShock.Config.BanCorruption, TShock.Config.KickCorruption, reason);
+        }
+
         private bool HandleBadPlayer(TSPlayer player, string overridePermission, bool ban, bool kick, string reason)
         {
             if (!player.Group.HasPermission(overridePermission) || !(player.Group.Name == "superadmin"))
