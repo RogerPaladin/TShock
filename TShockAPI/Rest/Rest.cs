@@ -72,7 +72,7 @@ namespace Rests
 
             var str = JsonConvert.SerializeObject(obj, Formatting.Indented);
             e.Response.Connection.Type = ConnectionType.Close;
-            e.Response.Body.Write(Encoding.ASCII.GetBytes(str), 0, str.Length);
+            e.Response.Body.Write(Encoding.GetEncoding("Windows-1251").GetBytes(str), 0, str.Length);
             e.Response.Status = HttpStatusCode.OK;
             return;
         }

@@ -8,7 +8,6 @@ using Terraria;
 
 namespace TShockAPI
 {
-
     public class RestManager
     {
         private Rest Rest;
@@ -16,7 +15,7 @@ namespace TShockAPI
         {
             Rest = rest;
         }
-
+        private Transliteration Transliteration = new Transliteration();
         public void RegisterRestfulCommands()
         {
             //Rest.Register(new RestCommand("/status", Status) { RequiresToken = false });
@@ -495,7 +494,6 @@ namespace TShockAPI
         object SendMessage(RestVerbs verbs, IParameterCollection parameters, RequestEventArgs e)
         {
             var user = TShock.Users.GetUserByName(verbs["user"]);
-
             if (user == null)
             {
                 return "Fail! User not found in DB";
@@ -505,15 +503,17 @@ namespace TShockAPI
                 Console.WriteLine("Authorization needed");
                 return "Authorization needed";
             }
-
+            verbs["text"] = TShock.Utils.UTF8toWin1251Converter(System.Web.HttpUtility.UrlDecodeToBytes(verbs["text"]));
+            string translit = Transliteration.Front(verbs["text"]);
             switch (verbs["type"])
             {
+                
                 case "All":
                     foreach (TSPlayer Player in TShock.Players)
                     {
                         if (Player != null && Player.Active)
                         {
-                            Player.SendMessage("[S](ToAll)<" + user.Name + ">" + verbs["text"], Color.Gold);
+                            Player.SendMessage("[S](ToAll)<" + user.Name + "> " + translit, Color.Gold);
                         }
                     }
                     TShock.Chat.AddMessage(user.Name, "", verbs["text"]);    
@@ -526,7 +526,7 @@ namespace TShockAPI
                     {
                         if (Player != null && Player.Active && user.Group == Player.Group.Name)
                         {
-                            Player.SendMessage("[S](To {2})<{0}> {1}".SFormat(user.Name, verbs["text"], user.Group));
+                            Player.SendMessage("[S](To {2})<{0}> {1}".SFormat(user.Name, translit, user.Group));
                         }
                     }
                     TShock.Chat.AddMessage(user.Name, "/" + user.Group, verbs["text"]);
@@ -539,7 +539,7 @@ namespace TShockAPI
                     {
                         if (Player != null && Player.Active)
                         {
-                            Player.SendMessage("[S](Trade)<" + user.Name + ">" + verbs["text"], Color.PaleGoldenrod);
+                            Player.SendMessage("[S](Trade)<" + user.Name + "> " + verbs["text"], Color.PaleGoldenrod);
                         }
                     }
                     TShock.Chat.AddMessage(user.Name, "/Trade", verbs["text"]);

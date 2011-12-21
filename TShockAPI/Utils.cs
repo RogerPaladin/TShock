@@ -731,6 +731,26 @@ namespace TShockAPI
             return time[1];
         }
 
+        public string UTF8toWin1251Converter(byte[] bytes)
+        {
+            Encoding win1251 = Encoding.GetEncoding("Windows-1251");
+            char[] chars = win1251.GetChars(bytes);
+            return new string(chars);
+        }
+
+        public string Win1251ToUTF8(string source)
+        {
+
+            Encoding utf8 = Encoding.GetEncoding("UTF-8");
+            Encoding win1251 = Encoding.GetEncoding("Windows-1251");
+
+            byte[] utf8Bytes = win1251.GetBytes(source);
+            byte[] win1251Bytes = Encoding.Convert(utf8, win1251, utf8Bytes);
+            source = win1251.GetString(win1251Bytes);
+            return source;
+
+        }
+
         public static Player LoadPlayer(string playerPath)
         {
             bool flag = false;
