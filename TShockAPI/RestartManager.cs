@@ -31,6 +31,7 @@ namespace TShockAPI
     public class RestartManager
     {
         public int Interval { get; set; }
+        public bool Prepared = false;
 
         DateTime lastrestart = DateTime.UtcNow;
 

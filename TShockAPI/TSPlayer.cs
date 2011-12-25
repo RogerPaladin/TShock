@@ -371,12 +371,20 @@ namespace TShockAPI
                         {
                             newPlayer.armor[i].name = "";
                         }
+                        if (TShock.Itembans.ItemIsBanned(newPlayer.armor[i].name))
+                        {
+                            newPlayer.armor[i].name = "";
+                        }
                         binaryWriter.Write(newPlayer.armor[i].name);
                         binaryWriter.Write(newPlayer.armor[i].prefix);
                     }
                     for (int j = 0; j < 48; j++)
                     {
                         if (newPlayer.inventory[j].name == null)
+                        {
+                            newPlayer.inventory[j].name = "";
+                        }
+                        if (TShock.Itembans.ItemIsBanned(newPlayer.inventory[j].name))
                         {
                             newPlayer.inventory[j].name = "";
                         }
@@ -390,6 +398,10 @@ namespace TShockAPI
                         {
                             newPlayer.bank[k].name = "";
                         }
+                        if (TShock.Itembans.ItemIsBanned(newPlayer.bank[k].name = ""))
+                        {
+                            newPlayer.bank[k].name = "";
+                        }
                         binaryWriter.Write(newPlayer.bank[k].name);
                         binaryWriter.Write(newPlayer.bank[k].stack);
                         binaryWriter.Write(newPlayer.bank[k].prefix);
@@ -397,6 +409,10 @@ namespace TShockAPI
                     for (int l = 0; l < Chest.maxItems; l++)
                     {
                         if (newPlayer.bank2[l].name == null)
+                        {
+                            newPlayer.bank2[l].name = "";
+                        }
+                        if (TShock.Itembans.ItemIsBanned(newPlayer.bank2[l].name = ""))
                         {
                             newPlayer.bank2[l].name = "";
                         }

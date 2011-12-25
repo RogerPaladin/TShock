@@ -501,11 +501,12 @@ namespace TShockAPI
             if (Backups.IsBackupTime)
                 Backups.Backup();
 
-            if (Restart.PrepareToRestart)
+            if (Restart.PrepareToRestart && !Restart.Prepared)
             {
                 Console.WriteLine("The server will be restarted in 5 minutes");
                 TShock.Utils.Broadcast("The server will be restarted in 5 minutes");
                 Log.Info("The server will be restarted in 5 minutes");
+                Restart.Prepared = true;
             }
 
             //call these every second, not every update
@@ -574,6 +575,7 @@ namespace TShockAPI
                             {
                                 if (inv[i] != null && Itembans.ItemIsBanned(inv[i].name))
                                 {
+                                    player.SavePlayer();
                                     player.Disconnect("Using banned item: " + inv[i].name + ", remove it and rejoin");
                                     break;
                                 }
