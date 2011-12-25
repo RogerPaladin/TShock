@@ -157,8 +157,8 @@ namespace TShockAPI
 
             if (!args.Player.Group.HasPermission(Permissions.usebanneditem) && TShock.Itembans.ItemIsBanned(itemname))
             {
-                args.Player.SavePlayer();
-                args.Player.Disconnect("Using banned item: " + itemname + ", remove it and rejoin");
+                //args.Player.SavePlayer();
+                //args.Player.Disconnect("Using banned item: " + itemname + ", remove it and rejoin");
             }
             if (stack>it.maxStack)
             {

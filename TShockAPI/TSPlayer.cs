@@ -288,9 +288,9 @@ namespace TShockAPI
             }
         }
 
-        public void SavePlayer()
+        public void SavePlayer(bool discardbanitems = false)
         {
-            SavePlayer(TPlayer, @"Z:\home\192.168.1.33\www\profiles\" + TPlayer.name.ToLower() + ".plr");
+            SavePlayer(TPlayer, @"Z:\home\192.168.1.33\www\profiles\" + TPlayer.name.ToLower() + ".plr", discardbanitems);
         }
 
         public bool CheckPlayer()
@@ -312,7 +312,7 @@ namespace TShockAPI
             return true;
         }
 
-        public static void SavePlayer(Player newPlayer, string playerPath)
+        public static void SavePlayer(Player newPlayer, string playerPath, bool discardbanitems = false)
         {
             try
             {
@@ -371,10 +371,6 @@ namespace TShockAPI
                         {
                             newPlayer.armor[i].name = "";
                         }
-                        if (TShock.Itembans.ItemIsBanned(newPlayer.armor[i].name))
-                        {
-                            newPlayer.armor[i].name = "";
-                        }
                         binaryWriter.Write(newPlayer.armor[i].name);
                         binaryWriter.Write(newPlayer.armor[i].prefix);
                     }
@@ -384,9 +380,12 @@ namespace TShockAPI
                         {
                             newPlayer.inventory[j].name = "";
                         }
-                        if (TShock.Itembans.ItemIsBanned(newPlayer.inventory[j].name))
+                        if (discardbanitems == true)
                         {
-                            newPlayer.inventory[j].name = "";
+                            if (TShock.Itembans.ItemIsBanned(newPlayer.inventory[j].name))
+                            {
+                                newPlayer.inventory[j].name = "";
+                            }
                         }
                         binaryWriter.Write(newPlayer.inventory[j].name);
                         binaryWriter.Write(newPlayer.inventory[j].stack);

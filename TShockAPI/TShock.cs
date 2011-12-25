@@ -570,12 +570,13 @@ namespace TShockAPI
                         if (!player.Group.HasPermission(Permissions.usebanneditem))
                         {
                             var inv = player.TPlayer.inventory;
-
+                            var user = TShock.Users.GetUserByName(player.Name);
                             for (int i = 0; i < inv.Length; i++)
                             {
                                 if (inv[i] != null && Itembans.ItemIsBanned(inv[i].name))
                                 {
-                                    player.SavePlayer();
+                                    if (user != null)
+                                        player.SavePlayer(true);
                                     player.Disconnect("Using banned item: " + inv[i].name + ", remove it and rejoin");
                                     break;
                                 }
