@@ -1664,7 +1664,7 @@ namespace TShockAPI
                 args.Player.SendMessage("Invalid syntax! Proper syntax: /sethome ", Color.Red);
                 return;
             }
-            
+
             TShock.HomeManager.InsertHome(args.Player.Name, args.Player.TileX, args.Player.TileY);
             args.Player.SendMessage("Home placed successfully!", Color.Yellow);
         }

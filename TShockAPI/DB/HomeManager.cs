@@ -33,10 +33,11 @@ namespace TShockAPI.DB
             database = db;
 
             var table = new SqlTable("Home",
-                new SqlColumn("Name", MySqlDbType.VarChar, 50) { Primary = true },
+                new SqlColumn("ID", MySqlDbType.Int32) { Primary = true, AutoIncrement = true },
+                new SqlColumn("Name", MySqlDbType.VarChar, 50),
                 new SqlColumn("X", MySqlDbType.Int32),
                 new SqlColumn("Y", MySqlDbType.Int32),
-                new SqlColumn("WorldID", MySqlDbType.Text)
+                new SqlColumn("WorldID", MySqlDbType.VarChar, 32)
             );
             var creator = new SqlTableCreator(db, db.GetSqlType() == SqlType.Sqlite ? (IQueryBuilder)new SqliteQueryCreator() : new MysqlQueryCreator());
             creator.EnsureExists(table);
@@ -46,7 +47,7 @@ namespace TShockAPI.DB
         {
             try
             {
-                using (var reader = database.QueryReader("SELECT * FROM Home WHERE Name=@0", name))
+                using (var reader = database.QueryReader("SELECT * FROM Home WHERE Name=@0 AND WorldID = @1", name, Main.worldID.ToString()))
                 {
                     if (reader.Read())
                     {

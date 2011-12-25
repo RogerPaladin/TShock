@@ -117,7 +117,7 @@ namespace TShockAPI
                 {PacketTypes.TileGetSection, HandleGetSection},
                 {PacketTypes.UpdateNPCHome, UpdateNPCHome },
                 {PacketTypes.PlayerAddBuff, HandlePlayerBuff},
-                {PacketTypes.ItemDrop, HandleItemDrop}
+                {PacketTypes.ItemDrop, HandleItemDrop},
             };
         }
 
@@ -1062,9 +1062,21 @@ namespace TShockAPI
                         return true;
                     }
                 }
+                if (TShock.Config.RememberHome)
+                {
+                    if (TShock.HomeManager.GetHome(args.Player.Name) != Vector2.Zero)
+                    {
+                        var pos = TShock.HomeManager.GetHome(args.Player.Name);
+                        args.Player.Teleport((int)pos.X, (int)pos.Y);
+                        args.Player.SendTileSquare((int)pos.X, (int)pos.Y);
+                        return false;
+                    }
+                }
             }
             else
+            {
                 args.Player.InitSpawn = true;
+            }
 
             return false;
         }
