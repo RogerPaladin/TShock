@@ -96,6 +96,8 @@ namespace TShockAPI
 
         [Description("Remembers where a player left off. It works by remembering the IP, NOT the character.  \neg. When you try to disconnect, and reconnect to be automatically placed at spawn, you'll be at your last location. Note: Won't save after server restarts.")]
         public bool RememberLeavePos;
+        [Description("Remembers where a player set home.")]
+        public bool RememberHome;
         [Description("Hardcore players ONLY. This means softcore players cannot join.")]
         public bool HardcoreOnly;
         [Description("Mediumcore players ONLY. This means softcore players cannot join.")]
@@ -237,6 +239,18 @@ namespace TShockAPI
 
         [Description("Kicks users using a proxy as identified with the GeoIP database")] 
         public bool KickProxyUsers = true;
+
+        [Description("Disables hardmode, can't never be activated. Overrides /starthardmode")]
+        public bool DisableHardmode = false;
+
+        [Description("Disables Dungeon Guardian from being spawned by player packets, this will instead force a respawn")]
+        public bool DisableDungeonGuardian = false;
+
+        [Description("Disables clown bomb projectiles from spawning")] //Change this to stop the tile from spawning
+        public bool DisableClownBombs = false;
+
+        [Description("Disables snow ball projectiles from spawning")] //Change this to stop the tile from spawning
+        public bool DisableSnowBalls = false;
 
         public static ConfigFile Read(string path)
         {

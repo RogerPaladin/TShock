@@ -64,6 +64,7 @@ namespace TShockAPI
         public static ChatManager Chat;
         public static InventoryManager Inventory;
         public static ItemManager Itembans;
+        public static HomeManager HomeManager;
         public static RemeberedPosManager RememberedPos;
         public static ConfigFile Config { get; set; }
         public static IDbConnection DB;
@@ -189,6 +190,7 @@ namespace TShockAPI
                 Regions = new RegionManager(DB);
                 Itembans = new ItemManager(DB);
                 RememberedPos = new RemeberedPosManager(DB);
+                HomeManager = new HomeManager(DB);
                 Restart = new RestartManager();
                 RestApi = new SecureRest(Netplay.serverListenIP, 8080);
                 RestApi.Verify += RestApi_Verify;
@@ -614,6 +616,7 @@ namespace TShockAPI
         private void OnJoin(int ply, HandledEventArgs handler)
         {
             var player = new TSPlayer(ply);
+            player.Group = TShock.Utils.GetGroup("default");
             /*if (Config.EnableDNSHostResolution)
             {
                 player.Group = Users.GetGroupForIPExpensive(player.IP);
@@ -623,7 +626,6 @@ namespace TShockAPI
                 player.Group = Users.GetGroupForIP(player.IP);
             }
             */
-            player.Group = TShock.Utils.GetGroup("default");
             if (TShock.Utils.ActivePlayers() + 1 > Config.MaxSlots && !player.Group.HasPermission(Permissions.reservedslot))
             {
                 TShock.Utils.ForceKick(player, Config.ServerFullReason);
@@ -885,7 +887,7 @@ namespace TShockAPI
                 e.Handled = true;
                 return;
             }
-
+            var user = TShock.Users.GetUserByName(player.Name);
             NetMessage.SendData((int)PacketTypes.TimeSet, -1, -1, "", 0, 0, Main.sunModY, Main.moonModY);
             NetMessage.syncPlayers();
 
@@ -903,6 +905,18 @@ namespace TShockAPI
                 Log.Info(string.Format("{0} ({1}) from '{2}' group joined.", player.Name, player.IP, player.Group.Name));
 
             TShock.Utils.ShowFileToUser(player, "motd.txt");
+            if (user != null && player.IP.Equals(user.Address))
+            {
+                player.Group = TShock.Utils.GetGroup(user.Group);
+                player.UserAccountName = player.Name;
+                player.UserID = TShock.Users.GetUserID(player.UserAccountName);
+                player.IsLoggedIn = true;
+                player.SendMessage("Authenticated successfully.", Color.LimeGreen);
+                player.SendMessage(string.Format("Hello {0}. Your last login is {1}.", player.Name, Convert.ToDateTime(user.LastLogin)));
+                TShock.Users.Login(player);
+                Log.ConsoleInfo(player.Name + " authenticated successfully.");
+            }
+            
             if (HackedHealth(player))
             {
                 TShock.Utils.HandleCheater(player, "Hacked health.");
@@ -963,6 +977,15 @@ namespace TShockAPI
                 player.Teleport((int)pos.X, (int)pos.Y);
                 player.SendTileSquare((int)pos.X, (int)pos.Y);
             }
+            if (Config.RememberHome)
+            {
+                if (HomeManager.GetHome(player.Name) != Vector2.Zero)
+                {
+                    var pos = HomeManager.GetHome(player.Name);
+                    player.Teleport((int)pos.X, (int)pos.Y);
+                    player.SendTileSquare((int)pos.X, (int)pos.Y);
+                }
+            }
             if (Config.DisplayIPToAdmins)
                 Utils.SendLogs(string.Format("{0} has joined. IP: {1}", player.Name, player.IP), Color.Blue);
             e.Handled = true;
@@ -984,6 +1007,12 @@ namespace TShockAPI
         {
             if (e.Info == 43)
                 if (Config.DisableTombstones)
+                    e.Object.SetDefaults(0);
+            if (e.Info == 75)
+                if (Config.DisableClownBombs)
+                    e.Object.SetDefaults(0);
+            if (e.Info == 109)
+                if (Config.DisableSnowBalls)
                     e.Object.SetDefaults(0);
         }
 
@@ -1065,6 +1094,12 @@ namespace TShockAPI
             Thread SaveWorld = new Thread(TShock.Utils.SaveWorld);
             SaveWorld.Start();
             e.Handled = true;
+        }
+
+        void OnStartHardMode(HandledEventArgs e)
+        {
+            if (Config.DisableHardmode)
+                e.Handled = true;
         }
 
         /*

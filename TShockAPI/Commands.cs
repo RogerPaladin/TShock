@@ -175,6 +175,7 @@ namespace TShockAPI
             add(null, PartyChat, "p");
             add(null, Motd, "motd");
             add(null, Rules, "rules");
+            add(null, SetHome, "sethome");
             add(Permissions.logs, DisplayLogs, "displaylogs");
             add(Permissions.chat, DisplayChat, "displaychat");
             ChatCommands.Add(new Command(PasswordUser, "password") { DoLog = false });
@@ -218,6 +219,8 @@ namespace TShockAPI
             add(Permissions.hardmode, StartHardMode, "hardmode");
             add(Permissions.hardmode, DisableHardMode, "stophardmode", "disablehardmode");
         	add(Permissions.cfg, ServerInfo, "stats");
+            add(Permissions.converthardmode, ConvertCorruption, "convertcorruption");
+            add(Permissions.converthardmode, ConvertHallow, "converthallow");
         }
 
         public static bool HandleCommand(TSPlayer player, string text)
@@ -1279,6 +1282,72 @@ namespace TShockAPI
             Main.hardMode = false;
         }
 
+        private static void ConvertCorruption(CommandArgs args)
+        {
+            TShock.Utils.Broadcast("Server is might lag for a moment.", Color.Red);
+            for (int x = 0; x < Main.maxTilesX; x++)
+            {
+                for (int y = 0; y < Main.maxTilesY; y++)
+                {
+                    switch (Main.tile[x, y].type)
+                    {
+                        case 22:
+                        case 25:
+                            Main.tile[x, y].type = 117;
+                            break;
+                        case 23:
+                            Main.tile[x, y].type = 109;
+                            break;
+                        case 32:
+                            Main.tile[x, y].type = 0;
+                            Main.tile[x, y].active = false;
+                            break;
+                        case 24:
+                            Main.tile[x, y].type = 110;
+                            break;
+                        case 112:
+                            Main.tile[x, y].type = 116;
+                            break;
+                        default:
+                            continue;
+                    }
+                }
+            }
+            WorldGen.CountTiles(0);
+            TSPlayer.All.SendData(PacketTypes.UpdateGoodEvil);
+            Netplay.ResetSections();
+            TShock.Utils.Broadcast("Corruption conversion done.");
+        }
+
+        private static void ConvertHallow(CommandArgs args)
+        {
+            TShock.Utils.Broadcast("Server is might lag for a moment.", Color.Red);
+            for (int x = 0; x < Main.maxTilesX; x++)
+            {
+                for (int y = 0; y < Main.maxTilesY; y++)
+                {
+                    switch (Main.tile[x, y].type)
+                    {
+                        case 117:
+                            Main.tile[x, y].type = 25;
+                            break;
+                        case 109:
+                            Main.tile[x, y].type = 23;
+                            break;
+                        case 116:
+                            Main.tile[x, y].type = 112;
+                            break;
+                        default:
+                            continue;
+                    }
+                }
+            }
+            WorldGen.CountTiles(0);
+            TSPlayer.All.SendData(PacketTypes.UpdateGoodEvil);
+            Netplay.ResetSections();
+            TShock.Utils.Broadcast("Hallow conversion done.");
+        }
+
         #endregion Cause Events and Spawn Monsters Commands
 
         #region Teleport Commands
@@ -1586,6 +1655,18 @@ namespace TShockAPI
                     args.Player.SendMessage("Specified warp not found", Color.Red);
                 }
             }
+        }
+
+        private static void SetHome(CommandArgs args)
+        {
+            if (args.Parameters.Count < 0)
+            {
+                args.Player.SendMessage("Invalid syntax! Proper syntax: /sethome ", Color.Red);
+                return;
+            }
+            
+            TShock.HomeManager.InsertHome(args.Player.Name, args.Player.TileX, args.Player.TileY);
+            args.Player.SendMessage("Home placed successfully!", Color.Yellow);
         }
 
         #endregion Teleport Commands
