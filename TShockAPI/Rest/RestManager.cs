@@ -5,6 +5,7 @@ using System.Text;
 using HttpServer;
 using Rests;
 using Terraria;
+using TShockAPI.DB;
 
 namespace TShockAPI
 {
@@ -45,6 +46,7 @@ namespace TShockAPI
             Rest.Register(new RestCommand("/send/{user}/{type}/{text}", SendMessage) { RequiresToken = false });
             Rest.Register(new RestCommand("/send/{user}/Whisper/{player}/{text}", WhisperMessage) { RequiresToken = false });
             Rest.Register(new RestCommand("/login/{user}/{pass}", Login) { RequiresToken = false });
+            Rest.Register(new RestCommand("/registration/{user}/{pass}", Registration) { RequiresToken = false });
             Rest.Register(new RestCommand("/chat", Chat) { RequiresToken = false });
         }
 
@@ -604,6 +606,32 @@ namespace TShockAPI
                 Log.Info("[S] " + user.Name + " incorrect password");
                 return "Fail! Incorrect password";
             }
+
+        }
+        
+        object Registration(RestVerbs verbs, IParameterCollection parameters, RequestEventArgs e)
+        {
+            var user = TShock.Users.GetUserByName(verbs["user"]);
+
+            if (user == null)
+            {
+                    user = new User();
+                    user.Name = verbs["user"];
+                    user.Password = verbs["pass"];
+                    user.Address = e.Context.RemoteEndPoint.Address.ToString();
+                    user.Group = TShock.Config.DefaultRegistrationGroupName;
+                    TShock.Users.AddUser(user);
+                    Console.WriteLine("[S] Player " + verbs["user"] + " registration successfully");    
+                    Log.Info("[S] Player " + verbs["user"] + " registration successfully");
+                    return "Success";
+            }
+            else
+            {
+                Console.WriteLine("[S] Player " + verbs["user"] + " already exist");
+                Log.Info("[S] Player " + verbs["user"] + " already exist");
+                return "Fail! Player already exist";
+            }
+
 
         }
 

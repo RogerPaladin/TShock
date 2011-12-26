@@ -579,7 +579,7 @@ namespace TShockAPI
                                 {
                                     if (user != null)
                                         player.SavePlayer(true);
-                                    player.Disconnect("Using banned item: " + inv[i].name + ", remove it and rejoin");
+                                    player.Disconnect("Using banned item: " + inv[i].name + ", reload profile.");
                                     break;
                                 }
                             }

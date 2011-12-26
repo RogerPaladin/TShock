@@ -201,6 +201,11 @@ namespace TShockAPI
                 TShock.Utils.ForceKick(args.Player, "Empty Name.");
                 return true;
             }
+            if (name.Contains("'") || name.Contains("/"))
+            {
+                TShock.Utils.ForceKick(args.Player, "Forbidden characters in the name.");
+                return true;
+            }
             var ban = TShock.Bans.GetBanByName(name);
             if (ban != null)
             {
