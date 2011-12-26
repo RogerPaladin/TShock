@@ -58,7 +58,7 @@ namespace TShockAPI
         public Vector2 TeleportCoords = new Vector2(-1, -1);
         public string UserAccountName { get; set; }
         public bool HasBeenSpammedWithBuildMessage;
-        public bool IsLoggedIn;
+        public bool IsLoggedIn; 
         public int UserID = -1;
         public bool HasBeenNaggedAboutLoggingIn;
         public bool TPAllow = true;

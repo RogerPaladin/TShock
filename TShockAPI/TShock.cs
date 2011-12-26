@@ -887,7 +887,6 @@ namespace TShockAPI
                 e.Handled = true;
                 return;
             }
-            var user = TShock.Users.GetUserByName(player.Name);
             NetMessage.SendData((int)PacketTypes.TimeSet, -1, -1, "", 0, 0, Main.sunModY, Main.moonModY);
             NetMessage.syncPlayers();
 
@@ -905,17 +904,6 @@ namespace TShockAPI
                 Log.Info(string.Format("{0} ({1}) from '{2}' group joined.", player.Name, player.IP, player.Group.Name));
 
             TShock.Utils.ShowFileToUser(player, "motd.txt");
-            if (user != null && player.IP.Equals(user.Address))
-            {
-                player.Group = TShock.Utils.GetGroup(user.Group);
-                player.UserAccountName = player.Name;
-                player.UserID = TShock.Users.GetUserID(player.UserAccountName);
-                player.IsLoggedIn = true;
-                player.SendMessage("Authenticated successfully.", Color.LimeGreen);
-                player.SendMessage(string.Format("Hello {0}. Your last login is {1}.", player.Name, Convert.ToDateTime(user.LastLogin)));
-                TShock.Users.Login(player);
-                Log.ConsoleInfo(player.Name + " authenticated successfully.");
-            }
             
             if (HackedHealth(player))
             {
@@ -966,10 +954,26 @@ namespace TShockAPI
                         } 
 
                     }
-                if (!player.CheckPlayer())
+            if (!player.CheckPlayer())
+            {
+                TShock.Utils.Kick(player, "Your profile was modified! Login to launcher!");
+            }
+            else
+            {
+
+                var user = TShock.Users.GetUserByName(player.Name);
+                if (user != null && player.IP.Equals(user.Address))
                 {
-                    TShock.Utils.Kick(player, "Your profile was modified! Login to launcher!");
+                    player.Group = TShock.Utils.GetGroup(user.Group);
+                    player.UserAccountName = player.Name;
+                    player.UserID = TShock.Users.GetUserID(player.UserAccountName);
+                    player.IsLoggedIn = true;
+                    player.SendMessage("Authenticated successfully.", Color.LimeGreen);
+                    player.SendMessage(string.Format("Hello {0}. Your last login is {1}.", player.Name, Convert.ToDateTime(user.LastLogin)));
+                    TShock.Users.Login(player);
+                    Log.ConsoleInfo(player.Name + " authenticated successfully.");
                 }
+            }
             
             if (Config.RememberLeavePos)
             {
