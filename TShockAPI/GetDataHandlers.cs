@@ -112,7 +112,10 @@ namespace TShockAPI
                 {PacketTypes.PlayerSpawn, HandleSpawn},
                 {PacketTypes.SyncPlayers, HandleSync},
                 {PacketTypes.ChestGetContents, HandleChest},
+                {PacketTypes.ChestItem, HandleChestItem},
+                {PacketTypes.ChestOpen, HandleChestOpen},
                 {PacketTypes.SignNew, HandleSign},
+                {PacketTypes.SignRead, HandleSignRead},
                 {PacketTypes.PlayerSlot, HandlePlayerSlot},
                 {PacketTypes.TileGetSection, HandleGetSection},
                 {PacketTypes.UpdateNPCHome, UpdateNPCHome },
@@ -512,14 +515,14 @@ namespace TShockAPI
                     args.Player.SendTileSquare(x, y);
                     return true;
                 }
-                if (tiletype == 29 && !args.Player.Group.HasPermission(Permissions.adminstatus))
+                if (type == 1 && tiletype == 29 && !args.Player.Group.HasPermission(Permissions.adminstatus))
                 {
                     args.Player.SendMessage("You do not have permission to place piggy bank.", Color.Red);
                     TShock.Utils.SendLogs(string.Format("{0} tried to place piggy bank", args.Player.Name), Color.Red);
                     args.Player.SendTileSquare(x, y);
                     return true;
                 }
-                if (tiletype == 97 && !args.Player.Group.HasPermission(Permissions.adminstatus))
+                if (type == 1 && tiletype == 97 && !args.Player.Group.HasPermission(Permissions.adminstatus))
                 {
                     args.Player.SendMessage("You do not have permission to place safe.", Color.Red);
                     TShock.Utils.SendLogs(string.Format("{0} tried to place safe", args.Player.Name), Color.Red);
@@ -1092,13 +1095,102 @@ namespace TShockAPI
             var y = args.Data.ReadInt32();
             string Owner = string.Empty;
             string RegionName = string.Empty;
+            string PlayerName = string.Empty;
+            string[] ItemName;
+            double Price = 0;
+            int id = Chest.FindChest(x, y);
+            Item[] item = new Item[5];
+            int[] Quantity = new int[5];
+            int Count = 0;
+            int[] index = new int[5];
             
             if (TShock.Config.RangeChecks && ((Math.Abs(args.Player.TileX - x) > 32) || (Math.Abs(args.Player.TileY - y) > 32)))
             {
                 return TShock.Utils.HandleGriefer(args.Player, TShock.Config.RangeCheckBanReason);
             }
+            
+            if (TShock.Utils.SignCheck(args.Player.LastSignX, args.Player.LastSignY, out  PlayerName, out  ItemName, out  Price))
+            {
+                var players = TShock.Utils.FindPlayer(PlayerName);
+                item = new Item[ItemName.Length];
+                Quantity = new int[ItemName.Length];
+                index = new int[ItemName.Length];
+                
+                for (int i = 0; i < ItemName.Length; i++)
+                {
+                    Quantity[i] = int.Parse(ItemName[i].Split(':')[1]);
+                    ItemName[i] = ItemName[i].Split(':')[0];
+                    if (ItemName[i].Equals(string.Empty))
+                    {
+                        break;
+                    }
+                        var items = TShock.Utils.GetItemByIdOrName(ItemName[i]);
+                        if (items.Count == 0)
+                        {
+                            args.Player.SendMessage("Invalid item name!", Color.Red);
+                        }
+                        item[i] = items[0];
 
-            if (!args.Player.Group.HasPermission(Permissions.manageregion) && !TShock.Regions.CanBuild(x, y, args.Player, out Owner) && TShock.Regions.InArea(x, y, out RegionName))
+                }
+                if (TShock.Users.GetUserByName(PlayerName) == null)
+                {
+                   args.Player.SendMessage("User by that name <" + PlayerName + "> does not exist", Color.Red);
+                   return true;
+                }
+                if ((!TShock.Users.Buy(args.Player.Name, Price, true)))
+                {
+                    args.Player.SendMessage("You need " + Price + " RCoins to buy " + ItemName, Color.Red);
+                    return true;
+                }
+                if (!args.Player.InventorySlotAvailable)
+                {
+                    args.Player.SendMessage("You don't have free slots!", Color.Red);
+                    return true;
+                }
+                for (int i = 0; i < Chest.maxItems; i++)
+                {
+                    for (int d = 0; d < item.Length; d++)
+                    {
+                        if (Main.chest[id].item[i].name == item[d].name)
+                        {
+                            if (Main.chest[id].item[i].stack > Quantity[d])
+                            {
+                                Count++;
+                                index[d] = i;
+                            }
+                            else
+                            {
+                                args.Player.SendMessage("Not enough <" + item[d].name + "> in the chest", Color.Red);
+                                return true;
+                            }
+                        }
+                    }
+
+                    if (Count >= item.Length)
+                    {
+                        TShock.Users.Buy(args.Player.Name, Price);
+                        args.Player.SendMessage("You spent " + Price + " RCoins.", Color.BlanchedAlmond);
+                        TShock.Users.SetRCoins(PlayerName, Price);
+                        if (players.Count == 1)
+                        {
+                            players[0].SendMessage("Sold items to " + args.Player.Name + " for " + Price + " RCoins.", Color.Green);
+                        }
+                        for (int m = 0; m < item.Length; m++)
+                        {
+                            args.Player.GiveItem(item[m].type, item[m].name, item[m].width, item[m].height, Quantity[m]);
+                            Main.chest[id].item[index[m]].stack = Main.chest[id].item[index[m]].stack - Quantity[m];
+                        }
+                        args.Player.SendMessage("You buy items successfully.", Color.Green);
+
+                        return true;
+                    }
+                }
+
+                args.Player.SendMessage("Not enough items in the chest", Color.Red);
+                return true;
+            }
+            
+            if (!args.Player.Group.HasPermission(Permissions.manageregion) && !TShock.Regions.CanBuild(x, y, args.Player, out Owner) && TShock.Regions.InArea(x, y, out RegionName) && RegionName != "Sell")
             {
                 args.Player.SendMessage("Chest protected from changes by " + Owner, Color.Red);
                 args.Player.SendMessage("Log in to use it", Color.Red);
@@ -1172,21 +1264,11 @@ namespace TShockAPI
 
             var item = new Item();
             item.netDefaults(type);
-            string RegionName;
             //if (!args.Player.IsLoggedIn)
             //{
                 //args.Player.SendMessage("Login to drop the items.", Color.Red);
                 //return true;
             //}
-            if (TShock.Regions.InArea(args.Player.TileX, args.Player.TileY, out RegionName))
-            {
-                if (RegionName == "Sell")
-                {
-                    //args.Player.SendMessage("You sold " + stacks + " " + item.name + " for " + stacks * 0.01 + " RCoins.");
-                    //TShock.Users.SetRCoins(args.Player.Name, stacks * 0.01);
-                    //return true;
-                }
-            }
             if (TShock.Config.EnableItemStackChecks)
             {
                 if (stacks > item.maxStack)
@@ -1195,8 +1277,63 @@ namespace TShockAPI
                     return true;
                 }
             }
-            if (TShock.Itembans.ItemIsBanned(item.name))
-                TShock.Utils.HandleCheater(args.Player, "Dropped banned item");
+            //if (TShock.Itembans.ItemIsBanned(item.name))
+                //TShock.Utils.HandleCheater(args.Player, "Dropped banned item");
+            return false;
+        }
+
+        private static bool HandleSignRead(GetDataHandlerArgs args)
+        {
+            var x = args.Data.ReadInt32();
+            var y = args.Data.ReadInt32();
+            //Console.WriteLine(Main.sign[Sign.ReadSign(x, y)].text);
+            args.Player.LastSignX = x;
+            args.Player.LastSignY = y;
+            return false;
+        }
+
+        private static bool HandleChestItem(GetDataHandlerArgs args)
+        {
+            var chestid = args.Data.ReadInt16();
+            var itemslot = args.Data.ReadInt8();
+            var stacks = args.Data.ReadInt8();
+            var prefix = args.Data.ReadInt8();
+            var type = args.Data.ReadInt16();
+            string RegionName;
+            var item = new Item();
+            item.netDefaults(type);
+            if (TShock.Regions.InArea(args.Player.TileX, args.Player.TileY, out RegionName))
+            {
+                if (RegionName == "Sell")
+                {
+                    args.Player.selllist.Add(item.name + ";" + stacks);
+                    return true;
+                }
+            }
+            return false;
+        }
+        
+        private static bool HandleChestOpen(GetDataHandlerArgs args)
+        {
+            var type = args.Data.ReadInt16();
+
+            string[] split;
+            int count = 0;
+            string RegionName;
+            if (TShock.Regions.InArea(args.Player.TileX, args.Player.TileY, out RegionName))
+            {
+                if (type == -1 && args.Player.selllist.Count > 0 && RegionName == "Sell")
+                {
+                    foreach (string s in args.Player.selllist)
+                    {
+                        split = s.Split(';');
+                        count = count + int.Parse(split[1]);
+                    }
+                    args.Player.selllist.Clear();
+                    args.Player.SendMessage("You sold " + count + " items for " + count * 0.01 + " RCoins.");
+                    TShock.Users.SetRCoins(args.Player.Name, count * 0.01);
+                }
+            }
             return false;
         }
     }
