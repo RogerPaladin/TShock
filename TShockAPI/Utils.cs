@@ -727,23 +727,30 @@ namespace TShockAPI
             ItemName = new string[5];
             Price = 0;
             int j = 0;
-            if (x != 0 && y != 0)
+            try
             {
-                split = Main.sign[Sign.ReadSign(x, y)].text.Split('\n');
-
-                if (split[0].Equals("[Sell]") && split.Count() < 8)
+                if (x != 0 && y != 0)
                 {
-                    ItemName = new string[split.Count() - 3];
-                    
-                    PlayerName = split[1];
-                    for (int i = 2; i < split.Count() - 1; i++)
+                    split = Main.sign[Sign.ReadSign(x, y)].text.Split('\n');
+
+                    if (split[0].Equals("[Sell]") && split.Count() < 8)
                     {
-                        ItemName[j] = split[i];
-                        j++;
+                        ItemName = new string[split.Count() - 3];
+
+                        PlayerName = split[1];
+                        for (int i = 2; i < split.Count() - 1; i++)
+                        {
+                            ItemName[j] = split[i];
+                            j++;
+                        }
+                        Price = double.Parse(split[split.Count() - 1]);
+                        return true;
                     }
-                    Price = double.Parse(split[split.Count() - 1]);
-                    return true;
                 }
+            }
+            catch
+            {
+                return false; 
             }
             return false;              
         }

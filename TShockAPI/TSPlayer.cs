@@ -73,7 +73,6 @@ namespace TShockAPI
         public Vector2 LastTilePos = new Vector2(-1,-1);
         public string CurrentRegion;
         public bool InRegion = false;
-        public List<string> selllist = new List<string>();
         public int LastSignX { get; set; }
         public int LastSignY { get; set; }
         

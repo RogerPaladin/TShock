@@ -113,7 +113,6 @@ namespace TShockAPI
                 {PacketTypes.SyncPlayers, HandleSync},
                 {PacketTypes.ChestGetContents, HandleChest},
                 {PacketTypes.ChestItem, HandleChestItem},
-                {PacketTypes.ChestOpen, HandleChestOpen},
                 {PacketTypes.SignNew, HandleSign},
                 {PacketTypes.SignRead, HandleSignRead},
                 {PacketTypes.PlayerSlot, HandlePlayerSlot},
@@ -1286,7 +1285,6 @@ namespace TShockAPI
         {
             var x = args.Data.ReadInt32();
             var y = args.Data.ReadInt32();
-            //Console.WriteLine(Main.sign[Sign.ReadSign(x, y)].text);
             args.Player.LastSignX = x;
             args.Player.LastSignY = y;
             return false;
@@ -1306,35 +1304,14 @@ namespace TShockAPI
             {
                 if (RegionName == "Sell")
                 {
-                    args.Player.selllist.Add(item.name + ";" + stacks);
+                    args.Player.SendMessage("You sold " + stacks + " " + item.name + " items for " + stacks * 0.01 + " RCoins.");
+                    TShock.Users.SetRCoins(args.Player.Name, stacks * 0.01);
+                    args.Player.SendData(PacketTypes.ChestItem, "", chestid, itemslot);
                     return true;
                 }
             }
             return false;
         }
         
-        private static bool HandleChestOpen(GetDataHandlerArgs args)
-        {
-            var type = args.Data.ReadInt16();
-
-            string[] split;
-            int count = 0;
-            string RegionName;
-            if (TShock.Regions.InArea(args.Player.TileX, args.Player.TileY, out RegionName))
-            {
-                if (type == -1 && args.Player.selllist.Count > 0 && RegionName == "Sell")
-                {
-                    foreach (string s in args.Player.selllist)
-                    {
-                        split = s.Split(';');
-                        count = count + int.Parse(split[1]);
-                    }
-                    args.Player.selllist.Clear();
-                    args.Player.SendMessage("You sold " + count + " items for " + count * 0.01 + " RCoins.");
-                    TShock.Users.SetRCoins(args.Player.Name, count * 0.01);
-                }
-            }
-            return false;
-        }
     }
 }
