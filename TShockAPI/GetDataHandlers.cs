@@ -1302,9 +1302,10 @@ namespace TShockAPI
             string RegionName;
             var item = new Item();
             item.netDefaults(type);
+            Console.WriteLine(item.type);
             if (TShock.Regions.InArea(args.Player.TileX, args.Player.TileY, out RegionName))
             {
-                if (RegionName == "Sell")
+                if (RegionName == "Sell" && item.type != 328 && item.type != 48 && item.type != 306 && item.type != 0)
                 {
                     args.Player.SendMessage("You sold " + stacks + " " + item.name + " items for " + stacks * 0.01 + " RCoins.");
                     TShock.Users.SetRCoins(args.Player.Name, stacks * 0.01);
