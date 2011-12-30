@@ -755,6 +755,63 @@ namespace TShockAPI
             return false;              
         }
 
+        public bool SignName(int x, int y, string name)
+        {
+            string[] split;
+                if (x != 0 && y != 0)
+                {
+                    split = Main.sign[Sign.ReadSign(x, y)].text.Split('\n');
+
+                    if (split[1].Equals(name) && split.Count() < 8)
+                    {
+                        return true;
+                    }
+            }
+            return false;
+        }
+
+        public bool Signs(int x, int y, out string PlayerName, out string[] ItemName, out double Price)
+        {
+            string[] split;
+            PlayerName = string.Empty;
+            ItemName = new string[5];
+            Price = 0;
+            int j = 0;
+            double result = 0;
+            int[] X = new int[9] { x - 1, x, x + 1, x - 1, x, x + 1, x - 1, x, x + 1 };
+            int[] Y = new int[9] { y - 1, y - 1, y - 1, y, y, y, y + 1, y + 1, y + 1 };
+            for (int i = 0; i <= 8; i++)
+            {
+                if (Main.tile[X[i], Y[i]].type == 55)
+                {
+                    split = Main.sign[Sign.ReadSign(X[i], Y[i])].text.Split('\n');
+
+                    if (split[0].Equals("[Sell]") && split.Count() < 8)
+                    {
+                        ItemName = new string[split.Count() - 3];
+
+                        PlayerName = split[1];
+                        for (int t = 2; t < split.Count() - 1; t++)
+                        {
+                            ItemName[j] = split[t];
+                            j++;
+                        }
+                        if (double.TryParse(split[split.Count() - 1], out result))
+                            Price = result;
+                        else
+                        {
+                            return false;
+                        }
+                        return true;
+                    }
+                    else
+                    {
+                        return false;
+                    }
+                }
+            }
+            return false;
+        }
         /// <summary>
         /// Return a time for a Player
         /// </summary>

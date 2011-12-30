@@ -1108,7 +1108,7 @@ namespace TShockAPI
                 return TShock.Utils.HandleGriefer(args.Player, TShock.Config.RangeCheckBanReason);
             }
             
-            if (TShock.Utils.SignCheck(args.Player.LastSignX, args.Player.LastSignY, out  PlayerName, out  ItemName, out  Price))
+            if (TShock.Utils.Signs(x, y, out  PlayerName, out  ItemName, out  Price))
             {
                 var players = TShock.Utils.FindPlayer(PlayerName);
                 item = new Item[ItemName.Length];
@@ -1126,7 +1126,8 @@ namespace TShockAPI
                         var items = TShock.Utils.GetItemByIdOrName(ItemName[i]);
                         if (items.Count == 0)
                         {
-                            args.Player.SendMessage("Invalid item name!", Color.Red);
+                            args.Player.SendMessage("Invalid item name <" + ItemName[i] + ">", Color.Red);
+                            return true;
                         }
                         item[i] = items[0];
 
@@ -1138,7 +1139,7 @@ namespace TShockAPI
                 }
                 if ((!TShock.Users.Buy(args.Player.Name, Price, true)))
                 {
-                    args.Player.SendMessage("You need " + Price + " RCoins to buy " + ItemName, Color.Red);
+                    args.Player.SendMessage("You need " + Price + " RCoins to buy items", Color.Red);
                     return true;
                 }
                 if (!args.Player.InventorySlotAvailable)
@@ -1188,7 +1189,6 @@ namespace TShockAPI
                 args.Player.SendMessage("Not enough items in the chest", Color.Red);
                 return true;
             }
-            
             if (!args.Player.Group.HasPermission(Permissions.manageregion) && !TShock.Regions.CanBuild(x, y, args.Player, out Owner) && TShock.Regions.InArea(x, y, out RegionName) && RegionName != "Sell")
             {
                 args.Player.SendMessage("Chest protected from changes by " + Owner, Color.Red);
@@ -1211,8 +1211,12 @@ namespace TShockAPI
             {
                 return TShock.Utils.HandleGriefer(args.Player, TShock.Config.RangeCheckBanReason);
             }
-            
-            if (!args.Player.Group.HasPermission(Permissions.manageregion) && !TShock.Regions.CanBuild(x, y, args.Player, out Owner) && TShock.Regions.InArea(x, y, out RegionName))
+
+            if (TShock.Utils.SignName(x, y, args.Player.Name) || args.Player.Group.HasPermission(Permissions.adminstatus))
+            {
+                return false;
+            }
+                if (!args.Player.Group.HasPermission(Permissions.manageregion) && !TShock.Regions.CanBuild(x, y, args.Player, out Owner) && TShock.Regions.InArea(x, y, out RegionName))
             {
                 args.Player.SendMessage("Sign protected from changes by " + Owner, Color.Red);
                 args.Player.SendMessage("Log in to use it", Color.Red);
@@ -1285,8 +1289,6 @@ namespace TShockAPI
         {
             var x = args.Data.ReadInt32();
             var y = args.Data.ReadInt32();
-            args.Player.LastSignX = x;
-            args.Player.LastSignY = y;
             return false;
         }
 
