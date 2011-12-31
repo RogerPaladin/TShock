@@ -40,13 +40,14 @@ namespace TShockAPI.DB
             database = db;
 
             var table = new SqlTable("Regions",
+                new SqlColumn("ID", MySqlDbType.Int32) { Primary = true, AutoIncrement = true },
                 new SqlColumn("X1", MySqlDbType.Int32),
                 new SqlColumn("Y1", MySqlDbType.Int32),
                 new SqlColumn("width", MySqlDbType.Int32),
                 new SqlColumn("height", MySqlDbType.Int32),
-                new SqlColumn("RegionName", MySqlDbType.VarChar, 50) { Primary = true },
-                new SqlColumn("WorldID", MySqlDbType.Text),
-                new SqlColumn("UserIds", MySqlDbType.Text),
+                new SqlColumn("RegionName", MySqlDbType.VarChar, 50),
+                new SqlColumn("WorldID", MySqlDbType.VarChar, 32),
+                new SqlColumn("UserIds", MySqlDbType.VarChar, 128),
                 new SqlColumn("Protected", MySqlDbType.Int32)
             );
             var creator = new SqlTableCreator(db, db.GetSqlType() == SqlType.Sqlite ? (IQueryBuilder)new SqliteQueryCreator() : new MysqlQueryCreator());
@@ -268,7 +269,7 @@ namespace TShockAPI.DB
             }
             try
             {
-                database.Query("INSERT INTO Regions VALUES (@0, @1, @2, @3, @4, @5, @6, @7);", tx, ty, width, height, regionname, worldid, "", 1);
+                database.Query("INSERT INTO Regions (X1, Y1, width, height, RegionName, WorldID, UserIds, Protected) VALUES (@0, @1, @2, @3, @4, @5, @6, @7);", tx, ty, width, height, regionname, worldid, "", 1);
                 Regions.Add(new Region(new Rectangle(tx, ty, width, height), regionname, true, worldid));
                 return true;
             }
@@ -610,7 +611,7 @@ namespace TShockAPI.DB
         {
             foreach (Region r in Regions)
             {
-                if (r.Name.ToLower().Equals(name.ToLower()))
+                if (r.Name.ToLower().Equals(name.ToLower()) && r.WorldID.Equals(Main.worldID.ToString()))
                     return r;
             }
             return null;

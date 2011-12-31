@@ -221,6 +221,7 @@ namespace TShockAPI
         	add(Permissions.cfg, ServerInfo, "stats");
             add(Permissions.converthardmode, ConvertCorruption, "convertcorruption");
             add(Permissions.converthardmode, ConvertHallow, "converthallow");
+            add(Permissions.converthardmode, ConvertAll, "convertall");
         }
 
         public static bool HandleCommand(TSPlayer player, string text)
@@ -1328,6 +1329,43 @@ namespace TShockAPI
                 {
                     switch (Main.tile[x, y].type)
                     {
+                        case 22:
+                        case 25:
+                            Main.tile[x, y].type = 1;
+                            break;
+                        case 23:
+                            Main.tile[x, y].type = 2;
+                            break;
+                        case 32:
+                            Main.tile[x, y].type = 0;
+                            Main.tile[x, y].active = false;
+                            break;
+                        case 24:
+                            Main.tile[x, y].type = 3;
+                            break;
+                        case 112:
+                            Main.tile[x, y].type = 53;
+                            break;
+                        default:
+                            continue;
+                    }
+                }
+            }
+            WorldGen.CountTiles(0);
+            TSPlayer.All.SendData(PacketTypes.UpdateGoodEvil);
+            Netplay.ResetSections();
+            TShock.Utils.Broadcast("Hallow conversion done.");
+        }
+
+        private static void ConvertAll(CommandArgs args)
+        {
+            TShock.Utils.Broadcast("Server is might lag for a moment.", Color.Red);
+            for (int x = 0; x < Main.maxTilesX; x++)
+            {
+                for (int y = 0; y < Main.maxTilesY; y++)
+                {
+                    switch (Main.tile[x, y].type)
+                    {
                         case 117:
                             Main.tile[x, y].type = 25;
                             break;
@@ -2282,12 +2320,12 @@ namespace TShockAPI
                         }
                         break;
                     }
-                case "expand":
+                case "resize":
                     {
                         if (args.Parameters.Count == 4)
                         {
                             int direction;
-                            switch (args.Parameters[3])
+                            switch (args.Parameters[2])
                             {
                                 case "u":
                                 case "up":
@@ -2333,7 +2371,7 @@ namespace TShockAPI
                         }
                         else
                         {
-                            args.Player.SendMessage("Invalid syntax! Proper syntax: /region resize [regionname] [u/d/l/r] [amount]1", Color.Red);
+                            args.Player.SendMessage("Invalid syntax! Proper syntax: /region resize [regionname] [u/d/l/r] [amount]", Color.Red);
                         }
                         break;
                     }

@@ -720,51 +720,23 @@ namespace TShockAPI
             return false;
         }
 
-        public bool SignCheck(int x, int y, out string PlayerName, out string[] ItemName, out double Price)
-        {
-            string[] split;
-            PlayerName = string.Empty;
-            ItemName = new string[5];
-            Price = 0;
-            int j = 0;
-            try
-            {
-                if (x != 0 && y != 0)
-                {
-                    split = Main.sign[Sign.ReadSign(x, y)].text.Split('\n');
-
-                    if (split[0].Equals("[Sell]") && split.Count() < 8)
-                    {
-                        ItemName = new string[split.Count() - 3];
-
-                        PlayerName = split[1];
-                        for (int i = 2; i < split.Count() - 1; i++)
-                        {
-                            ItemName[j] = split[i];
-                            j++;
-                        }
-                        Price = double.Parse(split[split.Count() - 1]);
-                        return true;
-                    }
-                }
-            }
-            catch
-            {
-                return false; 
-            }
-            return false;              
-        }
-
         public bool SignName(int x, int y, string name)
         {
             string[] split;
                 if (x != 0 && y != 0)
                 {
-                    split = Main.sign[Sign.ReadSign(x, y)].text.Split('\n');
-
-                    if (split[1].Equals(name) && split.Count() < 8)
+                    try
                     {
-                        return true;
+                        split = Main.sign[Sign.ReadSign(x, y)].text.Split('\n');
+
+                        if (split[1].Equals(name) && split.Count() < 8)
+                        {
+                            return true;
+                        }
+                    }
+                    catch
+                    {
+                        return false;  
                     }
             }
             return false;
