@@ -1302,15 +1302,27 @@ namespace TShockAPI
             string RegionName;
             var item = new Item();
             item.netDefaults(type);
-            //Console.WriteLine(item.type);
             if (TShock.Regions.InArea(args.Player.TileX, args.Player.TileY, out RegionName))
             {
                 if (RegionName == "Sell" && item.type != 328 && item.type != 48 && item.type != 306 && item.type != 71 && item.type != 72 && item.type != 73 && item.type != 74 && item.type != 2 && item.type != 30 && item.type != 0)
                 {
-                    Log.ConsoleInfo("[Sell] " + args.Player.Name + " sold " + stacks + " " + item.name);
-                    args.Player.SendMessage("You sold " + stacks + " " + item.name + " items for " + stacks * 0.01 + " RCoins.");
-                    TShock.Users.SetRCoins(args.Player.Name, stacks * 0.01);
-                    args.Player.SendData(PacketTypes.ChestItem, "", chestid, itemslot);
+                    if (args.Player.LastSellItem != item.name && args.Player.LastSellItemStack != stacks)
+                    {
+                        args.Player.SendData(PacketTypes.ChestItem, "", chestid, itemslot);
+                        Log.ConsoleInfo("[Sell] " + args.Player.Name + " sold " + stacks + " " + item.name);
+                        args.Player.SendMessage("You sold " + stacks + " " + item.name + " items for " + stacks * 0.01 + " RCoins.");
+                        TShock.Users.SetRCoins(args.Player.Name, stacks * 0.01);
+                        args.Player.LastSellItem = item.name;
+                        args.Player.LastSellItemStack = stacks;
+                        args.Player.LastChestItem = DateTime.Now;
+                    }
+                
+                    if ((DateTime.Now - args.Player.LastChestItem).TotalMilliseconds > 1000)
+                    {
+                        //args.Player.LastSellItem = string.Empty;
+                        //args.Player.LastSellItemStack = 0;
+                    }
+                    
                     return true;
                 }
             }

@@ -49,6 +49,9 @@ namespace TShockAPI
         public DateTime LastTileChangeNotify { get; set; }
         public DateTime LoginTime { get; set; }
         public DateTime Interval { get; set; }
+        public DateTime LastChestItem { get; set; }
+        public string LastSellItem { get; set; }
+        public byte LastSellItemStack { get; set; }
         public bool InitSpawn;
         public bool DisplayLogs = true;
         public Vector2 oldSpawn = Vector2.Zero;

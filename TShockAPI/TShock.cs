@@ -65,6 +65,11 @@ namespace TShockAPI
         public static InventoryManager Inventory;
         public static ItemManager Itembans;
         public static HomeManager HomeManager;
+        public static ArmorShopManager ArmorShopManager;
+        public static WeaponShopManager WeaponShopManager;
+        public static ItemShopManager ItemShopManager;
+        public static BlockShopManager BlockShopManager;
+        public static OtherShopManager OtherShopManager;
         public static RemeberedPosManager RememberedPos;
         public static ConfigFile Config { get; set; }
         public static IDbConnection DB;
@@ -191,6 +196,11 @@ namespace TShockAPI
                 Itembans = new ItemManager(DB);
                 RememberedPos = new RemeberedPosManager(DB);
                 HomeManager = new HomeManager(DB);
+                ArmorShopManager = new ArmorShopManager(DB);
+                WeaponShopManager = new WeaponShopManager(DB);
+                ItemShopManager = new ItemShopManager(DB);
+                BlockShopManager = new BlockShopManager(DB);
+                OtherShopManager = new OtherShopManager(DB);
                 Restart = new RestartManager();
                 RestApi = new SecureRest(Netplay.serverListenIP, 8080);
                 RestApi.Verify += RestApi_Verify;
