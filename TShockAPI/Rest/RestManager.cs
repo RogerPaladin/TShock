@@ -48,6 +48,7 @@ namespace TShockAPI
             Rest.Register(new RestCommand("/login/{user}/{pass}", Login) { RequiresToken = false });
             Rest.Register(new RestCommand("/registration/{user}/{pass}", Registration) { RequiresToken = false });
             Rest.Register(new RestCommand("/chat", Chat) { RequiresToken = false });
+            Rest.Register(new RestCommand("/shop/{user}", Shop) { RequiresToken = false });
         }
 
         #region RestMethods
@@ -646,6 +647,32 @@ namespace TShockAPI
                 returnBlock.Add(i.ToString(), "'<" + username[i] + "> " + messages[i] + "'");
             }
             return returnBlock;
+        }
+
+        object Shop(RestVerbs verbs, IParameterCollection parameters, RequestEventArgs e)
+        {
+            var user = TShock.Users.GetUserByName(verbs["user"]);
+            string[] slots = new string[40];
+            var result = new List<string>();
+            if (user != null)
+            {
+                TShock.Inventory.InventoryOut(user.Name, out slots);
+                foreach (string s in slots)
+                {
+                    result.Add(s);
+                }
+                result.Add(user.Name);
+                result.Add(user.Group);
+                result.Add(Convert.ToString(user.RCoins));
+                result.Add(Convert.ToString(user.LastLogin));
+                return result;
+            }
+            else
+            {
+                return "Fail! User not found in DB";
+            }
+
+
         }
     }
 }

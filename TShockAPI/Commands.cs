@@ -2985,8 +2985,8 @@ namespace TShockAPI
                     }
                     if (TShock.BlockShopManager.GetBlock(args.Parameters[1].ToLower(), out Name, out Contains, out Price))
                     {
-                        Ammount = Convert.ToInt32(Contains.Split(':')[1]);
-                        Contains = Contains.Split(':')[0];
+                        Ammount = Convert.ToInt32(Name.Split(':')[1]);
+                        Name = Name.Split(':')[0];
                         cost = ((double)Price / Ammount) * quantity;
                         if (TShock.Users.Buy(args.Player.Name, Price))
                         {
@@ -3005,8 +3005,8 @@ namespace TShockAPI
                     }
                     if (TShock.OtherShopManager.GetOther(args.Parameters[1].ToLower(), out Name, out Contains, out Price))
                     {
-                        Ammount = Convert.ToInt32(Contains.Split(':')[1]);
-                        Contains = Contains.Split(':')[0];
+                        Ammount = Convert.ToInt32(Name.Split(':')[1]);
+                        Name = Name.Split(':')[0];
                         cost = ((double)Price / Ammount) * quantity;
                         if (TShock.Users.Buy(args.Player.Name, Price))
                         {

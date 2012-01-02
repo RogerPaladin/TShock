@@ -267,10 +267,9 @@ namespace TShockAPI.DB
             database.Query("DELETE FROM Inventory WHERE LOWER (Username) = @0;", PlayerName.ToLower());
             Log.ConsoleInfo(string.Format("Player <{0}> inventory automatically deleted.", PlayerName));
         }
-        public bool InventoryOut(string PlayerName, out string[] slots, out string InDBName)
+        public bool InventoryOut(string PlayerName, out string[] slots)
         {
-            slots = new string[41];
-            InDBName = "";
+            slots = new string[40];
             for (int i = 0; i < 40; i++ )
             {
                 slots[i] = "";
@@ -293,7 +292,6 @@ namespace TShockAPI.DB
                         {
                             slots[i] = reader.Get<string>("Slot" + i);
                         }
-                        InDBName = reader.Get<string>("Username");
                         return true;
                     }
                 }

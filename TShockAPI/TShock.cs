@@ -590,6 +590,7 @@ namespace TShockAPI
                                     if (user != null)
                                         player.SavePlayer(true);
                                     player.Disconnect("Using banned item: " + inv[i].name + ", reload profile.");
+                                    Log.Info(player.Name + "was kicked for using banned item " + inv[i].name);
                                     break;
                                 }
                             }
