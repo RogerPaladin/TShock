@@ -822,7 +822,7 @@ namespace TShockAPI
                     {
                         if (Player.DisplayChat && Player.Group.HasPermission(Permissions.chat))
                         {
-                            Player.SendMessage("(Ranged){2}<{0}> {1}".SFormat(tsplr.Name, text),
+                            Player.SendMessage("(Ranged)<{0}> {1}".SFormat(tsplr.Name, text),
                                                                       tsplr.Group.R, tsplr.Group.G,
                                                                       tsplr.Group.B);
                         }
@@ -830,7 +830,7 @@ namespace TShockAPI
                             if (Player.TileX >= rect.Left && Player.TileX <= rect.Right &&
                                 Player.TileY >= rect.Top && Player.TileY <= rect.Bottom)
                             {
-                                Player.SendMessage("{2}<{0}> {1}".SFormat(tsplr.Name, text),
+                                Player.SendMessage("<{0}> {1}".SFormat(tsplr.Name, text),
                                 tsplr.Group.R, tsplr.Group.G,
                                 tsplr.Group.B);
                             }
@@ -839,7 +839,6 @@ namespace TShockAPI
             }
                 Console.WriteLine(string.Format("{0} said: {1}", tsplr.Name, text));
                 Log.Info(string.Format("{0} said: {1}", tsplr.Name, text));
-                tsplr.SendMessage("You are muted!");
                 e.Handled = true;
             }
 
