@@ -137,11 +137,6 @@ namespace TShockAPI
             item.netDefaults(type);
             item.Prefix(prefix);
 
-            if (stack > item.maxStack && type != 0 && args.Player.IgnoreActionsForCheating != "none" && !args.Player.Group.HasPermission(Permissions.ignorestackhackdetection))
-            {
-                args.Player.IgnoreActionsForCheating = "Item Hack: " + item.name + " (" + stack + ") exceeds max stack of " + item.maxStack;
-            }
-
             if (args.Player.IsLoggedIn)
             {
                 args.Player.PlayerData.StoreSlot(slot, type, prefix, stack);
@@ -289,7 +284,11 @@ namespace TShockAPI
 
                     if (TShock.Config.ServerSideInventory)
                     {
-                        if (!TShock.CheckInventory(args.Player))
+                        if (args.Player.Group.HasPermission(Permissions.bypassinventorychecks))
+                        {
+                            args.Player.IgnoreActionsForClearingTrashCan = false;
+                        }
+                        else if (!TShock.CheckInventory(args.Player))
                         {
                             args.Player.SendMessage("Login Failed, Please fix the above errors then /login again.", Color.Cyan);
                             args.Player.IgnoreActionsForClearingTrashCan = true;
@@ -297,11 +296,17 @@ namespace TShockAPI
                         }
                     }
 
+                    if (args.Player.Group.HasPermission(Permissions.ignorestackhackdetection))
+                        args.Player.IgnoreActionsForCheating = "none";
+
+                    if (args.Player.Group.HasPermission(Permissions.usebanneditem))
+                        args.Player.IgnoreActionsForDisabledArmor = "none";
+
                     args.Player.Group = TShock.Utils.GetGroup(user.Group);
                     args.Player.UserAccountName = args.Player.Name;
                     args.Player.UserID = TShock.Users.GetUserID(args.Player.UserAccountName);
                     args.Player.IsLoggedIn = true;
-                    args.Player.IgnoreActionsForInventory = false;
+                    args.Player.IgnoreActionsForInventory = "none";
 
                     args.Player.PlayerData.CopyInventory(args.Player);
 
@@ -373,7 +378,9 @@ namespace TShockAPI
 
         private static bool HandleSendTileSquare(GetDataHandlerArgs args)
         {
-        	
+            if (args.Player.Group.HasPermission(Permissions.allowclientsideworldedit))
+                return false;
+
             var size = args.Data.ReadInt16();
             var tileX = args.Data.ReadInt32();
             var tileY = args.Data.ReadInt32();
@@ -633,6 +640,7 @@ namespace TShockAPI
                 }
                 if (tiletype == 48 && !args.Player.Group.HasPermission(Permissions.usebanneditem) && TShock.Itembans.ItemIsBanned("Spike", args.Player))
                 {
+                    args.Player.Disable();
                     args.Player.SendTileSquare(x, y);
                     return true;
                 }
@@ -680,6 +688,7 @@ namespace TShockAPI
                         return true;
                     }
                     args.Player.SendMessage("Please wait another " + Math.Round(2 - ((DateTime.UtcNow - args.Player.LastTileChangeNotify).TotalSeconds), 1) + " seconds.", Color.Red);
+                    args.Player.Disable();
                     args.Player.SendTileSquare(x, y, 1);
                     args.Player.LastTileChangeNotify = DateTime.UtcNow;
                     Log.ConsoleInfo(string.Format("{0} tried to place sand in [{1};{2}]", args.Player.Name, x, y));
@@ -814,7 +823,7 @@ namespace TShockAPI
             }
             #endregion
 
-            if ((tiletype == 127 || Main.tileCut[tiletype]) && type == 0) //Ice Block Kill, Bypass range checks and such
+            if ((tiletype == 127 || Main.tileCut[tiletype]) && (type == 0 || type == 4))
             {
                 return false;
             }
@@ -827,15 +836,16 @@ namespace TShockAPI
 
             if (args.Player.TileKillThreshold >= TShock.Config.TileKillThreshold)
             {
-                args.Player.LastThreat = DateTime.UtcNow;
+                args.Player.Disable();
                 args.Player.SendTileSquare(x, y);
                 return true;
             }
 
             if (args.Player.TilePlaceThreshold >= TShock.Config.TilePlaceThreshold)
             {
-                args.Player.LastThreat = DateTime.UtcNow;
+                args.Player.Disable();
                 args.Player.SendTileSquare(x, y);
+                return true;
             }
 
             if (!args.Player.Group.HasPermission(Permissions.editspawn) && !TShock.Regions.CanBuild(x, y, args.Player, out Owner) && TShock.Regions.InArea(x, y, out RegionName))
@@ -921,6 +931,11 @@ namespace TShockAPI
                 return true;
             }
 
+            if (TShock.Config.PvPMode == "disabled")
+            {
+                return true;
+            }
+
             if (args.TPlayer.hostile != pvp)
             {
                 long seconds = (long)(DateTime.UtcNow - args.Player.LastPvpChange).TotalSeconds;
@@ -935,13 +950,8 @@ namespace TShockAPI
 
             if (TShock.Config.PvPMode == "always")
             {
-                if (pvp == true)
-                    args.Player.IgnoreActionsForPvP = false;
-                else
-                {
+                if (!pvp)
                     args.Player.Spawn();
-                    args.Player.IgnoreActionsForPvP = true;
-                }
             }
 
             NetMessage.SendData((int)PacketTypes.TogglePvp, -1, -1, "", args.Player.Index);
@@ -962,32 +972,55 @@ namespace TShockAPI
                 return true;
             }
 
+            if(args.Player.LastNetPosition == Vector2.Zero)
+            {
+                return true;
+            }
+
             if (!pos.Equals(args.Player.LastNetPosition))
             {
-                float distance = Vector2.Distance(new Vector2((pos.X / 16f), (pos.Y / 16f)), new Vector2(Main.spawnTileX, Main.spawnTileY));
-                if (TShock.CheckIgnores(args.Player) && distance > TShock.Config.MaxRangeForDisabled)
+                float distance = Vector2.Distance(new Vector2(pos.X / 16f, pos.Y / 16f), new Vector2(args.Player.LastNetPosition.X / 16f, args.Player.LastNetPosition.Y / 16f));
+                if (TShock.CheckIgnores(args.Player))
                 {
-                    if(args.Player.IgnoreActionsForCheating != "none")
+                    if (distance > TShock.Config.MaxRangeForDisabled)
                     {
-                        args.Player.SendMessage("Disabled for cheating: " + args.Player.IgnoreActionsForCheating, Color.Red);
+                        if (args.Player.IgnoreActionsForCheating != "none")
+                        {
+                            args.Player.SendMessage("Disabled for cheating: " + args.Player.IgnoreActionsForCheating,
+                                                    Color.Red);
+                        }
+                        else if (args.Player.IgnoreActionsForDisabledArmor != "none")
+                        {
+                            args.Player.SendMessage(
+                                "Disabled for banned armor: " + args.Player.IgnoreActionsForDisabledArmor, Color.Red);
+                        }
+                        else if (args.Player.IgnoreActionsForInventory != "none")
+                        {
+                            args.Player.SendMessage(
+                                "Disabled for Server Side Inventory: " + args.Player.IgnoreActionsForInventory,
+                                Color.Red);
+                        }
+                        else if (TShock.Config.RequireLogin && !args.Player.IsLoggedIn)
+                        {
+                            args.Player.SendMessage("Please /register or /login to play!", Color.Red);
+                        }
+                        else if (args.Player.IgnoreActionsForClearingTrashCan)
+                        {
+                            args.Player.SendMessage("You need to rejoin to ensure your trash can is cleared!", Color.Red);
+                        }
+                        else if (TShock.Config.PvPMode == "always" && !args.TPlayer.hostile)
+                        {
+                            args.Player.SendMessage("PvP is forced! Enable PvP else you can't move or do anything!",
+                                                    Color.Red);
+                        }
+                        int lastTileX = (int) (args.Player.LastNetPosition.X/16f);
+                        int lastTileY = (int) (args.Player.LastNetPosition.Y/16f);
+                        if (!args.Player.Teleport(lastTileX, lastTileY))
+                        {
+                            args.Player.Spawn();
+                        }
+                        return true;
                     }
-                    else if (TShock.Config.RequireLogin && !args.Player.IsLoggedIn)
-                    {
-                        args.Player.SendMessage("Please /register or /login to play!", Color.Red);
-                    }
-                    else if (args.Player.IgnoreActionsForInventory)
-                    {
-                        args.Player.SendMessage("Server Side Inventory is enabled! Please /register or /login to play!", Color.Red);
-                    }
-                    else if (args.Player.IgnoreActionsForClearingTrashCan)
-                    {
-                        args.Player.SendMessage("You need to rejoin to ensure your trash can is cleared!", Color.Red);
-                    }
-                    else if (args.Player.IgnoreActionsForPvP)
-                    {
-                        args.Player.SendMessage("PvP is forced! Enable PvP else you can't move or do anything!", Color.Red);
-                    }
-                    args.Player.Spawn();
                     return true;
                 }
 
@@ -1007,15 +1040,15 @@ namespace TShockAPI
                     }
                     return true;
                 }
+                args.Player.LastNetPosition = pos;
             }
-            args.Player.LastNetPosition = pos;
 
             if ((control & 32) == 32)
             {
 				if (!args.Player.Group.HasPermission(Permissions.usebanneditem) && TShock.Itembans.ItemIsBanned(args.TPlayer.inventory[item].name, args.Player))
                 {
                     control -= 32;
-                    args.Player.LastThreat = DateTime.UtcNow;
+                    args.Player.Disable();
                     args.Player.SendMessage(string.Format("You cannot use {0} on this server. Your actions are being ignored.", args.TPlayer.inventory[item].name), Color.Red);
                 }
             }
@@ -1084,41 +1117,41 @@ namespace TShockAPI
 
             if (args.Player.Index != owner)
             {
-                args.Player.LastThreat = DateTime.UtcNow;
-                args.Player.SendData(PacketTypes.ProjectileNew, "", index);
+                args.Player.Disable();
+                args.Player.RemoveProjectile(ident, owner);
                 return true;
             }
 
             if (dmg > 175)
             {
-                args.Player.LastThreat = DateTime.UtcNow;
-                args.Player.SendData(PacketTypes.ProjectileNew, "", index);
+                args.Player.Disable();
+                args.Player.RemoveProjectile(ident, owner);
                 return true;
             }
 
             if (TShock.CheckIgnores(args.Player))
             {
-                args.Player.SendData(PacketTypes.ProjectileNew, "", index);
+                args.Player.RemoveProjectile(ident, owner);
                 return true;
             }
 
             if (TShock.CheckProjectilePermission(args.Player, index, type))
             {
-                args.Player.LastThreat = DateTime.UtcNow;
-                args.Player.SendData(PacketTypes.ProjectileNew, "", index);
+                args.Player.Disable();
+                args.Player.RemoveProjectile(ident, owner);
                 return true;
             }
 
             if (args.Player.ProjectileThreshold >= TShock.Config.ProjectileThreshold)
             {
-                args.Player.LastThreat = DateTime.UtcNow;
-                args.Player.SendData(PacketTypes.ProjectileNew, "", index);
+                args.Player.Disable();
+                args.Player.RemoveProjectile(ident, owner);
                 return true;
             }
 
             if ((DateTime.UtcNow - args.Player.LastThreat).TotalMilliseconds < 5000)
             {
-                args.Player.SendData(PacketTypes.ProjectileNew, "", index);
+                args.Player.RemoveProjectile(ident, owner);
                 return true;
             }
 
@@ -1137,7 +1170,7 @@ namespace TShockAPI
 
             if (args.Player.Index != owner)
             {
-                args.Player.LastThreat = DateTime.UtcNow;
+                args.Player.Disable();
                 return true;
             }
 
@@ -1152,8 +1185,8 @@ namespace TShockAPI
 
             if (args.Player.Index != Main.projectile[index].owner)
             {
-                args.Player.LastThreat = DateTime.UtcNow;
-                args.Player.SendData(PacketTypes.ProjectileNew, "", index);
+                args.Player.Disable();
+                args.Player.RemoveProjectile(ident, owner);
                 return true;
             }
 
@@ -1177,20 +1210,20 @@ namespace TShockAPI
             }
             if (args.Player.Index != owner)//ignores projectiles whose senders aren't the same as their owners
             {
-                args.Player.SendData(PacketTypes.ProjectileNew, "", index);
+                args.Player.RemoveProjectile(ident, owner);
                 return true;
             }
 
             if (TShock.CheckProjectilePermission(args.Player, index, type))
             {
-                args.Player.LastThreat = DateTime.UtcNow;
-                args.Player.SendData(PacketTypes.ProjectileNew, "", index);
+                args.Player.Disable();
+                args.Player.RemoveProjectile(ident, owner);
                 return true;
             }
 
             if ((DateTime.UtcNow - args.Player.LastThreat).TotalMilliseconds < 5000)
             {
-                args.Player.SendData(PacketTypes.ProjectileNew, "", index);
+                args.Player.RemoveProjectile(ident, owner);
                 return true;
             }
 
@@ -1243,7 +1276,7 @@ namespace TShockAPI
 
             if (args.Player.TileLiquidThreshold >= TShock.Config.TileLiquidThreshold)
             {
-                args.Player.LastThreat = DateTime.UtcNow;
+                args.Player.Disable();
                 args.Player.SendTileSquare(tileX, tileY);
                 return true;
             }
@@ -1265,14 +1298,14 @@ namespace TShockAPI
 
 			if (lava && bucket != 2 && !args.Player.Group.HasPermission(Permissions.usebanneditem) && TShock.Itembans.ItemIsBanned("Lava Bucket", args.Player))
             {
-                args.Player.LastThreat = DateTime.UtcNow;
+                args.Player.Disable();
                 args.Player.SendTileSquare(tileX, tileY);
                 return true;
             }
 
 			if (!lava && bucket != 1 && !args.Player.Group.HasPermission(Permissions.usebanneditem) && TShock.Itembans.ItemIsBanned("Water Bucket", args.Player))
             {
-                args.Player.LastThreat = DateTime.UtcNow;
+                args.Player.Disable();
                 args.Player.SendTileSquare(tileX, tileY);
                 return true;
             }
@@ -1315,7 +1348,6 @@ namespace TShockAPI
 
             if (Main.tile[tileX, tileY].type != 0x15 && (!TShock.Utils.MaxChests() && Main.tile[tileX, tileY].type != 0)) //Chest
             {
-                args.Player.LastThreat = DateTime.UtcNow;
                 args.Player.SendTileSquare(tileX, tileY);
                 return true;
             }
@@ -1733,6 +1765,7 @@ namespace TShockAPI
 
             if (dmg > 175)
             {
+                args.Player.Disable();
                 args.Player.SendData(PacketTypes.PlayerHp, "", id);
                 args.Player.SendData(PacketTypes.PlayerUpdate, "", id);
                 return true;
@@ -1782,6 +1815,7 @@ namespace TShockAPI
 
             if (dmg > 175)
             {
+                args.Player.Disable();
                 args.Player.SendData(PacketTypes.NpcUpdate, "", id);
                 return true;
             }

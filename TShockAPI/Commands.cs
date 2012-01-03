@@ -376,12 +376,15 @@ namespace TShockAPI
 
                     if (args.Player.Group.HasPermission(Permissions.ignorestackhackdetection))
                         args.Player.IgnoreActionsForCheating = "none";
+
+                    if (args.Player.Group.HasPermission(Permissions.usebanneditem))
+                        args.Player.IgnoreActionsForDisabledArmor = "none";
                     
                     args.Player.Group = TShock.Utils.GetGroup(user.Group);
                     args.Player.UserAccountName = args.Player.Name;
                     args.Player.UserID = TShock.Users.GetUserID(args.Player.UserAccountName);
                     args.Player.IsLoggedIn = true;
-					args.Player.IgnoreActionsForInventory = false;
+                    args.Player.IgnoreActionsForInventory = "none";
                     args.Player.PlayerData.CopyInventory(args.Player);
                     args.Player.SendMessage("Authenticated successfully.", Color.LimeGreen);
                     args.Player.SendMessage(string.Format("Hello {0}. Your last login is {1}.", args.Player.Name, Convert.ToDateTime(user.LastLogin)));

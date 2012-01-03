@@ -442,8 +442,7 @@ namespace TShockAPI
                     AuthToken = Convert.ToInt32(tr.ReadLine());
                 }
                 Console.ForegroundColor = ConsoleColor.Yellow;
-                Console.WriteLine(
-                    "TShock Notice: authcode.txt is still present, and the AuthToken located in that file will be used.");
+                Console.WriteLine("TShock Notice: authcode.txt is still present, and the AuthToken located in that file will be used.");
                 Console.WriteLine("To become superadmin, join the game and type /auth " + AuthToken);
                 Console.WriteLine("This token will display until disabled by verification. (/auth-verify)");
                 Console.ForegroundColor = ConsoleColor.Gray;
@@ -556,7 +555,7 @@ namespace TShockAPI
                         {
                             if (player.TilePlaceThreshold >= Config.TilePlaceThreshold)
                             {
-                                player.LastThreat = DateTime.UtcNow;
+                                player.Disable();
                                 TSPlayer.Server.RevertTiles(player.TilesCreated);
                                 player.TilesCreated.Clear();
                             }
@@ -567,7 +566,9 @@ namespace TShockAPI
                         }
                         if (player.TileLiquidThreshold >= Config.TileLiquidThreshold)
                         {
-                            player.LastThreat = DateTime.UtcNow;
+                            player.Disable();
+                            TSPlayer.Server.RevertTiles(player.TilesDestroyed);
+                            player.TilesDestroyed.Clear();
                         }
                         if (player.TileLiquidThreshold > 0)
                         {
@@ -649,11 +650,41 @@ namespace TShockAPI
                                 TShock.Utils.Broadcast(player.Name + " Not logged in.", Color.Yellow);
                                 TShock.Utils.Kick(player, "Not logged in.");
                             }
+                        }
 
+                            string check = "none";
+                            foreach (Item item1 in player.TPlayer.inventory)
+                            {
+                                if (!player.Group.HasPermission(Permissions.ignorestackhackdetection) && item1.stack > item1.maxStack && item1.type != 0)
+                                {
+                                    check = "Remove Item " + item1.name + " (" + item1.stack + ") exceeds max stack of " + item1.maxStack;
+                                }
+                            }
+                            player.IgnoreActionsForCheating = check;
+                            check = "none";
+                            foreach (Item item2 in player.TPlayer.armor)
+                            {
+                                if (!player.Group.HasPermission(Permissions.usebanneditem) && TShock.Itembans.ItemIsBanned(item2.name, player))
+                                {
+                                    player.SetBuff(30, 120); //Bleeding
+                                    player.SetBuff(36, 120); //Broken Armor
+                                    check = "Remove Armor/Accessory " + item2.name;
+                                }
+                            }
+                            player.IgnoreActionsForDisabledArmor = check;
+                            if (CheckIgnores(player))
+                            {
+                                player.SetBuff(33, 120); //Weak
+                                player.SetBuff(32, 120); //Slow
+                                player.SetBuff(23, 120); //Cursed
+                            }
+                            else if (!player.Group.HasPermission(Permissions.usebanneditem) && TShock.Itembans.ItemIsBanned(player.TPlayer.inventory[player.TPlayer.selectedItem].name, player))
+                            {
+                                player.SetBuff(23, 120); //Cursed
+                            }
                         }
                     }
                 }
-            }
             Console.Title = string.Format("TerrariaShock Version {0} ({1}) ({2}/{3})", Version, VersionCodename, count, Config.MaxSlots);
         }
 
@@ -953,24 +984,18 @@ namespace TShockAPI
 
             if (Config.PvPMode == "always" && !player.TPlayer.hostile)
             {
-                player.IgnoreActionsForPvP = true;
                 player.SendMessage("PvP is forced! Enable PvP else you can't move or do anything!", Color.Red);
             }
 
             if (!player.IsLoggedIn)
             {
-                if (Config.RequireLogin)
-                {
-                    player.SendMessage("Please /register or /login to play!", Color.Red);
-                }
-                else if (Config.ServerSideInventory)
-                {
-                    player.SendMessage("Server Side Inventory is enabled! Please /register or /login to play!", Color.Red);
-                }
-
                 if (Config.ServerSideInventory)
                 {
-                    player.IgnoreActionsForInventory = true;
+                    player.SendMessage(player.IgnoreActionsForInventory = "Server Side Inventory is enabled! Please /register or /login to play!", Color.Red);
+                }
+                else if (Config.RequireLogin)
+                {
+                    player.SendMessage("Please /register or /login to play!", Color.Red);
                 }
             }
 
@@ -1033,11 +1058,13 @@ namespace TShockAPI
                     Log.ConsoleInfo(player.Name + " authenticated successfully.");
                 }
             }
+            player.LastNetPosition = new Vector2(Main.spawnTileX * 16f, Main.spawnTileY * 16f);
 
             if (Config.RememberLeavePos)
             {
                 var pos = RememberedPos.GetLeavePos(player.Name, player.IP);
-                player.Teleport((int) pos.X, (int) pos.Y);
+                player.LastNetPosition = pos;
+                player.Teleport((int) pos.X, (int) pos.Y + 3);
             }
 
             if (Config.RememberHome)
@@ -1407,7 +1434,7 @@ namespace TShockAPI
                             item.netDefaults(inventory[i].netID);
                             item.Prefix(inventory[i].prefix);
                             item.AffixName();
-                            player.SendMessage("Error: Your item (" + item.name + ") needs to be deleted.", Color.Cyan);
+                            player.SendMessage(player.IgnoreActionsForInventory = "Your item (" + item.name + ") needs to be deleted.", Color.Cyan);
                             check = false;
                         }
                         else if (playerData.inventory[i].prefix != inventory[i].prefix)
@@ -1415,7 +1442,7 @@ namespace TShockAPI
                             item.netDefaults(inventory[i].netID);
                             item.Prefix(inventory[i].prefix);
                             item.AffixName();
-                            player.SendMessage("Error: Your item (" + item.name + ") needs to be deleted.", Color.Cyan);
+                            player.SendMessage(player.IgnoreActionsForInventory = "Your item (" + item.name + ") needs to be deleted.", Color.Cyan);
                             check = false;
                         }
                         else if (inventory[i].stack > playerData.inventory[i].stack)
@@ -1423,7 +1450,7 @@ namespace TShockAPI
                             item.netDefaults(inventory[i].netID);
                             item.Prefix(inventory[i].prefix);
                             item.AffixName();
-                            player.SendMessage("Error: Your item (" + item.name + ") (" + inventory[i].stack + ") needs to have it's stack decreased to (" + playerData.inventory[i].stack + ").", Color.Cyan);
+                            player.SendMessage(player.IgnoreActionsForInventory = "Your item (" + item.name + ") (" + inventory[i].stack + ") needs to have it's stack decreased to (" + playerData.inventory[i].stack + ").", Color.Cyan);
                             check = false;
                         }
                     }
@@ -1439,7 +1466,7 @@ namespace TShockAPI
                             item.netDefaults(armor[i - 48].netID);
                             item.Prefix(armor[i - 48].prefix);
                             item.AffixName();
-                            player.SendMessage("Error: Your armor (" + item.name + ") needs to be deleted.", Color.Cyan);
+                            player.SendMessage(player.IgnoreActionsForInventory = "Your armor (" + item.name + ") needs to be deleted.", Color.Cyan);
                             check = false;
                         }
                         else if (playerData.inventory[i].prefix != armor[i - 48].prefix)
@@ -1447,7 +1474,7 @@ namespace TShockAPI
                             item.netDefaults(armor[i - 48].netID);
                             item.Prefix(armor[i - 48].prefix);
                             item.AffixName();
-                            player.SendMessage("Error: Your armor (" + item.name + ") needs to be deleted.", Color.Cyan);
+                            player.SendMessage(player.IgnoreActionsForInventory = "Your armor (" + item.name + ") needs to be deleted.", Color.Cyan);
                             check = false;
                         }
                         else if (armor[i - 48].stack > playerData.inventory[i].stack)
@@ -1455,7 +1482,7 @@ namespace TShockAPI
                             item.netDefaults(armor[i - 48].netID);
                             item.Prefix(armor[i - 48].prefix);
                             item.AffixName();
-                            player.SendMessage("Error: Your armor (" + item.name + ") (" + inventory[i].stack + ") needs to have it's stack decreased to (" + playerData.inventory[i].stack + ").", Color.Cyan);
+                            player.SendMessage(player.IgnoreActionsForInventory = "Your armor (" + item.name + ") (" + inventory[i].stack + ") needs to have it's stack decreased to (" + playerData.inventory[i].stack + ").", Color.Cyan);
                             check = false;
                         }
                     }
@@ -1468,11 +1495,15 @@ namespace TShockAPI
         public static bool CheckIgnores(TSPlayer player)
         {
             bool check = false;
-            if (player.IgnoreActionsForPvP)
+            if (Config.PvPMode == "always" && !player.TPlayer.hostile)
                 check = true;
-            if (player.IgnoreActionsForInventory)
+            if (player.IgnoreActionsForInventory != "none")
                 check = true;
             if (player.IgnoreActionsForCheating != "none")
+                check = true;
+            if (player.IgnoreActionsForDisabledArmor != "none")
+                check = true;
+            if (player.IgnoreActionsForClearingTrashCan)
                 check = true;
             if (!player.IsLoggedIn && Config.RequireLogin)
                 check = true;

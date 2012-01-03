@@ -84,8 +84,9 @@ namespace TShockAPI
         public string CurrentRegion;
         public bool InRegion = false;
         public bool IgnoreActionsForPvP = false;
-        public bool IgnoreActionsForInventory = false;
+        public string IgnoreActionsForInventory = "none";
         public string IgnoreActionsForCheating = "none";
+        public string IgnoreActionsForDisabledArmor = "none";
         public bool IgnoreActionsForClearingTrashCan = false;
         public PlayerData PlayerData;
         public bool RequiresPassword = false;
@@ -268,7 +269,6 @@ namespace TShockAPI
         {
             InitSpawn = false;
 
-
             SendWorldInfo(tilex, tiley, true);
 
             //150 Should avoid all client crash errors
@@ -279,7 +279,6 @@ namespace TShockAPI
             {
                 InitSpawn = true;
                 SendWorldInfo(Main.spawnTileX, Main.spawnTileY, false);
-                SendMessage("Warning, teleport failed due to being too close to the edge of the map.", Color.Red);
                 return false;
             }
 
@@ -653,6 +652,20 @@ namespace TShockAPI
             return true;
         }
 
+        public void RemoveProjectile(int index, int owner)
+        {
+            using (var ms = new MemoryStream())
+            {
+                var msg = new ProjectileRemoveMsg()
+                {
+                    Index = (short)index,
+                    Owner = (byte)owner
+                };
+                msg.PackFull(ms);
+                SendRawData(ms.ToArray());
+            }
+        }
+
         public virtual bool SendTileSquare(int x, int y, int size = 10)
         {
             try
@@ -708,6 +721,14 @@ namespace TShockAPI
             SendData(PacketTypes.PlayerTeam, "", Index);
         }
 
+        public virtual void Disable()
+        {
+            LastThreat = DateTime.UtcNow;
+            SetBuff(33, 330, true); //Weak
+            SetBuff(32, 330, true); //Slow
+            SetBuff(23, 330, true); //Cursed
+        }
+
         public virtual void Whoopie(object time)
         {
             var time2 = (int)time;
@@ -721,8 +742,11 @@ namespace TShockAPI
             }
         }
 
-        public virtual void SetBuff(int type, int time = 3600)
+        public virtual void SetBuff(int type, int time = 3600, bool bypass = false)
         {
+            if ((DateTime.UtcNow - LastThreat).TotalMilliseconds < 5000 && !bypass)
+                return;
+
             SendData(PacketTypes.PlayerAddBuff, number: Index, number2: (float)type, number3: (float)time);
         }
 
