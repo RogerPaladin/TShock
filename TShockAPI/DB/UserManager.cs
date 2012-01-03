@@ -520,7 +520,7 @@ namespace TShockAPI.DB
             {
                 Log.ConsoleError("GetGroupForIP SQL returned an error: " + ex);
             }
-            return TShock.Utils.GetGroup("default");
+            return TShock.Utils.GetGroup(TShock.Config.DefaultGuestGroupName);
         }
 
         public Group GetGroupForIPExpensive(string ip)
@@ -542,7 +542,7 @@ namespace TShockAPI.DB
             {
                 Log.ConsoleError("GetGroupForIP SQL returned an error: " + ex);
             }
-            return TShock.Utils.GetGroup("default");
+            return TShock.Utils.GetGroup(TShock.Config.DefaultGuestGroupName);
         }
 
 

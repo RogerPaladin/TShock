@@ -1,5 +1,4 @@
-/*
-TShock, a server mod for Terraria
+/*TShock, a server mod for Terraria
 Copyright (C) 2011 The TShock Team
 
 This program is free software: you can redistribute it and/or modify
@@ -373,10 +372,12 @@ namespace TShockAPI
         {
             return (id > 0 && id < Main.maxBuffs) ? Main.buffName[id] : "null";
         }
+
         public string GetBuffDescription(int id)
         {
             return (id > 0 && id < Main.maxBuffs) ? Main.buffTip[id] : "null";
         }
+
         public List<int> GetBuffByName(string name)
         {
             for (int i = 1; i < Main.maxBuffs; i++)
@@ -392,6 +393,7 @@ namespace TShockAPI
             }
             return found;
         }
+
         public string GetPrefixById(int id)
         {
             var item = new Item();
@@ -407,7 +409,7 @@ namespace TShockAPI
             item.SetDefaults(0);
             for (int i = 1; i < 83; i++)
             {
-                item.prefix = (byte)i;
+                item.prefix = (byte) i;
                 if (item.AffixName().Trim() == name)
                     return new List<int> { i };
             }
@@ -416,7 +418,7 @@ namespace TShockAPI
             {
                 try
                 {
-                    item.prefix = (byte)i;
+                    item.prefix = (byte) i;
                     if (item.AffixName().Trim().ToLower() == name.ToLower())
                         return new List<int> { i };
                     if (item.AffixName().Trim().ToLower().StartsWith(name.ToLower()))
@@ -432,10 +434,11 @@ namespace TShockAPI
             int type = -1;
             if (int.TryParse(idOrName, out type) && type > 0 && type < 84)
             {
-                return new List<int> { type };
+                return new List<int> {type};
             }
             return GetPrefixByName(idOrName);
         }
+
         /// <summary>
         /// Kicks all player from the server without checking for immunetokick permission.
         /// </summary>
@@ -569,6 +572,7 @@ namespace TShockAPI
                 {
                     foo = foo.Replace("%map%", Main.worldName);
                     foo = foo.Replace("%players%", GetPlayers());
+                    foo = SanitizeString(foo);
                     if (foo.Substring(0, 1) == "%" && foo.Substring(12, 1) == "%") //Look for a beginning color code.
                     {
                         string possibleColor = foo.Substring(0, 13);
@@ -609,7 +613,7 @@ namespace TShockAPI
                     return TShock.Groups.groups[i];
                 }
             }
-            return new Group("default");
+            return new Group(TShock.Config.DefaultGuestGroupName);
         }
 
         /// <summary>
@@ -702,7 +706,6 @@ namespace TShockAPI
             }
             return true;
         }
-    
         public bool Altar(int x, int y, int center, int cross, int diagonal)
         {
             int[] X = new int[9] { x - 1, x, x + 1, x - 1, x, x + 1, x - 1, x, x + 1 };
@@ -1025,6 +1028,17 @@ namespace TShockAPI
                     return i;
             }
             return 1000;
+        }
+
+        public string SanitizeString(string str)
+        {
+            var returnstr = str.ToCharArray();
+            for (int i = 0; i < str.Length; i++)
+            {
+                if (!ValidString(str[i].ToString()))
+                    returnstr[i] = ' ';
+            }
+            return new string(returnstr);
         }
     }
 }

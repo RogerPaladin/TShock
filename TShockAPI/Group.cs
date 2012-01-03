@@ -28,6 +28,8 @@ namespace TShockAPI
         public string Name { get; set; }
         public Group Parent { get; set; }
         public int Order { get; set; }
+        public string Prefix { get; set; }
+        public string Suffix { get; set; }
 
         public byte R = 255;
         public byte G = 255;
@@ -88,9 +90,11 @@ namespace TShockAPI
         public SuperAdminGroup()
             : base("superadmin")
         {
-            R = (byte)255;
-            G = (byte)255;
-            B = (byte)255;
+            R = (byte)TShock.Config.SuperAdminChatRGB[0];
+            G = (byte)TShock.Config.SuperAdminChatRGB[1];
+            B = (byte)TShock.Config.SuperAdminChatRGB[2];
+            Prefix = TShock.Config.SuperAdminChatPrefix;
+            Suffix = TShock.Config.SuperAdminChatSuffix;
         }
 
         public override bool HasPermission(string permission)

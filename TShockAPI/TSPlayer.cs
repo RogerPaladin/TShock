@@ -32,10 +32,14 @@ namespace TShockAPI
     {
         public static readonly TSServerPlayer Server = new TSServerPlayer();
         public static readonly TSPlayer All = new TSPlayer("All");
-        public int TileThreshold { get; set; }
-        public Dictionary<Vector2, Tile> TilesDestroyed { get; protected set; }
-        public bool SyncHP { get; set; }
-        public bool SyncMP { get; set; }
+        public int TileKillThreshold { get; set; }
+        public int TilePlaceThreshold { get; set; }
+        public int TileLiquidThreshold { get; set; }
+        public int ProjectileThreshold { get; set; }
+        public Dictionary<Vector2, TileData> TilesDestroyed { get; protected set; }
+        public Dictionary<Vector2, TileData> TilesCreated { get; protected set; }
+        public int FirstMaxHP { get; set; }
+        public int FirstMaxMP { get; set; }
         public Group Group { get; set; }
         public bool DisplayChat = true;
         public bool ReceivedInfo { get; set; }
@@ -67,11 +71,12 @@ namespace TShockAPI
         public int UserID = -1;
         public bool HasBeenNaggedAboutLoggingIn;
         public bool TPAllow = true;
+        public bool mute = false;
         public bool TpLock = false;
         Player FakePlayer;
         public bool RequestedSection = false;
         public DateTime LastDeath { get; set; }
-        public bool ForceSpawn = false;
+        public bool Dead = false;
         public string Country = "??";
         public int Difficulty;
         private string CacheIP;
@@ -80,9 +85,11 @@ namespace TShockAPI
         public bool InRegion = false;
         public bool IgnoreActionsForPvP = false;
         public bool IgnoreActionsForInventory = false;
-        public bool IgnoreActionsForCheating = false;
+        public string IgnoreActionsForCheating = "none";
+        public bool IgnoreActionsForClearingTrashCan = false;
         public PlayerData PlayerData;
-        
+        public bool RequiresPassword = false;
+
         public bool RealPlayer
         {
             get { return Index >= 0 && Index < Main.maxNetPlayers && Main.player[Index] != null; }
@@ -91,6 +98,13 @@ namespace TShockAPI
         {
             get { return RealPlayer && (Netplay.serverSock[Index] != null && Netplay.serverSock[Index].active && !Netplay.serverSock[Index].kill); }
         }
+
+        public int State
+        {
+            get { return Netplay.serverSock[Index].state; }
+            set { Netplay.serverSock[Index].state = value; }
+        }
+
         public string IP
         {
             get
@@ -188,17 +202,19 @@ namespace TShockAPI
         
         public TSPlayer(int index)
         {
-            TilesDestroyed = new Dictionary<Vector2, Tile>();
+            TilesDestroyed = new Dictionary<Vector2, TileData>();
+            TilesCreated = new Dictionary<Vector2, TileData>();
             Index = index;
-            Group = new Group("null");
+            Group = new Group(TShock.Config.DefaultGuestGroupName);
         }
 
         protected TSPlayer(String playerName)
         {
-            TilesDestroyed = new Dictionary<Vector2, Tile>();
+            TilesDestroyed = new Dictionary<Vector2, TileData>();
+            TilesCreated = new Dictionary<Vector2, TileData>();
             Index = -1;
             FakePlayer = new Player { name = playerName, whoAmi = -1 };
-            Group = new Group("null");
+            Group = new Group(TShock.Config.DefaultGuestGroupName);
         }
 
         public virtual void Disconnect(string reason)
@@ -749,7 +765,7 @@ namespace TShockAPI
         public override void SendMessage(string msg, byte red, byte green, byte blue)
         {
             Console.WriteLine(msg);
-            RconHandler.Response += msg + "\n";
+            //RconHandler.Response += msg + "\n";
         }
         
         public void SetFullMoon(bool fullmoon)
@@ -791,17 +807,15 @@ namespace TShockAPI
             NetMessage.SendData((int)PacketTypes.NpcStrike, -1, -1, "", npcid, damage, knockBack, hitDirection);
         }
 
-        public void RevertKillTile(Dictionary<Vector2, Tile> destroyedTiles)
+        public void RevertTiles(Dictionary<Vector2, TileData> tiles)
         {
             // Update Main.Tile first so that when tile sqaure is sent it is correct
-            foreach (KeyValuePair<Vector2, Tile> entry in destroyedTiles)
+            foreach (KeyValuePair<Vector2, TileData> entry in tiles)
             {
-                Main.tile[(int)entry.Key.X, (int)entry.Key.Y] = entry.Value;
-                Log.Debug(string.Format("Reverted DestroyedTile(TileXY:{0}_{1}, Type:{2})",
-                                        entry.Key.X, entry.Key.Y, Main.tile[(int)entry.Key.X, (int)entry.Key.Y].type));
+                Main.tile[(int)entry.Key.X, (int)entry.Key.Y].Data = entry.Value;
             }
             // Send all players updated tile sqaures
-            foreach (Vector2 coords in destroyedTiles.Keys)
+            foreach (Vector2 coords in tiles.Keys)
             {
                 All.SendTileSquare((int)coords.X, (int)coords.Y, 3);
             }
@@ -812,7 +826,7 @@ namespace TShockAPI
     {
         public NetItem[] inventory = new NetItem[NetItem.maxNetInventory];
         public int maxHealth = 100;
-        public int maxMana = 100;
+        //public int maxMana = 100;
         public bool exists = false;
 
         public PlayerData(TSPlayer player)
@@ -853,7 +867,6 @@ namespace TShockAPI
         public void CopyInventory(TSPlayer player)
         {
             this.maxHealth = player.TPlayer.statLifeMax;
-            this.maxMana = player.TPlayer.statManaMax;
             Item[] inventory = player.TPlayer.inventory;
             Item[] armor = player.TPlayer.armor;
             for (int i = 0; i < NetItem.maxNetInventory; i++)
