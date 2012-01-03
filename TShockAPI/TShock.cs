@@ -49,7 +49,7 @@ namespace TShockAPI
     public class TShock : TerrariaPlugin
     {
 		public static readonly Version VersionNum = Assembly.GetExecutingAssembly().GetName().Version;
-        public static readonly string VersionCodename = "1.1 broke our API";
+        public static readonly string VersionCodename = "Zidonuke fixin' what Redigit doesn't";
 
         public static string SavePath = "tshock";
 
@@ -71,6 +71,7 @@ namespace TShockAPI
         public static BlockShopManager BlockShopManager;
         public static OtherShopManager OtherShopManager;
         public static RemeberedPosManager RememberedPos;
+        public static InventoryManager InventoryDB;
         public static ConfigFile Config { get; set; }
         public static IDbConnection DB;
         public static bool OverridePort;
@@ -202,6 +203,7 @@ namespace TShockAPI
                 BlockShopManager = new BlockShopManager(DB);
                 OtherShopManager = new OtherShopManager(DB);
                 Restart = new RestartManager();
+                InventoryDB = new InventoryManager(DB);
                 RestApi = new SecureRest(Netplay.serverListenIP, 8080);
                 RestApi.Verify += RestApi_Verify;
                 RestApi.Port = Config.RestApiPort;
@@ -225,6 +227,7 @@ namespace TShockAPI
                 NetHooks.GreetPlayer += OnGreetPlayer;
                 NpcHooks.StrikeNpc += NpcHooks_OnStrikeNpc;
                 ProjectileHooks.SetDefaults += OnProjectileSetDefaults;
+                WorldHooks.StartHardMode += OnStartHardMode;
 
                 GetDataHandlers.InitGetDataHandler();
                 Commands.InitCommands();
@@ -323,6 +326,10 @@ namespace TShockAPI
         {
             if (disposing)
             {
+				if (Geo != null)
+				{
+					Geo.Dispose();					
+				}
                 GameHooks.PostInitialize -= OnPostInit;
                 GameHooks.Update -= OnUpdate;
                 ServerHooks.Join -= OnJoin;
@@ -348,6 +355,7 @@ namespace TShockAPI
                         player.SavePlayer();
                     }
                 }
+                Log.Dispose();
             }
 
             base.Dispose(disposing);
@@ -533,10 +541,7 @@ namespace TShockAPI
                         {
                             if (player.TileThreshold >= Config.TileThreshold)
                             {
-                                if (TShock.Utils.HandleTntUser(player, "Kill tile abuse detected."))
-                                {
-                                    TSPlayer.Server.RevertKillTile(player.TilesDestroyed);
-                                }
+                                TSPlayer.Server.RevertKillTile(player.TilesDestroyed);
                             }
                             if (player.TileThreshold > 0)
                             {
@@ -644,7 +649,14 @@ namespace TShockAPI
                 return;
             }
 
-            var ban = Bans.GetBanByIp(player.IP);
+            var ipban = Bans.GetBanByIp(player.IP);
+            var nameban = Bans.GetBanByName(player.Name);
+            Ban ban = null;
+            if (ipban != null && Config.EnableIPBans)
+                ban = ipban;
+            else if (nameban != null && Config.EnableIPBans)
+                ban = nameban;
+
             if (ban != null)
             {
                 TShock.Utils.ForceKick(player, string.Format("You are banned: {0}", ban.Reason));
@@ -678,6 +690,7 @@ namespace TShockAPI
 
             if (tsplr != null && tsplr.ReceivedInfo)
             {
+                TShock.Utils.Broadcast(tsplr.Name + " has left", Color.Yellow);
                 Log.Info(string.Format("{0} left.", tsplr.Name));
                 if (tsplr.IsLoggedIn)
                 {
@@ -864,13 +877,9 @@ namespace TShockAPI
                 return;
             }
 
-            
-
             // Stop accepting updates from player as this player is going to be kicked/banned during OnUpdate (different thread so can produce race conditions)
-            if ((Config.BanKillTileAbusers || Config.KickKillTileAbusers) &&
-                player.TileThreshold >= Config.TileThreshold && !player.Group.HasPermission(Permissions.ignoregriefdetection))
+            if (player.TileThreshold >= Config.TileThreshold && !player.Group.HasPermission(Permissions.ignorekilltiledetection))
             {
-                Log.Debug("Rejecting " + type + " from " + player.Name + " as this player is about to be kicked");
                 e.Handled = true;
             }
             else
@@ -898,34 +907,31 @@ namespace TShockAPI
                 e.Handled = true;
                 return;
             }
-            NetMessage.SendData((int)PacketTypes.TimeSet, -1, -1, "", 0, 0, Main.sunModY, Main.moonModY);
-            NetMessage.syncPlayers();
-
-            if (Config.EnableGeoIP && Geo != null)
-            {
-                var code = Geo.TryGetCountryCode(IPAddress.Parse(player.IP));
-                player.Country = code == null ? "N/A" : MaxMind.GeoIPCountry.GetCountryNameByCode(code);
-                if (code == "A1")
-                    if (TShock.Config.KickProxyUsers)
-                        TShock.Utils.Kick(player, "Proxies are not allowed");
-                Log.Info(string.Format("{0} ({1}) from '{2}' group from '{3}' joined.", player.Name, player.IP, player.Group.Name, player.Country));
-                TShock.Utils.Broadcast(player.Name + " is from the " + player.Country, Color.Yellow);
-            }
-            else
-                Log.Info(string.Format("{0} ({1}) from '{2}' group joined.", player.Name, player.IP, player.Group.Name));
 
             TShock.Utils.ShowFileToUser(player, "motd.txt");
-            
             if (HackedHealth(player))
             {
-                TShock.Utils.HandleCheater(player, "Hacked health.");
+                player.IgnoreActionsForCheating = true;
+                player.SendMessage("You are using a health/mana cheat. Please choose a different character.");
             }
-            if (Config.AlwaysPvP)
+
+            if (HackedInventory(player))
             {
-                player.SetPvP(true);
-                player.SendMessage(
-                    "PvP is forced! Enable PvP else you can't deal damage to other people. (People can kill you)",
-                    Color.Red);
+                player.IgnoreActionsForCheating = true;
+            }
+
+            NetMessage.syncPlayers();
+
+            if (Config.ServerSideInventory && !player.IsLoggedIn)
+            {
+                player.IgnoreActionsForInventory = true;
+                player.SendMessage("Server Side Inventory is enabled! Please /register or /login to play!", Color.Red);
+            }
+
+            if (Config.AlwaysPvP && !player.TPlayer.hostile)
+            {
+                player.IgnoreActionsForPvP = true;
+                player.SendMessage("PvP is forced! Enable PvP else you can't move or do anything!", Color.Red);
             }
             if (player.Group.HasPermission(Permissions.causeevents) && Config.InfiniteInvasion)
             {
@@ -1177,6 +1183,81 @@ namespace TShockAPI
             }
         }
 
+        public static bool CheckProjectilePermission(TSPlayer player, int index, int type)
+        {
+            if (type == 43)
+            {
+                return true;
+            }
+
+            if (type == 17 && !player.Group.HasPermission(Permissions.usebanneditem) && TShock.Itembans.ItemIsBanned("Dirt Wand")) //Dirt Wand Projectile
+            {
+                return true;
+            }
+
+            if ((type == 42 || type == 65 || type == 68) && !player.Group.HasPermission(Permissions.usebanneditem) && TShock.Itembans.ItemIsBanned("Sandgun")) //Sandgun Projectiles
+            {
+                return true;
+            }
+
+            Projectile proj = new Projectile();
+            proj.SetDefaults(type);
+
+            if (!player.Group.HasPermission(Permissions.usebanneditem) && TShock.Itembans.ItemIsBanned(proj.name))
+            {
+                return true;
+            }
+
+            if (proj.hostile)
+            {
+                return true;
+            }
+
+            return false;
+        }
+
+        public static bool CheckTilePermission(TSPlayer player, int tileX, int tileY)
+        {
+            string Owner = string.Empty;
+            string RegionName = string.Empty;
+
+            if (TShock.Config.RangeChecks && ((Math.Abs(player.TileX - tileX) > 32) || (Math.Abs(player.TileY - tileY) > 32)))
+            {
+                return true;
+            }
+            if (!player.Group.HasPermission(Permissions.canbuild))
+            {
+                player.SendMessage("You do not have permission to build!", Color.Red);
+                return true;
+            }
+            if (!player.Group.HasPermission(Permissions.editspawn) && !TShock.Regions.CanBuild(tileX, tileY, player, out Owner) && TShock.Regions.InArea(tileX, tileY, out RegionName))
+            {
+                player.SendMessage("Region protected from changes.", Color.Red);
+                return true;
+            }
+            if (TShock.Config.DisableBuild)
+            {
+                if (!player.Group.HasPermission(Permissions.editspawn))
+                {
+                    player.SendMessage("World protected from changes.", Color.Red);
+                    return true;
+                }
+            }
+            if (TShock.Config.SpawnProtection)
+            {
+                if (!player.Group.HasPermission(Permissions.editspawn))
+                {
+                    var flag = TShock.CheckSpawn(tileX, tileY);
+                    if (flag)
+                    {
+                        player.SendMessage("Spawn protected from changes.", Color.Red);
+                        return true;
+                    }
+                }
+            }
+            return false;
+        }
+
         public static bool CheckSpawn(int x, int y)
         {
             Vector2 tile = new Vector2(x, y);
@@ -1199,6 +1280,151 @@ namespace TShockAPI
                    (player.TPlayer.statLife > 400);
         }
 
+        public static bool HackedInventory(TSPlayer player)
+        {
+            bool check = false;
+
+            Item[] inventory = player.TPlayer.inventory;
+            Item[] armor = player.TPlayer.armor;
+            for (int i = 0; i < NetItem.maxNetInventory; i++)
+            {
+                if (i < 49)
+                {
+                    Item item = new Item();
+                    if (inventory[i] != null && inventory[i].netID != 0)
+                    {
+                        item.netDefaults(inventory[i].netID);
+                        item.Prefix(inventory[i].prefix);
+                        item.AffixName();
+                        if (inventory[i].stack > item.maxStack)
+                        {
+                            check = true;
+                            player.SendMessage(String.Format("Stack cheat detected. Remove item {0} ({1}) and then rejoin", item.name, inventory[i].stack), Color.Cyan);
+                        }
+                    }
+                }
+                else
+                {
+                    Item item = new Item();
+                    if (armor[i - 48] != null && armor[i - 48].netID != 0)
+                    {
+                        item.netDefaults(armor[i - 48].netID);
+                        item.Prefix(armor[i - 48].prefix);
+                        item.AffixName();
+                        if (armor[i - 48].stack > item.maxStack)
+                        {
+                            check = true;
+                            player.SendMessage(String.Format("Stack cheat detected. Remove armor {0} ({1}) and then rejoin", item.name, armor[i - 48].stack), Color.Cyan);
+                        }
+                    }
+                }
+            }
+
+            return check;
+        }
+
+        public static bool CheckInventory(TSPlayer player)
+        {
+            PlayerData playerData = player.PlayerData;
+            bool check = true;
+
+            if (player.TPlayer.statLifeMax > playerData.maxHealth)
+            {
+                player.SendMessage("Error: Your max health exceeded (" + playerData.maxHealth + ") which is stored on server", Color.Cyan);
+                check = false;
+            }
+
+            if (player.TPlayer.statManaMax > playerData.maxMana)
+            {
+                player.SendMessage("Error: Your max mana exceeded (" + playerData.maxMana + ") which is stored on server", Color.Cyan);
+                check = false;
+            }
+
+            Item[] inventory = player.TPlayer.inventory;
+            Item[] armor = player.TPlayer.armor;
+            for (int i = 0; i < NetItem.maxNetInventory; i++)
+            {
+                if (i < 49)
+                {
+                    Item item = new Item();
+                    Item serverItem = new Item();
+                    if (inventory[i] != null && inventory[i].netID != 0)
+                    {
+                        if (playerData.inventory[i].netID != inventory[i].netID)
+                        {
+                            item.netDefaults(inventory[i].netID);
+                            item.Prefix(inventory[i].prefix);
+                            item.AffixName();
+                            player.SendMessage("Error: Your item (" + item.name + ") needs to be deleted.", Color.Cyan);
+                            check = false;
+                        }
+                        else if (playerData.inventory[i].prefix != inventory[i].prefix)
+                        {
+                            item.netDefaults(inventory[i].netID);
+                            item.Prefix(inventory[i].prefix);
+                            item.AffixName();
+                            player.SendMessage("Error: Your item (" + item.name + ") needs to be deleted.", Color.Cyan);
+                            check = false;
+                        }
+                        else if (inventory[i].stack > playerData.inventory[i].stack)
+                        {
+                            item.netDefaults(inventory[i].netID);
+                            item.Prefix(inventory[i].prefix);
+                            item.AffixName();
+                            player.SendMessage("Error: Your item (" + item.name + ") (" + inventory[i].stack + ") needs to have it's stack decreased to (" + playerData.inventory[i].stack + ").", Color.Cyan);
+                            check = false;
+                        }
+                    }
+                }
+                else
+                {
+                    Item item = new Item();
+                    Item serverItem = new Item();
+                    if (armor[i - 48] != null && armor[i - 48].netID != 0)
+                    {
+                        if (playerData.inventory[i].netID != armor[i - 48].netID)
+                        {
+                            item.netDefaults(armor[i - 48].netID);
+                            item.Prefix(armor[i - 48].prefix);
+                            item.AffixName();
+                            player.SendMessage("Error: Your armor (" + item.name + ") needs to be deleted.", Color.Cyan);
+                            check = false;
+                        }
+                        else if (playerData.inventory[i].prefix != armor[i - 48].prefix)
+                        {
+                            item.netDefaults(armor[i - 48].netID);
+                            item.Prefix(armor[i - 48].prefix);
+                            item.AffixName();
+                            player.SendMessage("Error: Your armor (" + item.name + ") needs to be deleted.", Color.Cyan);
+                            check = false;
+                        }
+                        else if (armor[i - 48].stack > playerData.inventory[i].stack)
+                        {
+                            item.netDefaults(armor[i - 48].netID);
+                            item.Prefix(armor[i - 48].prefix);
+                            item.AffixName();
+                            player.SendMessage("Error: Your armor (" + item.name + ") (" + inventory[i].stack + ") needs to have it's stack decreased to (" + playerData.inventory[i].stack + ").", Color.Cyan);
+                            check = false;
+                        }
+                    }
+                }
+            }
+
+            return check;
+        }
+
+        public static bool CheckIgnores(TSPlayer player)
+        {
+            bool check = false;
+            if (player.IgnoreActionsForPvP)
+                check = true;
+            if (player.IgnoreActionsForInventory)
+                check = true;
+            if (player.IgnoreActionsForCheating)
+                check = true;
+            return check;
+        }
+
         public static bool CheckPlayerCollision(int x, int y)
         {
             if (x + 1 <= Main.maxTilesX && y + 3 <= Main.maxTilesY
@@ -1208,7 +1434,7 @@ namespace TShockAPI
                 {
                     for (int h = y; h < y + 4; h++)
                     {
-                        if (!Main.tile[i, h].active || !GetDataHandlers.BlacklistTiles[Main.tile[i, h].type])
+                        if (!Main.tile[i, h].active || !Main.tileSolid[Main.tile[i, h].type])
                             return false;
                     }
                 }
@@ -1240,7 +1466,7 @@ namespace TShockAPI
                 Netplay.serverPort = file.ServerPort;
             }
 
-            Netplay.spamCheck = file.SpamChecks;
+            Netplay.spamCheck = false;
 
             RconHandler.Password = file.RconPassword;
             RconHandler.ListenPort = file.RconPort;

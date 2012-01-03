@@ -68,27 +68,21 @@ namespace TShockAPI
         [Description("Prevents tiles from being placed within SpawnProtectionRadius of the default spawn.")]
         public bool SpawnProtection = true;
         [Description("Radius from spawn tile for SpawnProtection.")]
-        public int SpawnProtectionRadius = 5;
+        public int SpawnProtectionRadius = 10;
         [Description("Max slots for the server. If you want people to be kicked with \"Server is full\" set this to how many players you want max and then set Terraria max players to 2 higher.")]
         public int MaxSlots = 8;
         [Description("Global protection agent for any block distance based anti-grief check.")]
         public bool RangeChecks = true;
-        [Description("Enable/Disable Terrarias built in spam checks.")]
-        public bool SpamChecks;
         [Description("Disables any building; placing of blocks")]
         public bool DisableBuild;
         [Description("Kick a player if they exceed this number of tile kills within 1 second.")]
-        public int TileThreshold = 60;
+        public int TileThreshold = 120;
         [Description("#.#.#. = Red/Blue/Green - RGB Colors for the Admin Chat Color. Max value: 255")]
         public float[] SuperAdminChatRGB = { 255, 0, 0 };
         [Description("The Chat Prefix before an admin speaks. eg. *The prefix was set to \"(Admin) \", so.. (Admin) : Hi! Note: If you put a space after the prefix, it will look like this: (Admin) <TerrariaDude): Hi!")]
         public string AdminChatPrefix = "(Admin) ";
         [Description("")]
         public bool AdminChatEnabled = true;
-
-        [Description("Seconds a player has to wait between pvp toggles.")]
-        public int PvpThrottle;
-
         [Description("Backup frequency in minutes. So, a value of 60 = 60 minutes. Backups are stored in the \\tshock\\backups folder.")]
         public int BackupInterval;
         [Description("How long backups are kept in minutes. 2880 = 2 days.")]
@@ -166,12 +160,6 @@ namespace TShockAPI
         [Description("")]
         public string MediumcoreKickReason = "Death results in a kick";
         [Description("")]
-        public string ProjectileAbuseReason = "Projectile abuse";
-        [Description("")]
-        public string TileAbuseReason = "Tile abuse ({0})";
-        [Description("")]
-        public string GriefClientReason = "Grief client detected ({0})";
-        [Description("")]
         public bool EnableDNSHostResolution;
         [Description("")]
         public bool EnableBanOnUsernames;
@@ -231,14 +219,14 @@ namespace TShockAPI
 		[Description("Some tiles are 'fixed' by not letting TShock handle them. Disabling this may break certain asthetic tiles.")]
     	public bool EnableInsecureTileFixes = true;
 
-    	[Description("Some weapons override the range checks, however malicious users can take advantage of this and send lots of packets of certain types. Disabling this will turn off weapons that affect this.")] 
-		public bool EnableRangeCheckOverrides = true;
-
-		[Description("Disabling this prevents players from being banned or kicked based on item stacks.")]
-    	public bool EnableItemStackChecks = true;
-
         [Description("Kicks users using a proxy as identified with the GeoIP database")] 
         public bool KickProxyUsers = true;
+
+        [Description("Kicks banned users by their name")]
+        public bool EnableNameBans = false;
+
+        [Description("Kicks banned users by their IP")] 
+        public bool EnableIPBans = true;
 
         [Description("Disables hardmode, can't never be activated. Overrides /starthardmode")]
         public bool DisableHardmode = false;
@@ -251,6 +239,9 @@ namespace TShockAPI
 
         [Description("Disables snow ball projectiles from spawning")] //Change this to stop the tile from spawning
         public bool DisableSnowBalls = false;
+
+        [Description("Enable Server Side Inventory checks, EXPERIMENTAL")]
+        public bool ServerSideInventory = false;
 
         public static ConfigFile Read(string path)
         {

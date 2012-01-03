@@ -24,7 +24,7 @@ using Terraria;
 
 using TShockAPI.Net;
 
-using Microsoft.Xna.Framework.Graphics;
+//using Microsoft.Xna.Framework.Graphics;
 
 namespace TShockAPI
 {
@@ -40,12 +40,13 @@ namespace TShockAPI
         public bool DisplayChat = true;
         public bool ReceivedInfo { get; set; }
         public int Index { get; protected set; }
-        public DateTime LastPvpChange { get; protected set; }
+        public DateTime LastPvpChange;
         public Point[] TempPoints = new Point[2];
         public int AwaitingTempPoint { get; set; }
         public bool AwaitingName { get; set; }
         public DateTime LastExplosive { get; set; }
         public DateTime LastCorruption { get; set; }
+        public DateTime LastThreat { get; set; }
         public DateTime LastTileChangeNotify { get; set; }
         public DateTime LoginTime { get; set; }
         public DateTime Interval { get; set; }
@@ -59,6 +60,7 @@ namespace TShockAPI
         public int LoginAttempts { get; set; }
         public int Dispenser { get; set; }
         public Vector2 TeleportCoords = new Vector2(-1, -1);
+        public Vector2 LastNetPosition = Vector2.Zero; 
         public string UserAccountName { get; set; }
         public bool HasBeenSpammedWithBuildMessage;
         public bool IsLoggedIn; 
@@ -76,6 +78,10 @@ namespace TShockAPI
         public Vector2 LastTilePos = new Vector2(-1,-1);
         public string CurrentRegion;
         public bool InRegion = false;
+        public bool IgnoreActionsForPvP = false;
+        public bool IgnoreActionsForInventory = false;
+        public bool IgnoreActionsForCheating = false;
+        public PlayerData PlayerData;
         
         public bool RealPlayer
         {
@@ -635,7 +641,8 @@ namespace TShockAPI
         {
             try
             {
-                SendData(PacketTypes.TileSendSquare, "", size, (x - (size / 2)), (y - (size / 2)));
+                int num = (size - 1) / 2;
+                SendData(PacketTypes.TileSendSquare, "", size, (float)(x - num), (float)(y - num));
                 return true;
             }
             catch (Exception ex)
@@ -677,18 +684,6 @@ namespace TShockAPI
         public virtual void DamagePlayer(int damage)
         {
             NetMessage.SendData((int)PacketTypes.PlayerDamage, -1, -1, "", Index, ((new Random()).Next(-1, 1)), damage, (float)0);
-        }
-
-        public virtual void SetPvP(bool pvp)
-        {
-            if (TPlayer.hostile != pvp)
-            {
-                LastPvpChange = DateTime.UtcNow;
-                TPlayer.hostile = pvp;
-                All.SendMessage(string.Format("{0} has {1} PvP!", Name, pvp ? "enabled" : "disabled"), Main.teamColor[Team]);
-            }
-            //Broadcast anyways to keep players synced
-            NetMessage.SendData((int)PacketTypes.TogglePvp, -1, -1, "", Index);
         }
 
         public virtual void SetTeam(int team)
@@ -810,6 +805,154 @@ namespace TShockAPI
             {
                 All.SendTileSquare((int)coords.X, (int)coords.Y, 3);
             }
+        }
+    }
+
+    public class PlayerData
+    {
+        public NetItem[] inventory = new NetItem[NetItem.maxNetInventory];
+        public int maxHealth = 100;
+        public int maxMana = 100;
+        public bool exists = false;
+
+        public PlayerData(TSPlayer player)
+        {
+            for (int i = 0; i < NetItem.maxNetInventory; i++)
+            {
+                this.inventory[i] = new NetItem();
+            }
+            this.inventory[0].netID = -15;
+            this.inventory[0].stack = 1;
+            if(player.TPlayer.inventory[0] != null && player.TPlayer.inventory[0].netID == -15)
+                this.inventory[0].prefix = player.TPlayer.inventory[0].prefix;
+            this.inventory[1].netID = -13;
+            this.inventory[1].stack = 1;
+            if (player.TPlayer.inventory[1] != null && player.TPlayer.inventory[1].netID == -13)
+                this.inventory[1].prefix = player.TPlayer.inventory[1].prefix;
+            this.inventory[2].netID = -16;
+            this.inventory[2].stack = 1;
+            if (player.TPlayer.inventory[2] != null && player.TPlayer.inventory[2].netID == -16)
+                this.inventory[2].prefix = player.TPlayer.inventory[2].prefix;
+        }
+
+        public void StoreSlot(int slot, int netID, int prefix, int stack)
+        {
+            this.inventory[slot].netID = netID;
+            if (this.inventory[slot].netID != 0)
+            {
+                this.inventory[slot].stack = stack;
+                this.inventory[slot].prefix = prefix;
+            }
+            else
+            {
+                this.inventory[slot].stack = 0;
+                this.inventory[slot].prefix = 0;
+            }
+        }
+
+        public void CopyInventory(TSPlayer player)
+        {
+            this.maxHealth = player.TPlayer.statLifeMax;
+            this.maxMana = player.TPlayer.statManaMax;
+            Item[] inventory = player.TPlayer.inventory;
+            Item[] armor = player.TPlayer.armor;
+            for (int i = 0; i < NetItem.maxNetInventory; i++)
+            {
+                if (i < 49)
+                {
+                    if (player.TPlayer.inventory[i] != null)
+                    {
+                        this.inventory[i].netID = inventory[i].netID;
+                    }
+                    else
+                    {
+                        this.inventory[i].netID = 0;
+                    }
+
+                    if (this.inventory[i].netID != 0)
+                    {
+                        this.inventory[i].stack = inventory[i].stack;
+                        this.inventory[i].prefix = inventory[i].prefix;
+                    }
+                    else
+                    {
+                        this.inventory[i].stack = 0;
+                        this.inventory[i].prefix = 0;
+                    }
+                }
+                else
+                {
+                    if (player.TPlayer.armor[i - 48] != null)
+                    {
+                        this.inventory[i].netID = armor[i - 48].netID;
+                    }
+                    else
+                    {
+                        this.inventory[i].netID = 0;
+                    }
+
+                    if (this.inventory[i].netID != 0)
+                    {
+                        this.inventory[i].stack = armor[i - 48].stack;
+                        this.inventory[i].prefix = armor[i - 48].prefix;
+                    }
+                    else
+                    {
+                        this.inventory[i].stack = 0;
+                        this.inventory[i].prefix = 0;
+                    }
+                }
+            }
+        }
+    }
+
+    public class NetItem
+    {
+        public static int maxNetInventory = 59;
+        public int netID = 0;
+        public int stack = 0;
+        public int prefix = 0;
+
+        public static string ToString(NetItem[] inventory)
+        {
+            string inventoryString = "";
+            for (int i = 0; i < NetItem.maxNetInventory; i++)
+            {
+                if (i != 0)
+                    inventoryString += "~";
+                inventoryString += inventory[i].netID;
+                if (inventory[i].netID != 0)
+                {
+                    inventoryString += "," + inventory[i].stack;
+                    inventoryString += "," + inventory[i].prefix;
+                }
+                else
+                {
+                    inventoryString += ",0,0";
+                }
+            }
+            return inventoryString;
+        }
+
+        public static NetItem[] Parse(string data)
+        {
+            NetItem[] inventory = new NetItem[NetItem.maxNetInventory];
+            int i;
+            for (i = 0; i < NetItem.maxNetInventory; i++)
+            {
+                inventory[i] = new NetItem();
+            }
+            string[] items = data.Split('~');
+            i = 0;
+            foreach (string item in items)
+            {
+                string[] idata = item.Split(',');
+                inventory[i].netID = int.Parse(idata[0]);
+                inventory[i].stack = int.Parse(idata[1]);
+                inventory[i].prefix = int.Parse(idata[2]);
+                i++;
+            }
+            return inventory;
         }
     }
 }

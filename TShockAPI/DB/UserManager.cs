@@ -21,7 +21,7 @@ using System;
 using System.Data;
 using System.IO;
 using MySql.Data.MySqlClient;
-using Microsoft.Xna.Framework;
+//using Microsoft.Xna.Framework;
 
 namespace TShockAPI.DB
 {

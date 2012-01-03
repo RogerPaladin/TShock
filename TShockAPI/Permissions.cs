@@ -37,7 +37,7 @@ namespace TShockAPI
 
         [Description("Required to be able to place sand")]
         public static readonly string cansand;
-        
+
         [Description("Allows you to edit the spawn")]
         public static readonly string editspawn;
 
@@ -47,14 +47,8 @@ namespace TShockAPI
         [Description("Prevents you from being banned")]
         public static readonly string immunetoban;
 
-        [Description("Prevents you from being kicked/banned by TShocks grief detections")]
-        public static readonly string ignoregriefdetection;
-
-        [Description("Prevents you from being kicked/banned by TShocks cheat detections")]
-        public static readonly string ignorecheatdetection;
-
-        [Description("Allows you to use explosives even when they are disabled")]
-        public static readonly string useexplosives;
+        [Description("Prevents you from being reverted by kill tile abuse detection")]
+        public static readonly string ignorekilltiledetection;
 
         [Description("Allows you to place corruptions even when they are disabled")]
         public static readonly string usecorruption;
@@ -186,6 +180,9 @@ namespace TShockAPI
         [Description("Users can tp to anyone")]
         public static readonly string tpall;
 
+        [Description("Users can tp to people without showing a notice")]
+        public static readonly string tphide;
+        
         [Description("User can convert hallow into corruption and vice-versa")]
         public static readonly string converthardmode;
 

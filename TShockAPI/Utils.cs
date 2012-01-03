@@ -312,7 +312,7 @@ namespace TShockAPI
             }
             //Method #2 - allows impartial matching
             var found = new List<Item>();
-            for (int i = 1; i < Main.maxItemTypes; i++)
+            for (int i = -24; i < Main.maxItemTypes; i++)
             {
                 try
                 {
@@ -348,7 +348,7 @@ namespace TShockAPI
         public List<NPC> GetNPCByName(string name)
         {
             //Method #1 - must be exact match, allows support for different coloured slimes
-            for (int i = 1; i < Main.maxNPCTypes; i++)
+            for (int i = -17; i < Main.maxNPCTypes; i++)
             {
                 NPC npc = new NPC();
                 npc.SetDefaults(name);
@@ -520,22 +520,22 @@ namespace TShockAPI
 
         public bool HandleGriefer(TSPlayer player, string reason)
         {
-            return HandleBadPlayer(player, Permissions.ignoregriefdetection, TShock.Config.BanGriefers, TShock.Config.KickGriefers, reason);
+            return HandleBadPlayer(player, Permissions.ignorekilltiledetection, TShock.Config.BanGriefers, TShock.Config.KickGriefers, reason);
         }
 
         public bool HandleTntUser(TSPlayer player, string reason)
         {
-            return HandleBadPlayer(player, Permissions.ignoregriefdetection, TShock.Config.BanKillTileAbusers, TShock.Config.KickKillTileAbusers, reason);
+            return HandleBadPlayer(player, Permissions.ignorekilltiledetection, TShock.Config.BanKillTileAbusers, TShock.Config.KickKillTileAbusers, reason);
         }
 
         public bool HandleExplosivesUser(TSPlayer player, string reason)
         {
-            return HandleBadPlayer(player, Permissions.ignoregriefdetection, TShock.Config.BanExplosives, TShock.Config.KickExplosives, reason);
+            return HandleBadPlayer(player, Permissions.ignorekilltiledetection, TShock.Config.BanExplosives, TShock.Config.KickExplosives, reason);
         }
 
         public bool HandleCorruptionUser(TSPlayer player, string reason)
         {
-            return HandleBadPlayer(player, Permissions.ignoregriefdetection, TShock.Config.BanCorruption, TShock.Config.KickCorruption, reason);
+            return HandleBadPlayer(player, Permissions.ignorekilltiledetection, TShock.Config.BanCorruption, TShock.Config.KickCorruption, reason);
         }
 
         private bool HandleBadPlayer(TSPlayer player, string overridePermission, bool ban, bool kick, string reason)

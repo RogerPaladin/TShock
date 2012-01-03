@@ -156,7 +156,6 @@ namespace TShockAPI
             add(Permissions.manageitem, DeleteItem, "delitem");
             add(Permissions.cfg, SetSpawn, "setspawn");
             add(Permissions.cfg, Reload, "reload");
-            add(Permissions.cfg, ShowConfiguration, "showconfig");
             add(Permissions.cfg, ServerPassword, "serverpassword");
             add(Permissions.cfg, Save, "save");
             add(Permissions.cfg, Settle, "settle");
@@ -363,10 +362,24 @@ namespace TShockAPI
                 }
                 else if (user.Password.ToUpper() == encrPass.ToUpper())
                 {
+                    //args.Player.PlayerData = TShock.InventoryDB.GetPlayerData(args.Player, TShock.Users.GetUserID(args.Parameters[0]));
+
+                    if (TShock.Config.ServerSideInventory)
+                    {
+                        if (!TShock.CheckInventory(args.Player))
+                        {
+                            args.Player.SendMessage("Login Failed, Please fix the above errors then log back in.", Color.Cyan);
+                            return;
+                        }
+                    }
+                    
                     args.Player.Group = TShock.Utils.GetGroup(user.Group);
                     args.Player.UserAccountName = args.Player.Name;
                     args.Player.UserID = TShock.Users.GetUserID(args.Player.UserAccountName);
                     args.Player.IsLoggedIn = true;
+					args.Player.IgnoreActionsForInventory = false;
+                    args.Player.PlayerData.CopyInventory(args.Player);
+                    //TShock.InventoryDB.InsertPlayerData(args.Player, args.Player.UserID);
                     args.Player.SendMessage("Authenticated successfully.", Color.LimeGreen);
                     args.Player.SendMessage(string.Format("Hello {0}. Your last login is {1}.", args.Player.Name, Convert.ToDateTime(user.LastLogin)));
                     TShock.Users.Login(args.Player);
@@ -1857,28 +1870,6 @@ namespace TShockAPI
             SaveWorld.Start();
         }
 
-        private static void ShowConfiguration(CommandArgs args)
-        {
-            args.Player.SendMessage("TShock Config:");
-            string lineOne = string.Format("BanCheater : {0}, KickCheater : {1}, BanGriefer : {2}, KickGriefer : {3}",
-                              TShock.Config.BanCheaters, TShock.Config.KickCheaters,
-                              TShock.Config.BanGriefers, TShock.Config.KickGriefers);
-            args.Player.SendMessage(lineOne, Color.Yellow);
-            string lineTwo = string.Format("BanTnt : {0}, KickTnt : {1}, BanBoom : {2}, KickBoom : {3}",
-                                           TShock.Config.BanKillTileAbusers, TShock.Config.KickKillTileAbusers,
-                                           TShock.Config.BanExplosives, TShock.Config.KickExplosives);
-            args.Player.SendMessage(lineTwo, Color.Yellow);
-            string lineThree = string.Format("RangeChecks : {0}, DisableBuild : {1}, ProtectSpawn : {2}, ProtectRadius : {3}",
-                                             TShock.Config.RangeChecks, TShock.Config.DisableBuild,
-                                             TShock.Config.SpawnProtection, TShock.Config.SpawnProtectionRadius);
-            args.Player.SendMessage(lineThree, Color.Yellow);
-            string lineFour = string.Format("MaxSlots : {0}, SpamChecks : {1}, InvMultiplier : {2}, DMS : {3}, SpawnRate {4}",
-                                           TShock.Config.MaxSlots, TShock.Config.SpamChecks,
-                                           TShock.Config.InvasionMultiplier, TShock.Config.DefaultMaximumSpawns,
-                                           TShock.Config.DefaultSpawnRate);
-            args.Player.SendMessage(lineFour, Color.Yellow);
-        }
-
         private static void Reload(CommandArgs args)
         {
             FileTool.SetupConfig();
@@ -2358,7 +2349,7 @@ namespace TShockAPI
                                     }
                             }
                             int addAmount;
-                            int.TryParse(args.Parameters[2], out addAmount);
+                            int.TryParse(args.Parameters[3], out addAmount);
                             if (TShock.Regions.resizeRegion(args.Parameters[1], addAmount, direction))
                             {
                                 args.Player.SendMessage("Region Resized Successfully!", Color.Yellow);
