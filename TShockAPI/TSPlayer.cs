@@ -15,13 +15,12 @@ GNU General Public License for more details.
 You should have received a copy of the GNU General Public License
 along with this program.  If not, see <http://www.gnu.org/licenses/>.
 */
+
 using System;
 using System.Collections.Generic;
-
 using System.IO;
 using System.Threading;
 using Terraria;
-
 using TShockAPI.Net;
 
 //using Microsoft.Xna.Framework.Graphics;
@@ -71,12 +70,12 @@ namespace TShockAPI
         public int UserID = -1;
         public bool HasBeenNaggedAboutLoggingIn;
         public bool TPAllow = true;
-        public bool mute = false;
-        public bool TpLock = false;
+        public bool mute;
+        public bool TpLock;
         Player FakePlayer;
-        public bool RequestedSection = false;
+        public bool RequestedSection;
         public DateTime LastDeath { get; set; }
-        public bool Dead = false;
+        public bool Dead;
         public string Country = "??";
         public int Difficulty;
         private string CacheIP;
@@ -87,9 +86,9 @@ namespace TShockAPI
         public string IgnoreActionsForInventory = "none";
         public string IgnoreActionsForCheating = "none";
         public string IgnoreActionsForDisabledArmor = "none";
-        public bool IgnoreActionsForClearingTrashCan = false;
+        public bool IgnoreActionsForClearingTrashCan;
         public PlayerData PlayerData;
-        public bool RequiresPassword = false;
+        public bool RequiresPassword;
 
         public bool RealPlayer
         {
@@ -301,8 +300,8 @@ namespace TShockAPI
         {
             using (var ms = new MemoryStream())
             {
-                var msg = new SpawnMsg()
-                {
+                var msg = new SpawnMsg
+                          	{
                     PlayerIndex = (byte)Index,
                     TileX = tilex,
                     TileY = tiley
@@ -656,8 +655,8 @@ namespace TShockAPI
         {
             using (var ms = new MemoryStream())
             {
-                var msg = new ProjectileRemoveMsg()
-                {
+                var msg = new ProjectileRemoveMsg
+                          	{
                     Index = (short)index,
                     Owner = (byte)owner
                 };
@@ -671,7 +670,7 @@ namespace TShockAPI
             try
             {
                 int num = (size - 1) / 2;
-                SendData(PacketTypes.TileSendSquare, "", size, (float)(x - num), (float)(y - num));
+                SendData(PacketTypes.TileSendSquare, "", size, (x - num), (y - num));
                 return true;
             }
             catch (Exception ex)
@@ -747,7 +746,7 @@ namespace TShockAPI
             if ((DateTime.UtcNow - LastThreat).TotalMilliseconds < 5000 && !bypass)
                 return;
 
-            SendData(PacketTypes.PlayerAddBuff, number: Index, number2: (float)type, number3: (float)time);
+            SendData(PacketTypes.PlayerAddBuff, number: Index, number2: type, number3: time);
         }
 
         //Todo: Separate this into a few functions. SendTo, SendToAll, etc
@@ -851,7 +850,7 @@ namespace TShockAPI
         public NetItem[] inventory = new NetItem[NetItem.maxNetInventory];
         public int maxHealth = 100;
         //public int maxMana = 100;
-        public bool exists = false;
+        public bool exists;
 
         public PlayerData(TSPlayer player)
         {
@@ -946,14 +945,14 @@ namespace TShockAPI
     public class NetItem
     {
         public static int maxNetInventory = 59;
-        public int netID = 0;
-        public int stack = 0;
-        public int prefix = 0;
+        public int netID;
+        public int stack;
+        public int prefix;
 
         public static string ToString(NetItem[] inventory)
         {
             string inventoryString = "";
-            for (int i = 0; i < NetItem.maxNetInventory; i++)
+            for (int i = 0; i < maxNetInventory; i++)
             {
                 if (i != 0)
                     inventoryString += "~";
@@ -973,9 +972,9 @@ namespace TShockAPI
 
         public static NetItem[] Parse(string data)
         {
-            NetItem[] inventory = new NetItem[NetItem.maxNetInventory];
+            NetItem[] inventory = new NetItem[maxNetInventory];
             int i;
-            for (i = 0; i < NetItem.maxNetInventory; i++)
+            for (i = 0; i < maxNetInventory; i++)
             {
                 inventory[i] = new NetItem();
             }

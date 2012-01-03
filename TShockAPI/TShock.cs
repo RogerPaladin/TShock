@@ -17,8 +17,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 */
 /* TShock wouldn't be possible without:
  * Github
- * Microsoft Visual Studio 2010
- * Adrenic
+ * Microsoft Visual Studio 2011
  * And you, for your continued support and devotion to the evolution of TShock
  * Kerplunc Gaming
  * TerrariaGSP
@@ -29,12 +28,14 @@ using System.Collections.Generic;
 using System.ComponentModel;
 using System.Data;
 using System.Diagnostics;
+using System.Diagnostics.CodeAnalysis;
 using System.IO;
 using System.Net;
 using System.Reflection;
 using System.Threading;
-using Mono.Data.Sqlite;
 using Hooks;
+using MaxMind;
+using Mono.Data.Sqlite;
 using MySql.Data.MySqlClient;
 using Rests;
 using Terraria;
@@ -122,7 +123,7 @@ namespace TShockAPI
 
 
 
-        [System.Diagnostics.CodeAnalysis.SuppressMessage("Microsoft.Security", "CA2122:DoNotIndirectlyExposeMethodsWithLinkDemands")]
+        [SuppressMessage("Microsoft.Security", "CA2122:DoNotIndirectlyExposeMethodsWithLinkDemands")]
         public override void Initialize()
         {
             HandleCommandLine(Environment.GetCommandLineArgs());
@@ -211,7 +212,7 @@ namespace TShockAPI
 
                 var geoippath = Path.Combine(SavePath, "GeoIP.dat");
                 if (Config.EnableGeoIP && File.Exists(geoippath))
-                    Geo = new MaxMind.GeoIPCountry(geoippath);
+                    Geo = new GeoIPCountry(geoippath);
 
                 Console.Title = string.Format("TerrariaShock Version {0} ({1})", Version, VersionCodename);
                 Log.ConsoleInfo(string.Format("TerrariaShock Version {0} ({1}) now running.", Version, VersionCodename));
@@ -262,18 +263,18 @@ namespace TShockAPI
 
     	RestObject RestApi_Verify(string username, string password)
         {
-            var userAccount = TShock.Users.GetUserByName(username);
+            var userAccount = Users.GetUserByName(username);
             if (userAccount == null)
             {
                 return new RestObject("401") { Error = "Invalid username/password combination provided. Please re-submit your query with a correct pair." };
             }
 
-            if (TShock.Utils.HashPassword(password).ToUpper() != userAccount.Password.ToUpper())
+            if (Utils.HashPassword(password).ToUpper() != userAccount.Password.ToUpper())
             {
                 return new RestObject("401") { Error = "Invalid username/password combination provided. Please re-submit your query with a correct pair." };
             }
 
-            if (!TShock.Utils.GetGroup(userAccount.Group).HasPermission("api") && userAccount.Group != "superadmin")
+            if (!Utils.GetGroup(userAccount.Group).HasPermission("api") && userAccount.Group != "superadmin")
             {
                 return new RestObject("403") { Error = "Although your account was successfully found and identified, your account lacks the permission required to use the API. (api)" };
             }
@@ -281,7 +282,7 @@ namespace TShockAPI
             return new RestObject("200") { Response = "Successful login" }; //Maybe return some user info too?
         }
 
-        protected override void  Dispose(bool disposing)
+        protected override void Dispose(bool disposing)
         {
             if (disposing)
             {
@@ -510,7 +511,7 @@ namespace TShockAPI
 
             if ((DateTime.UtcNow - LastSave).TotalMinutes >= 15)
             {
-                foreach (TSPlayer player in TShock.Players)
+                foreach (TSPlayer player in Players)
                 {
                     // prevent null point exceptions
                     if (player != null && player.IsLoggedIn)
@@ -693,9 +694,9 @@ namespace TShockAPI
             var player = new TSPlayer(ply);
             player.Group = TShock.Utils.GetGroup("default");
 
-            if (TShock.Utils.ActivePlayers() + 1 > Config.MaxSlots + 20)
+            if (Utils.ActivePlayers() + 1 > Config.MaxSlots + 20)
             {
-                TShock.Utils.ForceKick(player, Config.ServerFullNoReservedReason);
+                Utils.ForceKick(player, Config.ServerFullNoReservedReason);
                 handler.Handled = true;
                 return;
             }
@@ -707,7 +708,7 @@ namespace TShockAPI
 
             if (ban != null)
             {
-                TShock.Utils.ForceKick(player, string.Format("You are banned: {0}", ban.Reason));
+                Utils.ForceKick(player, string.Format("You are banned: {0}", ban.Reason));
                 handler.Handled = true;
                 return;
             }
@@ -722,20 +723,20 @@ namespace TShockAPI
 
             if (!FileTool.OnWhitelist(player.IP))
             {
-                TShock.Utils.ForceKick(player, "Not on whitelist.");
+                Utils.ForceKick(player, "Not on whitelist.");
                 handler.Handled = true;
                 return;
             }
 
-            if (TShock.Geo != null)
+            if (Geo != null)
             {
-                var code = TShock.Geo.TryGetCountryCode(IPAddress.Parse(player.IP));
-                player.Country = code == null ? "N/A" : MaxMind.GeoIPCountry.GetCountryNameByCode(code);
+                var code = Geo.TryGetCountryCode(IPAddress.Parse(player.IP));
+                player.Country = code == null ? "N/A" : GeoIPCountry.GetCountryNameByCode(code);
                 if (code == "A1")
                 {
-                    if (TShock.Config.KickProxyUsers)
+                    if (Config.KickProxyUsers)
                     {
-                        TShock.Utils.ForceKick(player, "Proxies are not allowed");
+                        Utils.ForceKick(player, "Proxies are not allowed");
                         handler.Handled = true;
                         return;
                     }
@@ -761,7 +762,7 @@ namespace TShockAPI
 
             if (ban != null)
             {
-                TShock.Utils.ForceKick(player, string.Format("You are banned: {0}", ban.Reason));
+                Utils.ForceKick(player, string.Format("You are banned: {0}", ban.Reason));
                 handler.Handled = true;
                 return;
             }
@@ -774,7 +775,7 @@ namespace TShockAPI
 
             if (tsplr != null && tsplr.ReceivedInfo)
             {
-                TShock.Utils.Broadcast(tsplr.Name + " has left", Color.Yellow);
+                Utils.Broadcast(tsplr.Name + " has left", Color.Yellow);
                 Log.Info(string.Format("{0} left.", tsplr.Name));
                 if (tsplr.IsLoggedIn)
                 {
@@ -806,7 +807,7 @@ namespace TShockAPI
                 return;
             }
 
-            if (!TShock.Utils.ValidString(text))
+            if (!Utils.ValidString(text))
             {
                 TShock.Utils.Kick(tsplr, "Unprintable character in chat");
                 e.Handled = true;
@@ -980,7 +981,7 @@ namespace TShockAPI
                 return;
             }
 
-            TShock.Utils.ShowFileToUser(player, "motd.txt");
+            Utils.ShowFileToUser(player, "motd.txt");
 
             if (Config.PvPMode == "always" && !player.TPlayer.hostile)
             {
@@ -1108,7 +1109,7 @@ namespace TShockAPI
 
         void OnNpcSetDefaults(SetDefaultsEventArgs<NPC, int> e)
         {
-            if (TShock.Itembans.ItemIsBanned(e.Object.name, null) )
+            if (Itembans.ItemIsBanned(e.Object.name, null) )
             {
                 e.Object.SetDefaults(0);
             }
@@ -1188,8 +1189,8 @@ namespace TShockAPI
 
         private void OnSaveWorld(bool resettime, HandledEventArgs e)
         {
-            TShock.Utils.Broadcast("Saving world. Momentary lag might result from this.", Color.Red);
-            Thread SaveWorld = new Thread(TShock.Utils.SaveWorld);
+            Utils.Broadcast("Saving world. Momentary lag might result from this.", Color.Red);
+            Thread SaveWorld = new Thread(Utils.SaveWorld);
             SaveWorld.Start();
             e.Handled = true;
         }
@@ -1213,7 +1214,7 @@ namespace TShockAPI
             }
             else
             {
-                Main.invasionSize = 100 + (Config.InvasionMultiplier * TShock.Utils.ActivePlayers());
+                Main.invasionSize = 100 + (Config.InvasionMultiplier * Utils.ActivePlayers());
             }
 
             Main.invasionWarn = 0;
@@ -1239,22 +1240,22 @@ namespace TShockAPI
                 switch (random)
                 {
                     case 0:
-                        TShock.Utils.Broadcast(string.Format("You call that a lot? {0} goblins killed!", KillCount));
+                        Utils.Broadcast(string.Format("You call that a lot? {0} goblins killed!", KillCount));
                         break;
                     case 1:
-                        TShock.Utils.Broadcast(string.Format("Fatality! {0} goblins killed!", KillCount));
+                        Utils.Broadcast(string.Format("Fatality! {0} goblins killed!", KillCount));
                         break;
                     case 2:
-                        TShock.Utils.Broadcast(string.Format("Number of 'noobs' killed to date: {0}", KillCount));
+                        Utils.Broadcast(string.Format("Number of 'noobs' killed to date: {0}", KillCount));
                         break;
                     case 3:
-                        TShock.Utils.Broadcast(string.Format("Duke Nukem would be proud. {0} goblins killed.", KillCount));
+                        Utils.Broadcast(string.Format("Duke Nukem would be proud. {0} goblins killed.", KillCount));
                         break;
                     case 4:
-                        TShock.Utils.Broadcast(string.Format("You call that a lot? {0} goblins killed!", KillCount));
+                        Utils.Broadcast(string.Format("You call that a lot? {0} goblins killed!", KillCount));
                         break;
                     case 5:
-                        TShock.Utils.Broadcast(string.Format("{0} copies of Call of Duty smashed.", KillCount));
+                        Utils.Broadcast(string.Format("{0} copies of Call of Duty smashed.", KillCount));
                         break;
                 }
             }
@@ -1267,12 +1268,12 @@ namespace TShockAPI
                 return true;
             }
 
-            if (type == 17 && !player.Group.HasPermission(Permissions.usebanneditem) && TShock.Itembans.ItemIsBanned("Dirt Rod", player)) //Dirt Rod Projectile
+            if (type == 17 && !player.Group.HasPermission(Permissions.usebanneditem) && Itembans.ItemIsBanned("Dirt Rod", player)) //Dirt Rod Projectile
             {
                 return true;
             }
 
-            if ((type == 42 || type == 65 || type == 68) && !player.Group.HasPermission(Permissions.usebanneditem) && TShock.Itembans.ItemIsBanned("Sandgun", player)) //Sandgun Projectiles
+            if ((type == 42 || type == 65 || type == 68) && !player.Group.HasPermission(Permissions.usebanneditem) && Itembans.ItemIsBanned("Sandgun", player)) //Sandgun Projectiles
             {
                 return true;
             }
@@ -1280,7 +1281,7 @@ namespace TShockAPI
             Projectile proj = new Projectile();
             proj.SetDefaults(type);
 
-            if (!player.Group.HasPermission(Permissions.usebanneditem) && TShock.Itembans.ItemIsBanned(proj.name, player))
+            if (!player.Group.HasPermission(Permissions.usebanneditem) && Itembans.ItemIsBanned(proj.name, player))
             {
                 return true;
             }
@@ -1298,7 +1299,7 @@ namespace TShockAPI
             string Owner = string.Empty;
             string RegionName = string.Empty;
 
-            if (TShock.Config.RangeChecks && ((Math.Abs(player.TileX - x) > 32) || (Math.Abs(player.TileY - y) > 32)))
+            if (Config.RangeChecks && ((Math.Abs(player.TileX - x) > 32) || (Math.Abs(player.TileY - y) > 32)))
             {
                 return true;
             }
@@ -1315,12 +1316,12 @@ namespace TShockAPI
                 player.SendMessage("You do not have permission to build!", Color.Red);
                 return true;
             }
-            if (!player.Group.HasPermission(Permissions.editspawn) && !TShock.Regions.CanBuild(tileX, tileY, player, out Owner) && TShock.Regions.InArea(tileX, tileY, out RegionName))
+            if (!player.Group.HasPermission(Permissions.editspawn) && !Regions.CanBuild(tileX, tileY, player, out Owner) && Regions.InArea(tileX, tileY, out RegionName))
             {
                 player.SendMessage("Region protected from changes.", Color.Red);
                 return true;
             }
-            if (TShock.Config.DisableBuild)
+            if (Config.DisableBuild)
             {
                 if (!player.Group.HasPermission(Permissions.editspawn))
                 {
@@ -1328,11 +1329,11 @@ namespace TShockAPI
                     return true;
                 }
             }
-            if (TShock.Config.SpawnProtection)
+            if (Config.SpawnProtection)
             {
                 if (!player.Group.HasPermission(Permissions.editspawn))
                 {
-                    var flag = TShock.CheckSpawn(tileX, tileY);
+                    var flag = CheckSpawn(tileX, tileY);
                     if (flag)
                     {
                         player.SendMessage("Spawn protected from changes.", Color.Red);
@@ -1354,7 +1355,7 @@ namespace TShockAPI
             float num2 = value1.X - value2.X;
             float num = value1.Y - value2.Y;
             float num3 = (num2 * num2) + (num * num);
-            return (float)Math.Sqrt((double)num3);
+            return (float)Math.Sqrt(num3);
         }
 
         public static bool HackedHealth(TSPlayer player)
@@ -1541,7 +1542,7 @@ namespace TShockAPI
             RconHandler.Password = file.RconPassword;
             RconHandler.ListenPort = file.RconPort;
 
-            TShock.Utils.HashAlgo = file.HashAlgorithm;
+            Utils.HashAlgo = file.HashAlgorithm;
         }
     }
 }
