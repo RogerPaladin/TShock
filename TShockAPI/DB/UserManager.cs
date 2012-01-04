@@ -21,7 +21,6 @@ using System;
 using System.Data;
 using System.IO;
 using MySql.Data.MySqlClient;
-//using Microsoft.Xna.Framework;
 
 namespace TShockAPI.DB
 {
@@ -167,7 +166,7 @@ namespace TShockAPI.DB
                     if (!PlayerGroup.Equals("admin") && !PlayerGroup.Equals("trustedadmin") && !PlayerGroup.Equals("superadmin"))
                     {
                         TShock.Regions.DeleteRegionAfterMinutes(PlayerName);
-                        TShock.Regions.DeleteOwnersAfterMinutes(PlayerName);
+                        TShock.Regions.DeleteCoOwnersAfterMinutes(PlayerName);
                         TShock.Inventory.DelInventory(PlayerName);
                         if (File.Exists(@"Z:\home\192.168.1.33\www\profiles\" + PlayerName.ToLower() + ".plr"))
                             File.Delete(@"Z:\home\192.168.1.33\www\profiles\" + PlayerName.ToLower() + ".plr");
@@ -520,7 +519,7 @@ namespace TShockAPI.DB
             {
                 Log.ConsoleError("GetGroupForIP SQL returned an error: " + ex);
             }
-            return TShock.Utils.GetGroup(TShock.Config.DefaultGuestGroupName);
+            return TShock.Utils.GetGroup("default");
         }
 
         public Group GetGroupForIPExpensive(string ip)
@@ -542,7 +541,7 @@ namespace TShockAPI.DB
             {
                 Log.ConsoleError("GetGroupForIP SQL returned an error: " + ex);
             }
-            return TShock.Utils.GetGroup(TShock.Config.DefaultGuestGroupName);
+            return TShock.Utils.GetGroup("default");
         }
 
 

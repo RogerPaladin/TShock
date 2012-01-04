@@ -1,4 +1,4 @@
-<?xml version="1.0" encoding="utf-8"?>
+﻿<?xml version="1.0" encoding="utf-8"?>
 <Project ToolsVersion="4.0" DefaultTargets="Build" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
   <PropertyGroup>
     <Configuration Condition=" '$(Configuration)' == '' ">Debug</Configuration>
@@ -32,11 +32,12 @@
     <DebugSymbols>true</DebugSymbols>
     <DebugType>full</DebugType>
     <Optimize>false</Optimize>
-    <OutputPath>..\..\serverplugins\</OutputPath>
+    <OutputPath>..\..\ServerPlugins\</OutputPath>
     <DefineConstants>DEBUG;TRACE</DefineConstants>
     <ErrorReport>prompt</ErrorReport>
     <WarningLevel>4</WarningLevel>
     <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
+    <DocumentationFile>..\..\erverPlugins\TShockAPI.XML</DocumentationFile>
   </PropertyGroup>
   <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Release|AnyCPU' ">
     <DebugType>pdbonly</DebugType>
@@ -46,6 +47,7 @@
     <ErrorReport>prompt</ErrorReport>
     <WarningLevel>4</WarningLevel>
     <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
+    <DocumentationFile>bin\Release\TShockAPI.XML</DocumentationFile>
   </PropertyGroup>
   <ItemGroup>
     <Reference Include="HttpServer">
@@ -104,6 +106,7 @@
     <Compile Include="Extensions\RandomExt.cs" />
     <Compile Include="Extensions\StringExt.cs" />
     <Compile Include="GeoIPCountry.cs" />
+    <Compile Include="HandlerList.cs" />
     <Compile Include="IPackable.cs" />
     <Compile Include="Commands.cs" />
     <Compile Include="ConfigFile.cs" />
@@ -135,8 +138,8 @@
     <Compile Include="Rest\RestObject.cs" />
     <Compile Include="Rest\RestVerbs.cs" />
     <Compile Include="Rest\SecureRest.cs" />
-    <Compile Include="Translit.cs" />
     <Compile Include="StatTracker.cs" />
+    <Compile Include="Translit.cs" />
     <Compile Include="Utils.cs" />
     <Compile Include="TShock.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
@@ -146,6 +149,7 @@
   </ItemGroup>
   <ItemGroup>
     <None Include="config\groups.txt" />
+    <None Include="TShockAPI.licenseheader" />
   </ItemGroup>
   <ItemGroup>
     <None Include="config\users.txt" />
