@@ -947,7 +947,7 @@ namespace TShockAPI
 				message += " " + args.Parameters[i];
 			}
 
-			TShock.Utils.Broadcast("(Server Broadcast)" + message, Color.Red);
+			TShock.Utils.Broadcast("(Server)" + message, Color.Yellow);
 			return;
 		}
 

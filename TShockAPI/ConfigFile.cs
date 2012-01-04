@@ -170,7 +170,7 @@ namespace TShockAPI
         public string ServerNickname = "TShock Server";
 
 		[Description("Enable/Disable the rest api.")] 
-        public bool RestApiEnabled;
+        public bool RestApiEnabled = true;
 
 		[Description("This is the port which the rest api will listen on.")] 
         public int RestApiPort = 7878;
@@ -179,7 +179,7 @@ namespace TShockAPI
         public bool DisableTombstones = true;
 
 		[Description("Displays a player's IP on join to everyone who has the log permission")] 
-        public bool DisplayIPToAdmins;
+        public bool DisplayIPToAdmins = true;
 
 		[Description("Some tiles are 'fixed' by not letting TShock handle them. Disabling this may break certain asthetic tiles.")] 
         public bool EnableInsecureTileFixes = true;
@@ -235,11 +235,11 @@ namespace TShockAPI
 		[Description("Server password required to join server")] 
         public string ServerPassword = "";
 
-		[Description("Protect chests with region and build permissions")] 
-        public bool RegionProtectChests;
+        [Description("Protect chests with region and build permissions")]
+        public bool RegionProtectChests = true;
 
 		[Description("Disable users from being able to login with account password when joining")] 
-        public bool DisableLoginBeforeJoin = false;
+        public bool DisableLoginBeforeJoin = true;
 
 		[Description("Allows users to register any username with /register")] 
         public bool AllowRegisterAnyUsername = false;
@@ -257,7 +257,7 @@ namespace TShockAPI
         public bool StoreInventory = false;
 
         [Description("Remembers where a player set home.")]
-        public bool RememberHome;
+        public bool RememberHome = true;
 
 		public static ConfigFile Read(string path)
 		{

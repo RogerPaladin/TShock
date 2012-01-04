@@ -34,11 +34,12 @@ namespace TShockAPI.DB
 			database = db;
 
 			var table = new SqlTable("Warps",
-			                         new SqlColumn("WarpName", MySqlDbType.VarChar, 50) {Primary = true},
+                                      new SqlColumn("ID", MySqlDbType.Int32) { Primary = true, AutoIncrement = true },
+                                     new SqlColumn("WarpName", MySqlDbType.VarChar, 50),
 			                         new SqlColumn("X", MySqlDbType.Int32),
 			                         new SqlColumn("Y", MySqlDbType.Int32),
-			                         new SqlColumn("WorldID", MySqlDbType.Text),
-			                         new SqlColumn("Private", MySqlDbType.Text)
+                                     new SqlColumn("WorldID", MySqlDbType.VarChar, 50),
+                                     new SqlColumn("Private", MySqlDbType.VarChar, 50)
 				);
 			var creator = new SqlTableCreator(db,
 			                                  db.GetSqlType() == SqlType.Sqlite
