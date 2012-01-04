@@ -193,6 +193,7 @@ namespace TShockAPI
                 ItemShopManager = new ItemShopManager(DB);
                 BlockShopManager = new BlockShopManager(DB);
                 OtherShopManager = new OtherShopManager(DB);
+                Chat = new ChatManager(DB);
                 Restart = new RestartManager();
 				RestApi = new SecureRest(Netplay.serverListenIP, 8080);
 				RestApi.Verify += RestApi_Verify;
@@ -471,7 +472,38 @@ namespace TShockAPI
 			if (Backups.IsBackupTime)
 				Backups.Backup();
 
-			//call these every second, not every update
+            #region Thx2Twitchy
+            foreach (TSPlayer player in Players)
+            {
+                if (player != null && player.Active)
+                {
+                    if (player.LastTilePos != new Vector2(player.TileX, player.TileY))
+                    {
+                        bool InRegion = false;
+                        string RegionName;
+                        if (TShock.Regions.InArea(player.TileX, player.TileY, out RegionName))
+                        {
+                            if (player.CurrentRegion != RegionName)
+                            {
+                                player.CurrentRegion = RegionName;
+                                player.InRegion = true;
+                                player.SendMessage("Entering " + player.CurrentRegion + " region.", Color.Magenta);
+                            }
+                            InRegion = true;
+                        }
+                        if (!InRegion && player.InRegion)
+                        {
+                            player.SendMessage("Leaving " + player.CurrentRegion + " region.", Color.Magenta);
+                            player.CurrentRegion = "";
+                            player.InRegion = false;
+                        }
+                        player.LastTilePos = new Vector2(player.TileX, player.TileY);
+                    }
+                }
+            }
+            #endregion
+
+            //call these every second, not every update
 			if ((DateTime.UtcNow - LastCheck).TotalSeconds >= 1)
 			{
 				OnSecondUpdate();
@@ -605,30 +637,6 @@ namespace TShockAPI
 						player.SetBuff(23, 120); //Cursed
 					}*/
 
-                    #region Thx2Twitchy
-                    if (player.LastTilePos != new Vector2(player.TileX, player.TileY))
-                    {
-                        bool InRegion = false;
-                        string RegionName;
-                        if (TShock.Regions.InArea(player.TileX, player.TileY, out RegionName))
-                        {
-                            if (player.CurrentRegion != RegionName)
-                            {
-                                player.CurrentRegion = RegionName;
-                                player.InRegion = true;
-                                player.SendMessage("Entering " + player.CurrentRegion + " region.", Color.Magenta);
-                            }
-                            InRegion = true;
-                        }
-                        if (!InRegion && player.InRegion)
-                        {
-                            player.SendMessage("Leaving " + player.CurrentRegion + " region.", Color.Magenta);
-                            player.CurrentRegion = "";
-                            player.InRegion = false;
-                        }
-                        player.LastTilePos = new Vector2(player.TileX, player.TileY);
-                    }
-                    #endregion
                     if ((DateTime.UtcNow - StackCheatChecker).TotalMilliseconds > 5000)
                     {
                         StackCheatChecker = DateTime.UtcNow;
@@ -835,7 +843,7 @@ namespace TShockAPI
                 {
                     if (Player != null && Player.Active)
                     {
-                        if (Player.DisplayChat && Player.Group.HasPermission(Permissions.chat))
+                        if (Player.DisplayChat && Player.Group.HasPermission(Permissions.adminstatus))
                         {
                             Player.SendMessage("(Ranged){2}<{0}> {1}".SFormat(tsplr.Name, text, Config.ChatDisplayGroup ? "[{0}] ".SFormat(tsplr.Group.Name) : ""),
                                                                       tsplr.Group.R, tsplr.Group.G,
@@ -1289,21 +1297,33 @@ namespace TShockAPI
 
             if (!player.Group.HasPermission(Permissions.canbuild))
 			{
-				player.SendMessage("You do not have permission to build!", Color.Red);
+                if ((DateTime.UtcNow - player.LastTileChangeNotify).TotalMilliseconds > 1000)
+                {
+                    player.SendMessage("You do not have permission to build!", Color.Red);
+                    player.LastTileChangeNotify = DateTime.UtcNow;
+                }
 				return true;
 			}
 			if (!player.Group.HasPermission(Permissions.editspawn) && !Regions.CanBuild(tileX, tileY, player, out CoOwner) &&
 				Regions.InArea(tileX, tileY, out RegionName))
 			{
-                player.SendMessage("This region <" + RegionName + "> is protected by " + CoOwner, Color.Yellow);
-				return true;
+                if ((DateTime.UtcNow - player.LastTileChangeNotify).TotalMilliseconds > 1000)
+                {
+                    player.SendMessage("This region <" + RegionName + "> is protected by " + CoOwner, Color.Yellow);
+                    player.LastTileChangeNotify = DateTime.UtcNow;
+                }
+                return true;
 			}
 			if (Config.DisableBuild)
 			{
 				if (!player.Group.HasPermission(Permissions.editspawn))
 				{
-					player.SendMessage("World protected from changes.", Color.Red);
-					return true;
+                    if ((DateTime.UtcNow - player.LastTileChangeNotify).TotalMilliseconds > 1000)
+                    {
+                        player.SendMessage("World protected from changes.", Color.Red);
+                        player.LastTileChangeNotify = DateTime.UtcNow;
+                    }
+                    return true;
 				}
 			}
 			if (Config.SpawnProtection)
@@ -1313,8 +1333,12 @@ namespace TShockAPI
 					var flag = CheckSpawn(tileX, tileY);
 					if (flag)
 					{
-						player.SendMessage("Spawn protected from changes.", Color.Red);
-						return true;
+				        if ((DateTime.UtcNow - player.LastTileChangeNotify).TotalMilliseconds > 1000)
+                        {
+                            player.SendMessage("Spawn protected from changes.", Color.Red);
+                            player.LastTileChangeNotify = DateTime.UtcNow;
+                        }
+                        return true;
 					}
 				}
 			}

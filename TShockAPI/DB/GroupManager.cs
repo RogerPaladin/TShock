@@ -37,10 +37,10 @@ namespace TShockAPI.DB
 			var table = new SqlTable("GroupList",
 			                         new SqlColumn("GroupName", MySqlDbType.VarChar, 32) {Primary = true},
 			                         new SqlColumn("Parent", MySqlDbType.VarChar, 32),
-			                         new SqlColumn("Commands", MySqlDbType.Text),
-			                         new SqlColumn("ChatColor", MySqlDbType.Text),
-			                         new SqlColumn("Prefix", MySqlDbType.Text),
-			                         new SqlColumn("Suffix", MySqlDbType.Text)
+                                     new SqlColumn("Commands", MySqlDbType.VarChar, 128),
+                                     new SqlColumn("ChatColor", MySqlDbType.VarChar, 64),
+                                     new SqlColumn("Prefix", MySqlDbType.VarChar, 64),
+                                     new SqlColumn("Suffix", MySqlDbType.VarChar, 64)
 				);
 			var creator = new SqlTableCreator(db,
 			                                  db.GetSqlType() == SqlType.Sqlite

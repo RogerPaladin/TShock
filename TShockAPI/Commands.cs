@@ -1391,8 +1391,17 @@ namespace TShockAPI
 				return;
 			}
 
-			args.Player.Spawn();
-			args.Player.SendMessage("Teleported to your spawnpoint.");
+            if (TShock.HomeManager.GetHome(args.Player.Name) != Vector2.Zero)
+            {
+                var pos = TShock.HomeManager.GetHome(args.Player.Name);
+                args.Player.Teleport((int)pos.X, (int)pos.Y);
+                args.Player.SendTileSquare((int)pos.X, (int)pos.Y);
+                args.Player.SendMessage("Teleported to your Home.");
+            }
+            else
+            {
+                args.Player.SendMessage("Home not placed yet.");
+            }
 		}
 
 		private static void Spawn(CommandArgs args)

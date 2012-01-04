@@ -164,9 +164,6 @@ namespace TShockAPI
         [Description("User can use treade chat")]
         public static readonly string tradechat;
 
-        [Description("Chat messages are sent to users with this permission")]
-        public static readonly string chat;
-
         [Description("Required to be able to place Explosives")]
         public static readonly string canexplosive;
 
@@ -187,9 +184,6 @@ namespace TShockAPI
 
         [Description("Required to be able to place/pickup lava")]
         public static readonly string canlava;
-
-        [Description("Required to be able to place sand")]
-        public static readonly string cansand;
 
 
 		static Permissions()
