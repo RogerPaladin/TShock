@@ -773,7 +773,7 @@ namespace TShockAPI
 
 			if (args.Player.IsLoggedIn)
 			{
-				args.Player.PlayerData.maxHealth = max;
+				//args.Player.PlayerData.maxHealth = max;
 			}
 
 			return false;
@@ -1188,11 +1188,14 @@ namespace TShockAPI
 				}
 			}
             if (changed)
-			{
-				TSPlayer.All.SendTileSquare(tileX, tileY, size);
-				WorldGen.RangeFrame(tileX, tileY, tileX + size, tileY + size);
-			}
-            //args.Player.SendTileSquare(tileX, tileY, size);
+            {
+                TSPlayer.All.SendTileSquare(tileX, tileY, size);
+                WorldGen.RangeFrame(tileX, tileY, tileX + size, tileY + size);
+            }
+            else
+            {
+                args.Player.SendTileSquare(tileX, tileY, size);
+            }
 			return true;
 		}
 

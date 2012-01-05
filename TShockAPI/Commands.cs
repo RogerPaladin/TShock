@@ -150,7 +150,7 @@ namespace TShockAPI
 			add(Permissions.tp, Home, "home");
 			add(Permissions.tp, Spawn, "spawn");
 			add(Permissions.tp, TP, "tp");
-			add(Permissions.tphere, TPHere, "tphere");
+			add(Permissions.tphere, TPHere, "tphere", "th");
 			add(Permissions.tphere, SendWarp, "sendwarp", "sw");
 			add(Permissions.tpallow, TPAllow, "tpallow");
 			add(Permissions.warp, UseWarp, "warp");
@@ -173,7 +173,7 @@ namespace TShockAPI
 			add(Permissions.pvpfun, Slap, "slap");
 			add(Permissions.editspawn, ToggleAntiBuild, "antibuild");
 			add(Permissions.editspawn, ProtectSpawn, "protectspawn");
-			add(Permissions.manageregion, Region, "region");
+			add(Permissions.manageregion, Region, "region", "r");
 			add(Permissions.manageregion, DebugRegions, "debugreg");
 			add(null, Help, "help");
 			add(null, Playing, "playing", "online", "who", "version");
@@ -224,6 +224,11 @@ namespace TShockAPI
             add(null, Question, "?");
             add(null, ItemList, "items", "itemlist");
             add(Permissions.converthardmode, ConvertAll, "convertall");
+            add(Permissions.manageregion, R1, "r1");
+            add(Permissions.manageregion, R2, "r2");
+            add(Permissions.manageregion, RD, "rd");
+            add(Permissions.manageregion, RA, "ra");
+            add(Permissions.manageregion, RI, "ri");
 		}
 
 		public static bool HandleCommand(TSPlayer player, string text)
@@ -2486,6 +2491,112 @@ namespace TShockAPI
 			}
 		}
 
+        private static void R1(CommandArgs args)
+        {
+            args.Player.SendMessage("Hit a block to Set Point 1", Color.Yellow);
+            args.Player.AwaitingTempPoint = 1;
+        }
+
+        private static void R2(CommandArgs args)
+        {
+            args.Player.SendMessage("Hit a block to Set Point 2", Color.Yellow);
+            args.Player.AwaitingTempPoint = 2;
+        }
+
+        private static void RD(CommandArgs args)
+        {
+            if (args.Parameters.Count > 0)
+            {
+                string regionName = "";
+                if (!args.Player.TempPoints.Any(p => p == Point.Zero))
+                {
+                    for (int i = 0; i < args.Parameters.Count; i++)
+                    {
+                        if (regionName == "")
+                        {
+                            regionName = args.Parameters[0];
+                        }
+                        else
+                        {
+                            regionName = regionName + " " + args.Parameters[i];
+                        }
+                    }
+                    var x = Math.Min(args.Player.TempPoints[0].X, args.Player.TempPoints[1].X);
+                    var y = Math.Min(args.Player.TempPoints[0].Y, args.Player.TempPoints[1].Y);
+                    var width = Math.Abs(args.Player.TempPoints[0].X - args.Player.TempPoints[1].X);
+                    var height = Math.Abs(args.Player.TempPoints[0].Y - args.Player.TempPoints[1].Y);
+
+                    if (TShock.Regions.AddRegion(x, y, width, height, regionName, args.Player.UserAccountName,
+                                                 Main.worldID.ToString()))
+                    {
+                        args.Player.TempPoints[0] = Point.Zero;
+                        args.Player.TempPoints[1] = Point.Zero;
+                        args.Player.SendMessage("Set region " + regionName, Color.Yellow);
+                    }
+                    else
+                    {
+                        args.Player.SendMessage("Region " + regionName + " already exists", Color.Red);
+                    }
+                }
+                else
+                {
+                    args.Player.SendMessage("Points not set up yet", Color.Red);
+                }
+            }
+            else
+                args.Player.SendMessage("Invalid syntax! Proper syntax: /rd [name]", Color.Red);
+
+        }
+
+        private static void RA(CommandArgs args)
+        {
+            if (args.Parameters.Count > 1)
+            {
+                string playerName = args.Parameters[0];
+                string regionName = "";
+
+                for (int i = 1; i < args.Parameters.Count; i++)
+                {
+                    if (regionName == "")
+                    {
+                        regionName = args.Parameters[1];
+                    }
+                    else
+                    {
+                        regionName = regionName + " " + args.Parameters[i];
+                    }
+                }
+                if (TShock.Users.GetUserByName(playerName) != null)
+                {
+                    if (TShock.Regions.AddNewUser(regionName, playerName))
+                    {
+                        args.Player.SendMessage("Added user " + playerName + " to " + regionName, Color.Yellow);
+                    }
+                    else
+                        args.Player.SendMessage("Region " + regionName + " not found", Color.Red);
+                }
+                else
+                {
+                    args.Player.SendMessage("Player " + playerName + " not found", Color.Red);
+                }
+            }
+            else
+                args.Player.SendMessage("Invalid syntax! Proper syntax: /ra [name] [region]", Color.Red);
+        }
+
+        private static void RI(CommandArgs args)
+        {
+            string CoOwner = string.Empty;
+            string RegionName = string.Empty;
+
+            if (TShock.Regions.InArea(args.Player.TileX, args.Player.TileY, out RegionName) && TShock.Regions.CanBuild(args.Player.TileX, args.Player.TileY, args.Player, out CoOwner) || !TShock.Regions.CanBuild(args.Player.TileX, args.Player.TileY, args.Player, out CoOwner))
+            {
+                args.Player.SendMessage("This region <" + RegionName + "> is protected by " + CoOwner, Color.Red);
+            }
+            else
+                args.Player.SendMessage("Region is not protected", Color.Red);
+        }
+
         private static void AltarEdit(CommandArgs args)
         {
             if (!args.Player.Group.HasPermission(Permissions.altaredit))
@@ -2499,6 +2610,7 @@ namespace TShockAPI
                 args.Player.SendMessage("Now you can't destroy altars", Color.Green);
             }
         }
+
         private static void AltarTimer(CommandArgs args)
         {
             TShock.DispenserTime.Remove(args.Player.Name + ";" + Convert.ToString(TShock.Utils.DispencerTime(args.Player.Name)));
