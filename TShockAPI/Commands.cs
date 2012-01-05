@@ -3169,7 +3169,7 @@ namespace TShockAPI
                     switch (args.Parameters[1].ToLower())
                     {
                         case "fighter":
-                            if (TShock.Users.Buy(args.Player.Name, 15))
+                            if (TShock.Users.Buy(args.Player.Name, 15, true) || args.Player.Group.HasPermission("vipstatus"))
                             {
                                 //Regeneration
                                 args.Player.SetBuff(2, 60 * 60 * 5);
@@ -3192,6 +3192,13 @@ namespace TShockAPI
                                 //Well Fed
                                 args.Player.SetBuff(26, 60 * 60 * 9);
 
+                                if (args.Player.Group.HasPermission("vipstatus"))
+                                {
+                                    args.Player.SendMessage("You get fighter buff successfully.", Color.Green);
+                                    return;
+                                }
+
+                                TShock.Users.Buy(args.Player.Name, 15);
                                 args.Player.SendMessage("You spent 15 RCoins.", Color.BlanchedAlmond);
                                 args.Player.SendMessage("You buy fighter buff successfully.", Color.Green);
                                 return;
@@ -3202,7 +3209,7 @@ namespace TShockAPI
                                 return;
                             }
                         case "explorer":
-                            if (TShock.Users.Buy(args.Player.Name, 7))
+                            if (TShock.Users.Buy(args.Player.Name, 7, true) || args.Player.Group.HasPermission("vipstatus"))
                             {
                                 //Obsidian Skin
                                 args.Player.SetBuff(1, 60 * 60 * 4);
@@ -3225,6 +3232,13 @@ namespace TShockAPI
                                 //Well Fed
                                 args.Player.SetBuff(26, 60 * 60 * 9);
 
+                                if (args.Player.Group.HasPermission("vipstatus"))
+                                {
+                                    args.Player.SendMessage("You get explorer buff successfully.", Color.Green);
+                                    return;
+                                }
+
+                                TShock.Users.Buy(args.Player.Name, 7);
                                 args.Player.SendMessage("You spent 7 RCoins.", Color.BlanchedAlmond);
                                 args.Player.SendMessage("You buy explorer buff successfully.", Color.Green);
                                 return;
