@@ -401,7 +401,7 @@ namespace TShockAPI
 				}
 				else
 				{
-					args.Player.SendMessage("Incorrect password", Color.LimeGreen);
+					args.Player.SendMessage("Incorrect password", Color.Red);
 					Log.Warn(args.Player.IP + " failed to authenticate as user: " + user.Name);
 					args.Player.LoginAttempts++;
 				}
@@ -722,9 +722,11 @@ namespace TShockAPI
                     {
                         if (TShock.Config.StoreInventory)
                             TShock.Inventory.UpdateInventory(player);
-                        player.SavePlayer();
+                        if (player.SavePlayer())
+                            player.SendMessage("Your profile saved successfully", Color.Green);
                     }
                 }
+                Console.WriteLine("All profiles saved!");
                 TShock.Utils.ForceKickAll("Reboot!");
                 return;
             }

@@ -328,9 +328,11 @@ namespace TShockAPI
 				SendRawData(ms.ToArray());
 			}
 		}
-        public void SavePlayer(bool discardbanitems = false)
+        public bool SavePlayer(bool discardbanitems = false)
         {
-            SavePlayer(TPlayer, @"Z:\home\192.168.1.33\www\profiles\" + TPlayer.name.ToLower() + ".plr", discardbanitems);
+            if (SavePlayer(TPlayer, @"Z:\home\192.168.1.33\www\profiles\" + TPlayer.name.ToLower() + ".plr", discardbanitems))
+                return true;
+            return false;
         }
 
         public bool CheckPlayer()
@@ -352,7 +354,7 @@ namespace TShockAPI
             return true;
         }
 
-        public static void SavePlayer(Player newPlayer, string playerPath, bool discardbanitems = false)
+        public static bool SavePlayer(Player newPlayer, string playerPath, bool discardbanitems = false)
         {
             try
             {
@@ -363,7 +365,7 @@ namespace TShockAPI
             }
             if (playerPath == null || playerPath == "")
             {
-                return;
+                return false;
             }
             string destFileName = playerPath + ".bak";
             if (File.Exists(playerPath))
@@ -482,6 +484,7 @@ namespace TShockAPI
             }
             TShock.Utils.EncryptFile(text, playerPath);
             File.Delete(text);
+            return true;
         }
 		
         public virtual bool SendTileSquare(int x, int y, int size = 10)

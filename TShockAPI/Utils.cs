@@ -113,10 +113,12 @@ namespace TShockAPI
                 {
                     if (TShock.Config.StoreInventory)
                         TShock.Inventory.UpdateInventory(player);
-                    player.SavePlayer();
+                    if (player.SavePlayer())
+                        player.SendMessage("Your profile saved sucessfully", Color.Chartreuse);
                 }
             }
 			Broadcast("World saved.", Color.Yellow);
+            Console.WriteLine("All profiles saved!");
 			Log.Info(string.Format("World saved at ({0})", Main.worldPathName));
 		}
 

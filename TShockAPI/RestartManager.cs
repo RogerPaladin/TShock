@@ -68,10 +68,12 @@ namespace TShockAPI
                 {
                     if (TShock.Config.StoreInventory)
                         TShock.Inventory.UpdateInventory(player);
-                    player.SavePlayer();
+                    if (player.SavePlayer())
+                        player.SendMessage("Your profile saved sucessfully", Color.Green);
                 }
             }
             WorldGen.saveWorld();
+            Console.WriteLine("All profiles saved!");
             Netplay.disconnect = true;
             Process.GetProcessById(TShock.id).Kill();
         }

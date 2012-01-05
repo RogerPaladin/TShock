@@ -683,7 +683,7 @@ namespace TShockAPI
 			}
 			//Console.Title = string.Format("TerrariaShock Version {0} ({1}) ({2}/{3})", Version, VersionCodename, count,
 										  //Config.MaxSlots);
-            Console.Title = string.Format("{0} ({1}/{2})",Main.worldName, count, Config.MaxSlots);
+            Console.Title = string.Format("{0} ({1}/{2})", Config.ServerName, count, Config.MaxSlots);
 		}
 
 		private void OnConnect(int ply, HandledEventArgs handler)
