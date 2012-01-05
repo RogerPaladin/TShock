@@ -199,7 +199,7 @@ namespace TShockAPI
 			add(Permissions.item, Item, "item", "i");
 			add(Permissions.item, Give, "give");
 			add(Permissions.clearitems, ClearItems, "clear", "clearitems");
-			add(Permissions.heal, Heal, "heal");
+			add(Permissions.heal, Heal, "heal", "h");
 			add(Permissions.buff, Buff, "buff");
 			add(Permissions.buffplayer, GBuff, "gbuff", "buffplayer");
 			add(Permissions.grow, Grow, "grow");
@@ -217,12 +217,12 @@ namespace TShockAPI
             add(null, TopTime, "toptime");
             add(null, TopRC, "toprc");
             add(null, PayRC, "pay");
-            add(null, Shop, "shop", "buy");
+            add(null, Shop, "shop", "buy", "b");
             add(Permissions.tradechat, TradeChat, "t", "tc");
             add(null, Shout, "!");
             add(null, GroupChat, "g");
             add(null, Question, "?");
-            add(null, Items, "items");
+            add(null, ItemList, "items", "itemlist");
             add(Permissions.converthardmode, ConvertAll, "convertall");
 		}
 
@@ -3051,11 +3051,12 @@ namespace TShockAPI
             switch (args.Parameters[0].ToLower())
             {
                 #region item
+                case "i":
                 case "item":
                     if (args.Parameters.Count < 2)
                     {
                         args.Player.SendMessage("Invalid syntax! Proper syntax: /buy item [items]", Color.Red);
-                        args.Player.SendMessage("To see list of items type /items [armor/weapon/item/block/other]", Color.Red);
+                        args.Player.SendMessage("To see list of items type /itemlist [armor/weapon/item/block/other]", Color.Red);
                         return;
                     }
                     if (args.Parameters.Count == 3)
@@ -3162,6 +3163,7 @@ namespace TShockAPI
                     return;
                 #endregion
                 #region buff
+                case "b":
                 case "buff":
                     if (args.Parameters.Count < 2)
                     {
@@ -3170,6 +3172,7 @@ namespace TShockAPI
                     }
                     switch (args.Parameters[1].ToLower())
                     {
+                        case "f":
                         case "fighter":
                             if (TShock.Users.Buy(args.Player.Name, 15, true) || args.Player.Group.HasPermission("vipstatus"))
                             {
@@ -3210,6 +3213,7 @@ namespace TShockAPI
                                 args.Player.SendMessage("You need 15 RCoins to buy fighter buff.", Color.Red);
                                 return;
                             }
+                        case "e":
                         case "explorer":
                             if (TShock.Users.Buy(args.Player.Name, 7, true) || args.Player.Group.HasPermission("vipstatus"))
                             {
@@ -3311,17 +3315,18 @@ namespace TShockAPI
             }
         }
 
-        private static void Items(CommandArgs args)
+        private static void ItemList(CommandArgs args)
         {
             if (args.Parameters.Count == 0)
             {
-                args.Player.SendMessage("Invalid syntax! Proper syntax: /items [armor/weapon/item/block/other]", Color.Red);
+                args.Player.SendMessage("Invalid syntax! Proper syntax: /itemlist [armor/weapon/item/block/other]", Color.Red);
                 return;
             }
 
             switch (args.Parameters[0].ToLower())
             {
                 #region armor
+                case "a":
                 case "armor":
                     int page = 1;
                     if (args.Parameters.Count == 2)
@@ -3350,11 +3355,12 @@ namespace TShockAPI
                     }
                     if (ArmorSet.Count > (15 * page))
                     {
-                        args.Player.SendMessage(string.Format("Type /items armor {0} for more items.", (page + 1)), Color.Yellow);
+                        args.Player.SendMessage(string.Format("Type /itemlist armor {0} for more items.", (page + 1)), Color.Yellow);
                     }
                     return;
                 #endregion
                 #region weapon
+                case "w":
                 case "weapon":
                     page = 1;
                     if (args.Parameters.Count == 2)
@@ -3382,11 +3388,12 @@ namespace TShockAPI
                     }
                     if (WeaponSet.Count > (15 * page))
                     {
-                        args.Player.SendMessage(string.Format("Type /items weapon {0} for more items.", (page + 1)), Color.Yellow);
+                        args.Player.SendMessage(string.Format("Type /itemlist weapon {0} for more items.", (page + 1)), Color.Yellow);
                     }
                     return;
                 #endregion
                 #region item
+                case "i":
                 case "item":
                     page = 1;
                     if (args.Parameters.Count == 2)
@@ -3415,11 +3422,12 @@ namespace TShockAPI
                     }
                     if (ItemSet.Count > (15 * page))
                     {
-                        args.Player.SendMessage(string.Format("Type /items item {0} for more items.", (page + 1)), Color.Yellow);
+                        args.Player.SendMessage(string.Format("Type /itemlist item {0} for more items.", (page + 1)), Color.Yellow);
                     }
                     return;
                 #endregion
                 #region block
+                case "b":
                 case "block":
                     page = 1;
                     if (args.Parameters.Count == 2)
@@ -3448,11 +3456,12 @@ namespace TShockAPI
                     }
                     if (BlockSet.Count > (15 * page))
                     {
-                        args.Player.SendMessage(string.Format("Type /items block {0} for more items.", (page + 1)), Color.Yellow);
+                        args.Player.SendMessage(string.Format("Type /itemlist block {0} for more items.", (page + 1)), Color.Yellow);
                     }
                     return;
                 #endregion
                 #region other
+                case "o":
                 case "other":
                     page = 1;
                     if (args.Parameters.Count == 2)
@@ -3481,7 +3490,7 @@ namespace TShockAPI
                     }
                     if (other.Count > (15 * page))
                     {
-                        args.Player.SendMessage(string.Format("Type /items other {0} for more items.", (page + 1)), Color.Yellow);
+                        args.Player.SendMessage(string.Format("Type /itemlist other {0} for more items.", (page + 1)), Color.Yellow);
                     }
                     return;
                 #endregion

@@ -1064,7 +1064,13 @@ namespace TShockAPI
 					{
 						continue;
 					}
-					if (TShock.CheckRangePermission(args.Player, x, y))
+                    
+                    if ((tile.type == 128 && newtile.Type == 128) || (tile.type == 105 && newtile.Type == 105))
+                    {
+                        return false;
+                    }
+                    
+                    if (TShock.CheckRangePermission(args.Player, x, y))
 					{
 						continue;
 					}
@@ -1181,16 +1187,12 @@ namespace TShockAPI
 					}
 				}
 			}
-
-			if (changed)
+            if (changed)
 			{
 				TSPlayer.All.SendTileSquare(tileX, tileY, size);
 				WorldGen.RangeFrame(tileX, tileY, tileX + size, tileY + size);
 			}
-			else
-			{
-				args.Player.SendTileSquare(tileX, tileY, size);
-			}
+            //args.Player.SendTileSquare(tileX, tileY, size);
 			return true;
 		}
 
