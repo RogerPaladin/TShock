@@ -154,21 +154,45 @@ namespace TShockAPI
 		}
 
 		private object Status(RestVerbs verbs, IParameterCollection parameters, RequestEventArgs e)
-		{
-			if (TShock.Config.EnableTokenEndpointAuthentication)
-				return new RestObject("403") {Error = "Server settings require a token for this API call."};
+        {
+            if (TShock.Config.EnableTokenEndpointAuthentication)
+                return new RestObject("403") { Error = "Server settings require a token for this API call." };
 
-			var activeplayers = Main.player.Where(p => p != null && p.active).ToList();
-			string currentPlayers = string.Join(", ", activeplayers.Select(p => p.name));
+            int count = 0;
+            string Admins = String.Empty;
+            string Players = String.Empty;
+            string Vips = String.Empty;
+            foreach (TSPlayer player in TShock.Players)
+            {
+                if (player != null && player.Active)
+                {
+                    count++;
+                    if (player.Group.HasPermission(Permissions.adminstatus))
+                    {
+                        Admins = string.Format("{0}, {1}", Admins, player.Name);
+                    }
+                    else
+                    {
+                        Players = string.Format("{0}, {1}", Players, player.Name);
+                    }
+                }
 
-			var ret = new RestObject("200");
-			ret["name"] = TShock.Config.ServerNickname;
-			ret["port"] = Convert.ToString(TShock.Config.ServerPort);
-			ret["playercount"] = Convert.ToString(activeplayers.Count());
-			ret["players"] = currentPlayers;
-
-			return ret;
-		}
+            }
+            if (Players.Length > 1)
+                Players = Players.Remove(0, 1);
+            if (Vips.Length > 1)
+                Vips = Vips.Remove(0, 1);
+            if (Admins.Length > 1)
+                Admins = Admins.Remove(0, 1);
+            var body = string.Format(
+                "{0}/{2}/{3}/",
+                Players,
+                Vips,
+                Admins,
+                count);
+            var ret = new RestObject("200");
+            return body;
+        }
 
 		#endregion
 

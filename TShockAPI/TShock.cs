@@ -442,7 +442,7 @@ namespace TShockAPI
 			if (Config.RestApiEnabled)
 				RestApi.Start();
 
-			StatTracker.CheckIn();
+			//StatTracker.CheckIn();
 
 			FixChestStacks();
 		}
@@ -468,7 +468,7 @@ namespace TShockAPI
 		private void OnUpdate()
 		{
 			UpdateManager.UpdateProcedureCheck();
-			StatTracker.CheckIn();
+			//StatTracker.CheckIn();
 			if (Backups.IsBackupTime)
 				Backups.Backup();
 
@@ -681,8 +681,9 @@ namespace TShockAPI
                     }
 				}
 			}
-			Console.Title = string.Format("TerrariaShock Version {0} ({1}) ({2}/{3})", Version, VersionCodename, count,
-										  Config.MaxSlots);
+			//Console.Title = string.Format("TerrariaShock Version {0} ({1}) ({2}/{3})", Version, VersionCodename, count,
+										  //Config.MaxSlots);
+            Console.Title = string.Format("{0} ({1}/{2})",Main.worldName, count, Config.MaxSlots);
 		}
 
 		private void OnConnect(int ply, HandledEventArgs handler)
@@ -824,6 +825,7 @@ namespace TShockAPI
                         Player.SendMessage(string.Format("*<{0}> /{1}", tsplr.Name, text.Remove(0, 1)), Color.Red);
                 }
                 Console.WriteLine(string.Format("*<{0}> /{1}", tsplr.Name, text.Remove(0, 1)));
+                Log.Info(string.Format("*<{0}> /{1}", tsplr.Name, text.Remove(0, 1)));
                 try
 				{
 					e.Handled = Commands.HandleCommand(tsplr, text);
@@ -859,14 +861,14 @@ namespace TShockAPI
                             }
                     }
                 }
+                Console.WriteLine(string.Format("{0} said: {1}", tsplr.Name, text));
+                Log.Info(string.Format("{0} said: {1}", tsplr.Name, text));
             }
             else if (tsplr.mute)
             {
                 tsplr.SendMessage("You are muted!");
                 e.Handled = true;
             }
-            Console.WriteLine(string.Format("{0} said: {1}", tsplr.Name, text));
-            Log.Info(string.Format("{0} said: {1}", tsplr.Name, text));
             e.Handled = true;
 		}
 

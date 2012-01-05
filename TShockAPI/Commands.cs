@@ -85,7 +85,6 @@ namespace TShockAPI
 
 		public bool Run(string msg, TSPlayer ply, List<string> parms)
 		{
-            Log.Info(string.Format("*<{0}> /{1}", ply.Name, msg));
             if (!ply.Group.HasPermission(Permission))
 				return false;
 
@@ -198,7 +197,7 @@ namespace TShockAPI
 			add(Permissions.kill, Kill, "kill");
 			add(Permissions.butcher, Butcher, "butcher");
 			add(Permissions.item, Item, "item", "i");
-			add(Permissions.item, Give, "give", "g");
+			add(Permissions.item, Give, "give");
 			add(Permissions.clearitems, ClearItems, "clear", "clearitems");
 			add(Permissions.heal, Heal, "heal");
 			add(Permissions.buff, Buff, "buff");
@@ -1417,10 +1416,10 @@ namespace TShockAPI
 		}
 
 		private static void TP(CommandArgs args)
-		{
+        {
             if (TShock.Users.Buy(args.Player.Name, 3, true) || args.Player.Group.HasPermission("rich") || args.Player.Group.HasPermission("vipstatus"))
-            {
-
+             {
+                int result = 0;
                 if (!args.Player.RealPlayer)
                 {
                     args.Player.SendMessage("You cannot use teleport commands!");
@@ -1429,47 +1428,47 @@ namespace TShockAPI
 
                 if (args.Parameters.Count < 1)
                 {
-                    args.Player.SendMessage("Invalid syntax! Proper syntax: /tp <player> ", Color.Red);
+                    args.Player.SendMessage("Invalid syntax! Proper syntax: /tp <player/x y> ", Color.Red);
                     return;
                 }
-
-                string plStr = String.Join(" ", args.Parameters);
-                var players = TShock.Utils.FindPlayer(plStr);
-                if (players.Count == 0)
-                    args.Player.SendMessage("Invalid player!", Color.Red);
-                else if (players.Count > 1)
-                    args.Player.SendMessage("More than one player matched!", Color.Red);
-                else if (!players[0].TPAllow && !args.Player.Group.HasPermission(Permissions.tpall))
+                if (Int32.TryParse(args.Parameters[args.Parameters.Count - 1], out result))
                 {
-                    var plr = players[0];
-                    args.Player.SendMessage(plr.Name + " Has Selected For Users Not To Teleport To Them");
-                    plr.SendMessage(args.Player.Name + " Attempted To Teleport To You");
+                    if (args.Player.Teleport(Convert.ToInt32(args.Parameters[0]), Convert.ToInt32(args.Parameters[1]) + 3))
+                        args.Player.SendMessage(string.Format("Teleported to X= {0}; Y= {1}", args.Parameters[0], args.Parameters[1]));
                 }
                 else
                 {
-                    var plr = players[0];
-                    if (args.Player.Teleport(plr.TileX, plr.TileY + 3))
+                    string plStr = String.Join(" ", args.Parameters);
+                    var players = TShock.Utils.FindPlayer(plStr);
+                    if (players.Count == 0)
+                        args.Player.SendMessage("Invalid player!", Color.Red);
+                    else if (players.Count > 1)
+                        args.Player.SendMessage("More than one player matched!", Color.Red);
+                    else
                     {
-                        if (args.Player.Group.HasPermission("vipstatus"))
+                        var plr = players[0];
+                        if (args.Player.Teleport(plr.TileX, plr.TileY + 3))
                         {
-                            args.Player.SendMessage(string.Format("Teleported to {0}", plr.Name));
-                            return;
-                        }
-
-                        if (TShock.Users.Buy(args.Player.Name, 3))
-                        {
-                            args.Player.SendMessage("You spent 3 RCoins.", Color.BlanchedAlmond);
-                            args.Player.SendMessage(string.Format("Teleported to {0}", plr.Name));
+                            if (args.Player.Group.HasPermission("vipstatus"))
+                            {
+                                args.Player.SendMessage(string.Format("Teleported to {0}", plr.Name));
+                                return;
+                            }
+                            
+                            if (TShock.Users.Buy(args.Player.Name, 3))
+                            {
+                                args.Player.SendMessage("You spent 3 RCoins.", Color.BlanchedAlmond);
+                                args.Player.SendMessage(string.Format("Teleported to {0}", plr.Name));
+                            }
                         }
                     }
                 }
             }
-            
             else
             {
                 args.Player.SendMessage("You need 3 RCoins to use teleport!", Color.Red);
             }
-		}
+        }
 
 		private static void TPHere(CommandArgs args)
 		{
