@@ -182,9 +182,9 @@ namespace TShockAPI.DB
 		{
 			try
 			{
-				database.Query("DELETE FROM Regions WHERE RegionName=@0 AND WorldID=@1", name, Main.worldID.ToString());
+				database.Query("DELETE FROM Regions WHERE LOWER (RegionName) = @0 AND WorldID=@1", name.ToLower(), Main.worldID.ToString());
 				var worldid = Main.worldID.ToString();
-				Regions.RemoveAll(r => r.Name == name && r.WorldID == worldid);
+				Regions.RemoveAll(r => r.Name.ToLower() == name.ToLower() && r.WorldID == worldid);
 				return true;
 			}
 			catch (Exception ex)
@@ -267,7 +267,7 @@ namespace TShockAPI.DB
 		{
 			try
 			{
-				database.Query("UPDATE Regions SET Protected=@0 WHERE RegionName=@1 AND WorldID=@2", state ? 1 : 0, name,
+				database.Query("UPDATE Regions SET Protected=@0 WHERE LOWER (RegionName) = @1 AND WorldID=@2", state ? 1 : 0, name.ToLower(),
 				               Main.worldID.ToString());
 				var region = GetRegionByName(name);
 				if (region != null)
@@ -285,7 +285,7 @@ namespace TShockAPI.DB
 		{
 			try
 			{
-				database.Query("UPDATE Regions SET Protected=@0 WHERE RegionName=@1 AND WorldID=@2", state ? 1 : 0, name, world);
+				database.Query("UPDATE Regions SET Protected=@0 WHERE LOWER (RegionName) = @1 AND WorldID=@2", state ? 1 : 0, name.ToLower(), world);
 				var region = GetRegionByName(name);
 				if (region != null)
 					region.DisableBuild = state;
@@ -363,8 +363,8 @@ namespace TShockAPI.DB
 			try
 			{
 				using (
-					var reader = database.QueryReader("SELECT X1, Y1, height, width FROM Regions WHERE RegionName=@0 AND WorldID=@1",
-					                                  regionName, Main.worldID.ToString()))
+					var reader = database.QueryReader("SELECT X1, Y1, height, width FROM Regions WHERE LOWER (RegionName) = @0 AND WorldID=@1",
+					                                  regionName.ToLower(), Main.worldID.ToString()))
 				{
 					if (reader.Read())
 						X = reader.Get<int>("X1");
@@ -405,8 +405,8 @@ namespace TShockAPI.DB
 				}
 				int q =
 					database.Query(
-						"UPDATE Regions SET X1 = @0, Y1 = @1, width = @2, height = @3 WHERE RegionName = @4 AND WorldID=@5", X, Y, width,
-						height, regionName, Main.worldID.ToString());
+						"UPDATE Regions SET X1 = @0, Y1 = @1, width = @2, height = @3 WHERE LOWER (RegionName) = @4 AND WorldID=@5", X, Y, width,
+						height, regionName.ToLower(), Main.worldID.ToString());
 				if (q > 0)
 					return true;
 			}
@@ -424,8 +424,8 @@ namespace TShockAPI.DB
 			{
 				r.RemoveID(TShock.Users.GetUserID(userName));
 				string ids = string.Join(",", r.AllowedIDs);
-				int q = database.Query("UPDATE Regions SET UserIds=@0 WHERE RegionName=@1 AND WorldID=@2", ids,
-				                       regionName, Main.worldID.ToString());
+				int q = database.Query("UPDATE Regions SET UserIds=@0 WHERE LOWER (RegionName) = @1 AND WorldID=@2", ids,
+				                       regionName.ToLower(), Main.worldID.ToString());
 				if (q > 0)
 					return true;
 			}
@@ -438,7 +438,7 @@ namespace TShockAPI.DB
 			{
 				string MergedIDs = string.Empty;
 				using (
-					var reader = database.QueryReader("SELECT * FROM Regions WHERE RegionName=@0 AND WorldID=@1", regionName,
+					var reader = database.QueryReader("SELECT * FROM Regions WHERE LOWER (RegionName) = @0 AND WorldID=@1", regionName.ToLower(),
 					                                  Main.worldID.ToString()))
 				{
 					if (reader.Read())
@@ -450,11 +450,11 @@ namespace TShockAPI.DB
 				else
 					MergedIDs = MergedIDs + "," + Convert.ToString(TShock.Users.GetUserID(userName));
 
-				int q = database.Query("UPDATE Regions SET UserIds=@0 WHERE RegionName=@1 AND WorldID=@2", MergedIDs,
-				                       regionName, Main.worldID.ToString());
+				int q = database.Query("UPDATE Regions SET UserIds=@0 WHERE LOWER (RegionName) = @1 AND WorldID=@2", MergedIDs,
+				                       regionName.ToLower(), Main.worldID.ToString());
 				foreach (var r in Regions)
 				{
-					if (r.Name == regionName && r.WorldID == Main.worldID.ToString())
+					if (r.Name.ToLower() == regionName.ToLower() && r.WorldID == Main.worldID.ToString())
 						r.setAllowedIDs(MergedIDs);
 				}
 				return q != 0;
@@ -466,14 +466,14 @@ namespace TShockAPI.DB
 			return false;
 		}
 
-        public bool DelCoOwner(string regionName, String userName)
+        public bool DelCoOwner(string regionName, string userName)
         {
             try
             {
                 string MergedIDs = string.Empty;
                 string IDstring = string.Empty;
                 string[] IDs;
-                using (var reader = database.QueryReader("SELECT * FROM Regions WHERE RegionName=@0 AND WorldID=@1", regionName.ToLower(), Main.worldID.ToString()))
+                using (var reader = database.QueryReader("SELECT * FROM Regions WHERE LOWER (RegionName) = @0 AND WorldID=@1", regionName.ToLower(), Main.worldID.ToString()))
                 {
                     if (reader.Read())
                         MergedIDs = reader.Get<string>("UserIds");
@@ -495,10 +495,19 @@ namespace TShockAPI.DB
                         }
                     }
                     else
-                        MergedIDs = MergedIDs.Replace(Convert.ToString(TShock.Users.GetUserID(userName)), "");
-                if (database.Query("UPDATE Regions SET UserIds=@0 WHERE RegionName=@1 AND WorldID=@2", IDstring.Remove(0, 1), regionName.ToLower(), Main.worldID.ToString()) > 0)
+                        IDstring = MergedIDs.Replace(Convert.ToString(TShock.Users.GetUserID(userName)), " ");
+                if (IDstring.Equals(""))
+                    IDstring = " ";
+                if (database.Query("UPDATE Regions SET UserIds=@0 WHERE LOWER (RegionName) = @1 AND WorldID=@2", IDstring.Remove(0, 1), regionName.ToLower(), Main.worldID.ToString()) > 0)
                 {
-                    ReloadAllRegions();
+                    foreach (var r in Regions)
+                    {
+                        if (r.Name.ToLower() == regionName.ToLower() && r.WorldID == Main.worldID.ToString())
+                        {
+                            r.RemoveID(TShock.Users.GetUserID(userName));
+                            r.setAllowedIDs(IDstring);
+                        }
+                    }
                     return true;
                 }
             }
@@ -553,10 +562,17 @@ namespace TShockAPI.DB
 			if (region != null)
 			{
 				region.Owner = newOwner;
-				int q = database.Query("UPDATE Regions SET Owner=@0 WHERE RegionName=@1 AND WorldID=@2", newOwner,
-				                       regionName, Main.worldID.ToString());
-				if (q > 0)
-					return true;
+				int q = database.Query("UPDATE Regions SET Owner=@0 WHERE LOWER (RegionName) = @1 AND WorldID=@2", newOwner,
+				                       regionName.ToLower(), Main.worldID.ToString());
+                if (q > 0)
+                {
+                    foreach (var r in Regions)
+                    {
+                        if (r.Name.ToLower() == regionName.ToLower() && r.WorldID == Main.worldID.ToString())
+                            r.Owner = newOwner;
+                    }
+                    return true;
+                }
 			}
 			return false;
 		}
@@ -565,7 +581,7 @@ namespace TShockAPI.DB
 		{
 			string groupsNew = "";
 			using (
-				var reader = database.QueryReader("SELECT * FROM Regions WHERE RegionName=@0 AND WorldID=@1", regionName,
+				var reader = database.QueryReader("SELECT * FROM Regions WHERE LOWER (RegionName) = @0 AND WorldID=@1", regionName.ToLower(),
 				                                  Main.worldID.ToString()))
 			{
 				if (reader.Read())
@@ -575,8 +591,8 @@ namespace TShockAPI.DB
 				groupsNew += ",";
 			groupsNew += groups;
 
-			int q = database.Query("UPDATE Regions SET Groups=@0 WHERE RegionName=@1 AND WorldID=@2", groupsNew,
-			                       regionName, Main.worldID.ToString());
+			int q = database.Query("UPDATE Regions SET Groups=@0 WHERE LOWER (RegionName) = @1 AND WorldID=@2", groupsNew,
+			                       regionName.ToLower(), Main.worldID.ToString());
 
 			Region r = GetRegionByName(regionName);
 			if (r != null)
@@ -598,8 +614,8 @@ namespace TShockAPI.DB
 			{
 				r.RemoveGroup(group);
 				string groups = string.Join(",", r.AllowedGroups);
-				int q = database.Query("UPDATE Regions SET Groups=@0 WHERE RegionName=@1 AND WorldID=@2", groups,
-				                       regionName, Main.worldID.ToString());
+				int q = database.Query("UPDATE Regions SET Groups=@0 WHERE LOWER (RegionName) = @1 AND WorldID=@2", groups,
+				                       regionName.ToLower(), Main.worldID.ToString());
 				if (q > 0)
 					return true;
 			}
@@ -660,11 +676,20 @@ namespace TShockAPI.DB
 				return true;
 			}
 
-            for (int i = 0; i < AllowedIDs.Count; i++)
+            try
             {
-                CoOwner = string.Format("{0} {1}", CoOwner, TShock.Users.GetNameForID((int)AllowedIDs[i]));
+                for (int i = 0; i < AllowedIDs.Count; i++)
+                {
+                    CoOwner = string.Format("{0} {1}", CoOwner, TShock.Users.GetNameForID((int)AllowedIDs[i]));
+                }
+                CoOwner = CoOwner.Remove(0, 1);
             }
-            CoOwner = CoOwner.Remove(0, 1);
+            catch
+            {
+                CoOwner = "";
+                return false;
+            }
+
             for (int i = 0; i < AllowedIDs.Count; i++)
             {
                 if (AllowedIDs[i] == ply.UserID)

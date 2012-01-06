@@ -85,7 +85,9 @@ namespace TShockAPI
         public int Dispenser { get; set; }
         public Vector2 LastTilePos = new Vector2(-1, -1);
         public string CurrentRegion;
+        public string CurrentTown;
         public bool InRegion = false;
+        public bool InTown = false;
 
 		public bool RealPlayer
 		{

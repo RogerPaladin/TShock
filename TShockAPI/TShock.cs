@@ -63,6 +63,7 @@ namespace TShockAPI
         public static BlockShopManager BlockShopManager;
         public static OtherShopManager OtherShopManager;
         public static ChatManager Chat;
+        public static TownManager Towns;
         public static int disptime = 1000 * 60 * 15;
         public static List<string> DispenserTime = new List<string>();
         public static List<string> InventoryAllow = new List<string>();
@@ -193,6 +194,7 @@ namespace TShockAPI
                 ItemShopManager = new ItemShopManager(DB);
                 BlockShopManager = new BlockShopManager(DB);
                 OtherShopManager = new OtherShopManager(DB);
+                Towns = new TownManager(DB);
                 Chat = new ChatManager(DB);
                 Restart = new RestartManager();
 				RestApi = new SecureRest(Netplay.serverListenIP, 8080);
@@ -439,6 +441,7 @@ namespace TShockAPI
 				AuthToken = 0;
 			}
 			Regions.ReloadAllRegions();
+            Towns.ReloadAllTowns();
 			if (Config.RestApiEnabled)
 				RestApi.Start();
 
@@ -481,6 +484,27 @@ namespace TShockAPI
                     {
                         bool InRegion = false;
                         string RegionName;
+                        bool InTown = false;
+                        string TownName;
+                        string Mayor;
+
+                        if (TShock.Towns.InArea(player.TileX, player.TileY, out TownName))
+                        {
+                            if (player.CurrentTown != TownName)
+                            {
+                                player.CurrentTown = TownName;
+                                player.InTown = true;
+                                player.SendMessage("Entering " + player.CurrentTown + " town. Current mayor is " + TShock.Towns.GetMayor(TownName), Color.Khaki);
+                            }
+                            InTown = true;
+                        }
+                            if (!InTown && player.InTown)
+                            {
+                                player.SendMessage("Leaving " + player.CurrentTown + " town.", Color.Khaki);
+                                player.CurrentTown = "";
+                                player.InTown = false;
+                            }
+
                         if (TShock.Regions.InArea(player.TileX, player.TileY, out RegionName))
                         {
                             if (player.CurrentRegion != RegionName)
@@ -1296,6 +1320,8 @@ namespace TShockAPI
 		{
             string CoOwner = string.Empty;
             string RegionName = string.Empty;
+            string Mayor = string.Empty;
+            string TownName = string.Empty;
 
             if (!player.Group.HasPermission(Permissions.canbuild))
 			{
@@ -1305,16 +1331,6 @@ namespace TShockAPI
                     player.LastTileChangeNotify = DateTime.UtcNow;
                 }
 				return true;
-			}
-			if (!player.Group.HasPermission(Permissions.editspawn) && !Regions.CanBuild(tileX, tileY, player, out CoOwner) &&
-				Regions.InArea(tileX, tileY, out RegionName))
-			{
-                if ((DateTime.UtcNow - player.LastTileChangeNotify).TotalMilliseconds > 1000)
-                {
-                    player.SendMessage("This region <" + RegionName + "> is protected by " + CoOwner, Color.Yellow);
-                    player.LastTileChangeNotify = DateTime.UtcNow;
-                }
-                return true;
 			}
 			if (Config.DisableBuild)
 			{
@@ -1344,6 +1360,37 @@ namespace TShockAPI
 					}
 				}
 			}
+
+            if (!player.Group.HasPermission(Permissions.editspawn) && !Regions.CanBuild(tileX, tileY, player, out CoOwner) && Regions.InArea(tileX, tileY, out RegionName))
+            {
+                if (Towns.CanBuild(tileX, tileY, player, out Mayor) && Towns.InArea(tileX, tileY, out TownName))
+                {
+                    return false;
+                }
+
+                if ((DateTime.UtcNow - player.LastTileChangeNotify).TotalMilliseconds > 1000)
+                {
+                    player.SendMessage("This region <" + RegionName + "> is protected by " + CoOwner, Color.Yellow);
+                    player.LastTileChangeNotify = DateTime.UtcNow;
+                }
+                return true;
+            }
+
+            if (Regions.CanBuild(tileX, tileY, player, out CoOwner) && Regions.InArea(tileX, tileY, out RegionName))
+            {
+                return false;
+            }
+
+            if (!player.Group.HasPermission(Permissions.editspawn) && !Towns.CanBuild(tileX, tileY, player, out Mayor) && Towns.InArea(tileX, tileY, out TownName))
+            {
+                if ((DateTime.UtcNow - player.LastTileChangeNotify).TotalMilliseconds > 1000)
+                {
+                    player.SendMessage("This town <" + TownName + "> is protected by " + Mayor, Color.Yellow);
+                    player.LastTileChangeNotify = DateTime.UtcNow;
+                }
+                return true;
+            }
+
 			return false;
 		}
 

@@ -224,11 +224,26 @@ namespace TShockAPI
             add(null, Question, "?");
             add(null, ItemList, "items", "itemlist");
             add(Permissions.converthardmode, ConvertAll, "convertall");
-            add(Permissions.manageregion, R1, "r1");
-            add(Permissions.manageregion, R2, "r2");
-            add(Permissions.manageregion, RD, "rd");
-            add(Permissions.manageregion, RA, "ra");
-            add(Permissions.manageregion, RI, "ri");
+            add(Permissions.manageregion, RegionSet1, "r1");
+            add(Permissions.manageregion, RegionSet2, "r2");
+            add(Permissions.manageregion, RegionDefine, "rd");
+            add(Permissions.manageregion, RegionAllow, "ra");
+            add(Permissions.manageregion, RegionDelCoOwner, "rdeluser");
+            add(Permissions.manageregion, RegionDelete, "rdel");
+            add(Permissions.manageregion, RegionInfo, "ri");
+            add(null, HomeSet1, "h1");
+            add(null, HomeSet2, "h2");
+            add(null, HomeDefine, "hd");
+            add(null, HomeAllow, "ha");
+            add(null, HomeDelCoOwner, "hdeluser");
+            add(null, HomeDelete, "hdel");
+            add(null, HomeInfo, "hi");
+            add(Permissions.managetown, TownSet1, "t1");
+            add(Permissions.managetown, TownSet2, "t2");
+            add(Permissions.managetown, TownDefine, "td");
+            add(Permissions.managetown, TownChangeMayor, "tcm");
+            add(Permissions.managetown, TownDelete, "tdel");
+            add(null, TownInfo, "ti");
 		}
 
 		public static bool HandleCommand(TSPlayer player, string text)
@@ -1878,6 +1893,7 @@ namespace TShockAPI
 			FileTools.SetupConfig();
 			TShock.Groups.LoadPermisions();
 			TShock.Regions.ReloadAllRegions();
+            TShock.Towns.ReloadAllTowns();
 			args.Player.SendMessage(
 				"Configuration, Permissions, and Regions reload complete. Some changes may require server restart.");
 		}
@@ -2397,7 +2413,7 @@ namespace TShockAPI
                                 args.Player.SendMessage("Region " + regionName + " or owner " + playerName + " not found", Color.Red);
                         }
                         else
-                            args.Player.SendMessage("Invalid syntax! Proper syntax: /region allow [name] [region]", Color.Red);
+                            args.Player.SendMessage("Invalid syntax! Proper syntax: /region delowner [name] [region]", Color.Red);
                         break;
                     }
                 case "info":
@@ -2406,10 +2422,10 @@ namespace TShockAPI
                         {
                             if (TShock.Regions.InArea(args.Player.TileX, args.Player.TileY, out RegionName) && TShock.Regions.CanBuild(args.Player.TileX, args.Player.TileY, args.Player, out Owner) || !TShock.Regions.CanBuild(args.Player.TileX, args.Player.TileY, args.Player, out Owner))
                             {
-                                args.Player.SendMessage("This region <" + RegionName + "> is protected by " + Owner, Color.Red);
+                                args.Player.SendMessage("This region <" + RegionName + "> is protected by " + Owner, Color.Yellow);
                             }
                             else
-                                args.Player.SendMessage("Region is not protected", Color.Red);
+                                args.Player.SendMessage("Region is not protected", Color.Yellow);
                         }
 
                         if (args.Parameters.Count >= 2)
@@ -2491,19 +2507,19 @@ namespace TShockAPI
 			}
 		}
 
-        private static void R1(CommandArgs args)
+        private static void RegionSet1(CommandArgs args)
         {
             args.Player.SendMessage("Hit a block to Set Point 1", Color.Yellow);
             args.Player.AwaitingTempPoint = 1;
         }
 
-        private static void R2(CommandArgs args)
+        private static void RegionSet2(CommandArgs args)
         {
             args.Player.SendMessage("Hit a block to Set Point 2", Color.Yellow);
             args.Player.AwaitingTempPoint = 2;
         }
 
-        private static void RD(CommandArgs args)
+        private static void RegionDefine(CommandArgs args)
         {
             if (args.Parameters.Count > 0)
             {
@@ -2548,7 +2564,7 @@ namespace TShockAPI
 
         }
 
-        private static void RA(CommandArgs args)
+        private static void RegionAllow(CommandArgs args)
         {
             if (args.Parameters.Count > 1)
             {
@@ -2570,7 +2586,7 @@ namespace TShockAPI
                 {
                     if (TShock.Regions.AddNewUser(regionName, playerName))
                     {
-                        args.Player.SendMessage("Added user " + playerName + " to " + regionName, Color.Yellow);
+                        args.Player.SendMessage("Added user " + playerName + " to " + regionName + " region.", Color.Yellow);
                     }
                     else
                         args.Player.SendMessage("Region " + regionName + " not found", Color.Red);
@@ -2584,18 +2600,439 @@ namespace TShockAPI
                 args.Player.SendMessage("Invalid syntax! Proper syntax: /ra [name] [region]", Color.Red);
         }
 
-        private static void RI(CommandArgs args)
+        private static void RegionDelCoOwner(CommandArgs args)
+        {
+            if (args.Parameters.Count > 1)
+            {
+                string playerName = args.Parameters[0];
+                string regionName = "";
+
+                for (int i = 1; i < args.Parameters.Count; i++)
+                {
+                    if (regionName == "")
+                    {
+                        regionName = args.Parameters[1];
+                    }
+                    else
+                    {
+                        regionName = regionName + " " + args.Parameters[i];
+                    }
+                }
+                    if (TShock.Regions.DelCoOwner(regionName, playerName))
+                    {
+                        args.Player.SendMessage(playerName + " deleted from " + regionName, Color.Yellow);
+                    }
+                    else
+                        args.Player.SendMessage("Region " + regionName + " or user " + playerName + " not found", Color.Red);
+            }
+            else
+                args.Player.SendMessage("Invalid syntax! Proper syntax: /rdeluser [name] [region]", Color.Red);
+        }
+
+        private static void RegionDelete(CommandArgs args)
+        {
+            string regionName = string.Empty;
+            if (args.Parameters.Count > 0)
+            {
+                for (int i = 0; i < args.Parameters.Count; i++)
+                {
+                    if (regionName == "")
+                    {
+                        regionName = args.Parameters[0];
+                    }
+                    else
+                    {
+                        regionName = regionName + " " + args.Parameters[i];
+                    }
+                }
+                    if (TShock.Regions.DeleteRegion(regionName))
+                        args.Player.SendMessage("Deleted region " + regionName, Color.Yellow);
+                    else
+                        args.Player.SendMessage("Could not find specified region", Color.Red);
+            }
+            else
+                args.Player.SendMessage("Invalid syntax! Proper syntax: /rdel [name]", Color.Red);
+        }
+
+        private static void RegionInfo(CommandArgs args)
         {
             string CoOwner = string.Empty;
             string RegionName = string.Empty;
 
             if (TShock.Regions.InArea(args.Player.TileX, args.Player.TileY, out RegionName) && TShock.Regions.CanBuild(args.Player.TileX, args.Player.TileY, args.Player, out CoOwner) || !TShock.Regions.CanBuild(args.Player.TileX, args.Player.TileY, args.Player, out CoOwner))
             {
-                args.Player.SendMessage("This region <" + RegionName + "> is protected by " + CoOwner, Color.Red);
+                args.Player.SendMessage("This region <" + RegionName + "> is protected by " + CoOwner, Color.Yellow);
             }
             else
-                args.Player.SendMessage("Region is not protected", Color.Red);
+                args.Player.SendMessage("Region is not protected", Color.Yellow);
         }
+
+        
+        private static void HomeSet1(CommandArgs args)
+        {
+            if (!TShock.Towns.MayorCheck(args.Player))
+            {
+                args.Player.SendMessage("You are not the mayor!", Color.Red);
+                return;
+            }
+            args.Player.SendMessage("Hit a block to Set Point 1", Color.Yellow);
+            args.Player.AwaitingTempPoint = 1;
+        }
+
+        private static void HomeSet2(CommandArgs args)
+        {
+            if (!TShock.Towns.MayorCheck(args.Player))
+            {
+                args.Player.SendMessage("You are not the mayor!", Color.Red);
+                return;
+            }
+            args.Player.SendMessage("Hit a block to Set Point 2", Color.Yellow);
+            args.Player.AwaitingTempPoint = 2;
+        }
+
+        private static void HomeDefine(CommandArgs args)
+        {
+            string TownName = string.Empty;
+            
+            if (!TShock.Towns.MayorCheck(args.Player))
+            {
+                args.Player.SendMessage("You are not the mayor!", Color.Red);
+                return;
+            }
+
+            if (args.Parameters.Count > 0)
+            {
+                string regionName = "";
+                if (!args.Player.TempPoints.Any(p => p == Point.Zero))
+                {
+                    for (int i = 0; i < args.Parameters.Count; i++)
+                    {
+                        if (regionName == "")
+                        {
+                            regionName = args.Parameters[0];
+                        }
+                        else
+                        {
+                            regionName = regionName + " " + args.Parameters[i];
+                        }
+                    }
+                    var x = Math.Min(args.Player.TempPoints[0].X, args.Player.TempPoints[1].X);
+                    var y = Math.Min(args.Player.TempPoints[0].Y, args.Player.TempPoints[1].Y);
+                    var width = Math.Abs(args.Player.TempPoints[0].X - args.Player.TempPoints[1].X);
+                    var height = Math.Abs(args.Player.TempPoints[0].Y - args.Player.TempPoints[1].Y);
+                    if (TShock.Towns.InArea(x, y, out TownName))
+                    {
+                        var town = TShock.Towns.GetTownByName(TownName);
+                        if (TShock.Regions.AddRegion(x, y, width, height, regionName, town.Mayor,
+                                                     Main.worldID.ToString()))
+                        {
+                            args.Player.TempPoints[0] = Point.Zero;
+                            args.Player.TempPoints[1] = Point.Zero;
+                            args.Player.SendMessage("Set region " + regionName, Color.Yellow);
+                        }
+                        else
+                        {
+                            args.Player.SendMessage("Region " + regionName + " already exists", Color.Red);
+                        }
+                    }
+                    else
+                    {
+                        args.Player.SendMessage("You can select regions only within the town.", Color.Red);
+                    }
+                }
+                else
+                {
+                    args.Player.SendMessage("Points not set up yet", Color.Red);
+                }
+            }
+            else
+                args.Player.SendMessage("Invalid syntax! Proper syntax: /hd [name]", Color.Red);
+
+        }
+
+        private static void HomeAllow(CommandArgs args)
+        {
+            if (!TShock.Towns.MayorCheck(args.Player))
+            {
+                args.Player.SendMessage("You are not the mayor!", Color.Red);
+                return;
+            }
+
+            if (args.Parameters.Count > 1)
+            {
+                string playerName = args.Parameters[0];
+                string regionName = "";
+
+                for (int i = 1; i < args.Parameters.Count; i++)
+                {
+                    if (regionName == "")
+                    {
+                        regionName = args.Parameters[1];
+                    }
+                    else
+                    {
+                        regionName = regionName + " " + args.Parameters[i];
+                    }
+                }
+                var Region = TShock.Regions.GetRegionByName(regionName);
+                if (TShock.Users.GetUserByName(playerName) != null)
+                {
+                    if (Region.Owner.Equals(args.Player.Name) || args.Player.Group.HasPermission(Permissions.manageregion))
+                    {
+                        if (TShock.Regions.AddNewUser(regionName, playerName))
+                        {
+                            args.Player.SendMessage("Added user " + playerName + " to " + regionName + " region.", Color.Yellow);
+                        }
+                        else
+                            args.Player.SendMessage("Region " + regionName + " not found", Color.Red);
+                    }
+                    else
+                    {
+                        args.Player.SendMessage("Only the mayor " + Region.Owner + " can manage this region.", Color.Red);
+                    }
+                }
+                else
+                {
+                    args.Player.SendMessage("Player " + playerName + " not found", Color.Red);
+                }
+            }
+            else
+                args.Player.SendMessage("Invalid syntax! Proper syntax: /ha [name] [region]", Color.Red);
+        }
+        
+		private static void HomeDelCoOwner(CommandArgs args)
+        {
+            string Mayor = string.Empty;
+            string TownName = string.Empty;
+
+            if (!TShock.Towns.MayorCheck(args.Player))
+            {
+                args.Player.SendMessage("You are not the mayor!", Color.Red);
+                return;
+            }
+
+            if (args.Parameters.Count > 1)
+            {
+                string playerName = args.Parameters[0];
+                string regionName = "";
+
+                for (int i = 1; i < args.Parameters.Count; i++)
+                {
+                    if (regionName == "")
+                    {
+                        regionName = args.Parameters[1];
+                    }
+                    else
+                    {
+                        regionName = regionName + " " + args.Parameters[i];
+                    }
+                }
+                var Region = TShock.Regions.GetRegionByName(regionName);
+                if (Region.Owner.Equals(args.Player.Name) || args.Player.Group.HasPermission(Permissions.manageregion))
+                {
+                    if (TShock.Regions.DelCoOwner(regionName, playerName))
+                    {
+                        args.Player.SendMessage(playerName + " deleted from " + regionName + " region.", Color.Yellow);
+                    }
+                    else
+                        args.Player.SendMessage("Region " + regionName + " or user " + playerName + " not found", Color.Red);
+                }
+                else
+                {
+                    args.Player.SendMessage("Only the mayor " + Region.Owner + " can manage this region.", Color.Red);
+                }
+            }
+            else
+                args.Player.SendMessage("Invalid syntax! Proper syntax: /hdeluser [name] [region]", Color.Red);
+        }
+        
+		private static void HomeDelete(CommandArgs args)
+        {
+            string Mayor = string.Empty;
+            string TownName = string.Empty;
+            
+            if (!TShock.Towns.MayorCheck(args.Player))
+            {
+                args.Player.SendMessage("You are not the mayor!", Color.Red);
+                return;
+            }
+
+            if (args.Parameters.Count > 0)
+            {
+                string regionName = String.Join(" ", args.Parameters.GetRange(0, args.Parameters.Count - 1));
+                var Region = TShock.Regions.GetRegionByName(regionName);
+                if (Region.Owner.Equals(args.Player.Name) || args.Player.Group.HasPermission(Permissions.manageregion))
+                {
+                    if (TShock.Regions.DeleteRegion(regionName))
+                        args.Player.SendMessage("Deleted region " + regionName, Color.Yellow);
+                    else
+                        args.Player.SendMessage("Could not find specified region", Color.Red);
+                }
+                args.Player.SendMessage("Only the mayor " + Region.Owner + " can manage this region.", Color.Red);
+            }
+            else
+                args.Player.SendMessage("Invalid syntax! Proper syntax: /hdel [name]", Color.Red);
+        }
+		
+		private static void HomeInfo(CommandArgs args)
+        {
+            string CoOwner = string.Empty;
+            string RegionName = string.Empty;
+
+            if (TShock.Regions.InArea(args.Player.TileX, args.Player.TileY, out RegionName) && TShock.Regions.CanBuild(args.Player.TileX, args.Player.TileY, args.Player, out CoOwner) || !TShock.Regions.CanBuild(args.Player.TileX, args.Player.TileY, args.Player, out CoOwner))
+            {
+                args.Player.SendMessage("This region <" + RegionName + "> is protected by " + CoOwner, Color.Yellow);
+            }
+            else
+                args.Player.SendMessage("Region is not protected", Color.Yellow);
+        }
+
+
+        private static void TownSet1(CommandArgs args)
+        {
+            args.Player.SendMessage("[Town] Hit a block to Set Point 1", Color.Yellow);
+            args.Player.AwaitingTempPoint = 1;
+        }
+
+        private static void TownSet2(CommandArgs args)
+        {
+            args.Player.SendMessage("[Town] Hit a block to Set Point 2", Color.Yellow);
+            args.Player.AwaitingTempPoint = 2;
+        }
+
+        private static void TownDefine(CommandArgs args)
+        {
+            if (args.Parameters.Count > 0)
+            {
+                string townname = "";
+                if (!args.Player.TempPoints.Any(p => p == Point.Zero))
+                {
+                    for (int i = 0; i < args.Parameters.Count; i++)
+                    {
+                        if (townname == "")
+                        {
+                            townname = args.Parameters[0];
+                        }
+                        else
+                        {
+                            townname = townname + " " + args.Parameters[i];
+                        }
+                    }
+                    var x = Math.Min(args.Player.TempPoints[0].X, args.Player.TempPoints[1].X);
+                    var y = Math.Min(args.Player.TempPoints[0].Y, args.Player.TempPoints[1].Y);
+                    var width = Math.Abs(args.Player.TempPoints[0].X - args.Player.TempPoints[1].X);
+                    var height = Math.Abs(args.Player.TempPoints[0].Y - args.Player.TempPoints[1].Y);
+
+                    if (TShock.Towns.AddTown(x, y, width, height, townname, args.Player.Name,
+                                                 Main.worldID.ToString()))
+                    {
+                        args.Player.TempPoints[0] = Point.Zero;
+                        args.Player.TempPoints[1] = Point.Zero;
+                        args.Player.SendMessage("Set town " + townname, Color.Yellow);
+                    }
+                    else
+                    {
+                        args.Player.SendMessage("Town " + townname + " already exists", Color.Red);
+                    }
+                }
+                else
+                {
+                    args.Player.SendMessage("Points not set up yet", Color.Red);
+                }
+            }
+            else
+                args.Player.SendMessage("Invalid syntax! Proper syntax: /td [name]", Color.Red);
+
+        }
+
+        private static void TownChangeMayor(CommandArgs args)
+        {
+            if (args.Parameters.Count > 1)
+            {
+                string playerName = args.Parameters[0];
+                string townname = "";
+
+                for (int i = 1; i < args.Parameters.Count; i++)
+                {
+                    if (townname == "")
+                    {
+                        townname = args.Parameters[1];
+                    }
+                    else
+                    {
+                        townname = townname + " " + args.Parameters[i];
+                    }
+                }
+                if (TShock.Users.GetUserByName(playerName) != null)
+                {
+                    if (TShock.Towns.ChangeMayor(townname, playerName))
+                    {
+                        var town = TShock.Towns.GetTownByName(townname);
+                        args.Player.SendMessage("Added new mayor " + playerName + " in " + townname, Color.Yellow);
+                        foreach (Region r in TShock.Regions.Regions)
+                        {
+                            if (town.InArea(r.Area))
+                            {
+                                TShock.Regions.ChangeOwner(r.Name, playerName);
+                            }
+                        }
+                        TShock.Regions.ReloadAllRegions();
+                    }
+                    else
+                        args.Player.SendMessage("Town " + townname + " not found", Color.Red);
+                }
+                else
+                {
+                    args.Player.SendMessage("Player " + playerName + " not found", Color.Red);
+                }
+            }
+            else
+                args.Player.SendMessage("Invalid syntax! Proper syntax: /tcm [name] [town]", Color.Red);
+        }
+
+        private static void TownDelete(CommandArgs args)
+        {
+            string Mayor = string.Empty;
+            string townname = string.Empty;
+            if (args.Parameters.Count > 0)
+            {
+                for (int i = 0; i < args.Parameters.Count; i++)
+                {
+                    if (townname == "")
+                    {
+                        townname = args.Parameters[0];
+                    }
+                    else
+                    {
+                        townname = townname + " " + args.Parameters[i];
+                    }
+                }
+                if (TShock.Towns.DeleteTown(townname))
+                {
+                    args.Player.SendMessage("Deleted town " + townname, Color.Yellow);
+                    TShock.Towns.ReloadAllTowns();
+                }
+                else
+                    args.Player.SendMessage("Could not find specified town", Color.Red);
+            }
+            else
+                args.Player.SendMessage("Invalid syntax! Proper syntax: /tdel [name]", Color.Red);
+        }
+
+        private static void TownInfo(CommandArgs args)
+        {
+            string Mayor = string.Empty;
+            string TownName = string.Empty;
+
+            if (TShock.Towns.InArea(args.Player.TileX, args.Player.TileY, out TownName))
+            {
+                args.Player.SendMessage("This town <" + TownName + "> is protected by mayor " + TShock.Towns.GetMayor(TownName), Color.Yellow);
+            }
+            else
+                args.Player.SendMessage("There are no towns here!", Color.Yellow);
+        }
+
+
 
         private static void AltarEdit(CommandArgs args)
         {

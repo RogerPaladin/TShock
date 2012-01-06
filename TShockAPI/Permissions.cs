@@ -185,6 +185,8 @@ namespace TShockAPI
         [Description("Required to be able to place/pickup lava")]
         public static readonly string canlava;
 
+        [Description("User can edit towns")]
+        public static readonly string managetown;
 
 		static Permissions()
 		{

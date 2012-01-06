@@ -1208,6 +1208,8 @@ namespace TShockAPI
             Item heart = TShock.Utils.GetItemById(58);
             Item star = TShock.Utils.GetItemById(184);
             Random Rand = new Random();
+            string Mayor = string.Empty;
+            string TownName = string.Empty;
 
 			if (OnTileEdit(tileX, tileY, tiletype, type))
 				return true;
@@ -1226,12 +1228,29 @@ namespace TShockAPI
 
 			if (args.Player.AwaitingTempPoint > 0)
 			{
-				args.Player.TempPoints[args.Player.AwaitingTempPoint - 1].X = tileX;
-				args.Player.TempPoints[args.Player.AwaitingTempPoint - 1].Y = tileY;
-				args.Player.SendMessage("Set Temp Point " + args.Player.AwaitingTempPoint, Color.Yellow);
-				args.Player.SendTileSquare(tileX, tileY);
-				args.Player.AwaitingTempPoint = 0;
-				return true;
+                if (args.Player.Group.HasPermission(Permissions.manageregion) || TShock.Towns.InArea(args.Player.TileX, args.Player.TileY, out TownName))
+                {
+                    if (args.Player.Group.HasPermission(Permissions.manageregion) || TShock.Towns.CanBuild(args.Player.TileX, args.Player.TileY, args.Player, out Mayor))
+                    {
+                        args.Player.TempPoints[args.Player.AwaitingTempPoint - 1].X = tileX;
+                        args.Player.TempPoints[args.Player.AwaitingTempPoint - 1].Y = tileY;
+                        args.Player.SendMessage("Set Temp Point " + args.Player.AwaitingTempPoint, Color.Yellow);
+                        args.Player.SendTileSquare(tileX, tileY);
+                        args.Player.AwaitingTempPoint = 0;
+                        return true;
+                    }
+                    else
+                    {
+                        args.Player.SendMessage("Only the mayor " + Mayor + " can allocate regions.", Color.Red);
+                    
+                    }
+                }
+                else
+                {
+                    args.Player.SendMessage("You can select regions only within the town.", Color.Red);
+                }
+                args.Player.AwaitingTempPoint = 0;
+                return true;
 			}
 
 			if (type == 1 || type == 3)
