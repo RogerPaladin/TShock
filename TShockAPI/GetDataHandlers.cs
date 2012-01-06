@@ -1985,8 +1985,9 @@ namespace TShockAPI
             int id = Chest.FindChest(x, y);
             Item[] item = new Item[5];
             int[] Quantity = new int[5];
-            int Count = 0;
+            bool[] Bools = new bool[5];
             int[] index = new int[5];
+            int Count = 0;
 
 			if (OnChestOpen(x, y))
 				return true;
@@ -2007,11 +2008,20 @@ namespace TShockAPI
                 item = new Item[ItemName.Length];
                 Quantity = new int[ItemName.Length];
                 index = new int[ItemName.Length];
+                Bools = new bool[ItemName.Length];
 
                 for (int i = 0; i < ItemName.Length; i++)
                 {
-                    Quantity[i] = int.Parse(ItemName[i].Split(':')[1]);
-                    ItemName[i] = ItemName[i].Split(':')[0];
+                    try
+                    {
+                        Quantity[i] = int.Parse(ItemName[i].Split(':')[1]);
+                        ItemName[i] = ItemName[i].Split(':')[0];
+                    }
+                    catch
+                    {
+                        Quantity[i] = 1;
+                        ItemName[i] = ItemName[i];
+                    }
                     if (ItemName[i].Equals(string.Empty))
                     {
                         break;
@@ -2048,38 +2058,36 @@ namespace TShockAPI
                         {
                             if (Main.chest[id].item[i].stack >= Quantity[d])
                             {
-                                Count++;
+                                Bools[d] = true;
                                 index[d] = i;
                             }
-                            else
-                            {
-                                args.Player.SendMessage("Not enough <" + item[d].name + "> in the chest", Color.Red);
-                                return true;
-                            }
                         }
-                    }
-
-                    if (Count >= item.Length)
-                    {
-                        TShock.Users.Buy(args.Player.Name, Price);
-                        args.Player.SendMessage("You spent " + Price + " RCoins.", Color.BlanchedAlmond);
-                        TShock.Users.SetRCoins(PlayerName, Price);
-                        if (players.Count == 1)
-                        {
-                            players[0].SendMessage("Sold items to " + args.Player.Name + " for " + Price + " RCoins.", Color.Green);
-                        }
-                        for (int m = 0; m < item.Length; m++)
-                        {
-                            args.Player.GiveItem(item[m].type, item[m].name, item[m].width, item[m].height, Quantity[m]);
-                            Main.chest[id].item[index[m]].stack = Main.chest[id].item[index[m]].stack - Quantity[m];
-                        }
-                        args.Player.SendMessage("You buy items successfully.", Color.Green);
-
-                        return true;
                     }
                 }
 
-                args.Player.SendMessage("Not enough items in the chest", Color.Red);
+                foreach (bool b in Bools)
+                {
+                    if (b == false)
+                    {
+                        args.Player.SendMessage("Not enough <" + item[Count].name + "> in the chest", Color.Red);
+                        return true;
+                    }
+                    Count++;
+                }
+                TShock.Users.Buy(args.Player.Name, Price);
+                args.Player.SendMessage("You spent " + Price + " RCoins.", Color.BlanchedAlmond);
+                TShock.Users.SetRCoins(PlayerName, Price);
+                if (players.Count == 1)
+                {
+                    players[0].SendMessage("Sold items to " + args.Player.Name + " for " + Price + " RCoins.", Color.Green);
+                }
+                for (int m = 0; m < item.Length; m++)
+                {
+                    args.Player.GiveItem(item[m].type, item[m].name, item[m].width, item[m].height, Quantity[m]);
+                    Main.chest[id].item[index[m]].stack = Main.chest[id].item[index[m]].stack - Quantity[m];
+                }
+                args.Player.SendMessage("You buy items successfully.", Color.Green);
+
                 return true;
             }
 
