@@ -748,7 +748,7 @@ namespace TShockAPI
                             j++;
                         }
                         if (double.TryParse(split[split.Count() - 1], out result))
-                            Price = result;
+                            Price = Math.Abs(result);
                         else
                         {
                             return false;

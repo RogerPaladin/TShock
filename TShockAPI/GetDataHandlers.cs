@@ -2074,6 +2074,7 @@ namespace TShockAPI
                     }
                     Count++;
                 }
+                
                 TShock.Users.Buy(args.Player.Name, Price);
                 args.Player.SendMessage("You spent " + Price + " RCoins.", Color.BlanchedAlmond);
                 TShock.Users.SetRCoins(PlayerName, Price);
