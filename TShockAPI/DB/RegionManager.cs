@@ -542,6 +542,29 @@ namespace TShockAPI.DB
             return false;
         }
 
+        public bool DelAllCoOwners(string regionName)
+        {
+            try
+            {
+                if (database.Query("UPDATE Regions SET UserIds=@0 WHERE LOWER (RegionName) = @1 AND WorldID=@2", "", regionName.ToLower(), Main.worldID.ToString()) > 0)
+                {
+                    foreach (var r in Regions)
+                    {
+                        if (r.Name.ToLower() == regionName.ToLower() && r.WorldID == Main.worldID.ToString())
+                        {
+                            r.setAllowedIDs("");
+                        }
+                    }
+                    return true;
+                }
+            }
+            catch (Exception ex)
+            {
+                Log.Error(ex.ToString());
+            }
+            return false;
+        }
+
 		/// <summary>
 		/// Gets all the regions names from world
 		/// </summary>

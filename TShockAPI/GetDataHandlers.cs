@@ -837,6 +837,12 @@ namespace TShockAPI
                 return true;
             }
 
+            if (name.ToLower().Equals("all"))
+            {
+                TShock.Utils.ForceKick(args.Player, "Reserved name.");
+                return true;
+            }
+
 			var ban = TShock.Bans.GetBanByName(name);
 			if (ban != null)
 			{

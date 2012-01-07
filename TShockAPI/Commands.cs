@@ -2865,12 +2865,24 @@ namespace TShockAPI
                 var Region = TShock.Regions.GetRegionByName(regionName);
                 if (Region.Owner.Equals(args.Player.Name) || args.Player.Group.HasPermission(Permissions.manageregion))
                 {
-                    if (TShock.Regions.DelCoOwner(regionName, playerName))
+                    if (playerName.ToLower().Equals("all") || playerName.ToLower().Equals("*"))
                     {
-                        args.Player.SendMessage(playerName + " deleted from " + regionName + " region.", Color.Yellow);
+                        if (TShock.Regions.DelAllCoOwners(regionName))
+                        {
+                            args.Player.SendMessage("All players deleted from " + regionName + " region.", Color.Yellow);
+                        }
+                        else
+                            args.Player.SendMessage("Region " + regionName + " not found", Color.Red);
                     }
                     else
-                        args.Player.SendMessage("Region " + regionName + " or user " + playerName + " not found", Color.Red);
+                    {
+                        if (TShock.Regions.DelCoOwner(regionName, playerName))
+                        {
+                            args.Player.SendMessage(playerName + " deleted from " + regionName + " region.", Color.Yellow);
+                        }
+                        else
+                            args.Player.SendMessage("Region " + regionName + " or user " + playerName + " not found", Color.Red);
+                    }
                 }
                 else
                 {
@@ -2885,6 +2897,7 @@ namespace TShockAPI
         {
             string Mayor = string.Empty;
             string TownName = string.Empty;
+            string regionName = string.Empty;
 
             if (!args.Player.Group.HasPermission(Permissions.manageregion) && !TShock.Towns.MayorCheck(args.Player))
             {
@@ -2894,7 +2907,18 @@ namespace TShockAPI
 
             if (args.Parameters.Count > 0)
             {
-                string regionName = String.Join(" ", args.Parameters.GetRange(0, args.Parameters.Count - 1));
+                for (int i = 0; i < args.Parameters.Count; i++)
+                {
+                    if (regionName == "")
+                    {
+                        regionName = args.Parameters[0];
+                    }
+                    else
+                    {
+                        regionName = regionName + " " + args.Parameters[i];
+                    }
+                }
+
                 var Region = TShock.Regions.GetRegionByName(regionName);
                 if (Region.Owner.Equals(args.Player.Name) || args.Player.Group.HasPermission(Permissions.manageregion))
                 {
@@ -2903,7 +2927,8 @@ namespace TShockAPI
                     else
                         args.Player.SendMessage("Could not find specified region", Color.Red);
                 }
-                args.Player.SendMessage("Only the mayor " + Region.Owner + " can manage this region.", Color.Red);
+                else
+                    args.Player.SendMessage("Only the mayor " + Region.Owner + " can manage this region.", Color.Red);
             }
             else
                 args.Player.SendMessage("Invalid syntax! Proper syntax: /hdel [name]", Color.Red);
