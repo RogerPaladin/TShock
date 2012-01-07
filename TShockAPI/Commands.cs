@@ -1469,19 +1469,26 @@ namespace TShockAPI
                     else
                     {
                         var plr = players[0];
-                        if (args.Player.Teleport(plr.TileX, plr.TileY + 3))
+                        if (plr.TPAllow || args.Player.Group.HasPermission(Permissions.adminstatus))
                         {
-                            if (args.Player.Group.HasPermission("vipstatus"))
+                            if (args.Player.Teleport(plr.TileX, plr.TileY + 3))
                             {
-                                args.Player.SendMessage(string.Format("Teleported to {0}", plr.Name));
-                                return;
+                                if (args.Player.Group.HasPermission("vipstatus"))
+                                {
+                                    args.Player.SendMessage(string.Format("Teleported to {0}", plr.Name));
+                                    return;
+                                }
+
+                                if (TShock.Users.Buy(args.Player.Name, 3))
+                                {
+                                    args.Player.SendMessage("You spent 3 RCoins.", Color.BlanchedAlmond);
+                                    args.Player.SendMessage(string.Format("Teleported to {0}", plr.Name));
+                                }
                             }
-                            
-                            if (TShock.Users.Buy(args.Player.Name, 3))
-                            {
-                                args.Player.SendMessage("You spent 3 RCoins.", Color.BlanchedAlmond);
-                                args.Player.SendMessage(string.Format("Teleported to {0}", plr.Name));
-                            }
+                        }
+                        else
+                        {
+                            args.Player.SendMessage("Player <" + plr.Name + "> is hidden from the teleport ", Color.Red);
                         }
                     }
                 }
@@ -1544,11 +1551,16 @@ namespace TShockAPI
 
 		private static void TPAllow(CommandArgs args)
 		{
-			if (!args.Player.TPAllow)
-				args.Player.SendMessage("Other Players Can Now Teleport To You");
-			if (args.Player.TPAllow)
-				args.Player.SendMessage("Other Players Can No Longer Teleport To You");
-			args.Player.TPAllow = !args.Player.TPAllow;
+            if (!args.Player.TPAllow)
+            {
+                args.Player.SendMessage("Other Players Can Now Teleport To You");
+                args.Player.TPAllow = true;
+            }
+            else
+            {
+                args.Player.SendMessage("Other Players Can No Longer Teleport To You");
+                args.Player.TPAllow = false;
+            }
 		}
 
 		private static void SendWarp(CommandArgs args)
@@ -3126,6 +3138,13 @@ namespace TShockAPI
         private static void Location(CommandArgs args)
         {
             args.Player.SendMessage("X = " + args.Player.TileX + "; Y = " + args.Player.TileY, Color.Yellow);
+            foreach (TSPlayer Player in TShock.Players)
+            {
+                if (Player != null && Player.Active && Player.Group.HasPermission("adminstatus"))
+                {
+                    Player.SendMessage("(Location)<{0}> {1}".SFormat(args.Player.Name, "X = " + args.Player.TileX + "; Y = " + args.Player.TileY), Color.PaleGreen);
+                }
+            }
         }
 
 		#endregion World Protection Commands
@@ -3335,6 +3354,12 @@ namespace TShockAPI
         {
             string message = "";
 
+            if (args.Player.mute)
+            {
+                args.Player.SendMessage("You are muted!");
+                return;
+            }
+
             for (int i = 0; i < args.Parameters.Count; i++)
             {
                 message += " " + args.Parameters[i];
@@ -3348,7 +3373,11 @@ namespace TShockAPI
         private static void Shout(CommandArgs args)
         {
             string message = "";
-
+            if (args.Player.mute)
+            {
+                args.Player.SendMessage("You are muted!");
+                return;
+            }
             for (int i = 0; i < args.Parameters.Count; i++)
             {
                 message += " " + args.Parameters[i];
@@ -3472,26 +3501,40 @@ namespace TShockAPI
 
 			string plStr = String.Join(" ", args.Parameters);
 			var players = TShock.Utils.FindPlayer(plStr);
-			if (players.Count == 0)
-				args.Player.SendMessage("Invalid player!", Color.Red);
-			else if (players.Count > 1)
-				args.Player.SendMessage("More than one player matched!", Color.Red);
-			else if (players[0].mute && !players[0].Group.HasPermission(Permissions.mute))
-			{
-				var plr = players[0];
-				plr.mute = false;
-				plr.SendMessage("You have been unmuted.");
-				TShock.Utils.Broadcast(plr.Name + " has been unmuted by " + args.Player.Name, Color.Yellow);
-			}
-			else if (!players[0].Group.HasPermission(Permissions.mute))
-			{
-				var plr = players[0];
-				plr.mute = true;
-				plr.SendMessage("You have been muted.");
-				TShock.Utils.Broadcast(plr.Name + " has been muted by " + args.Player.Name, Color.Yellow);
-			}
-			else
-				args.Player.SendMessage("You cannot mute this player.");
+            if (players.Count == 0)
+            {
+                args.Player.SendMessage("Invalid player!", Color.Red);
+            }
+            else
+            {
+                if (players.Count > 1)
+                {
+                    args.Player.SendMessage("More than one player matched!", Color.Red);
+                }
+                else
+                {
+                    var plr = players[0];
+                    if (TShock.MutedPlayers.Contains(plr.Name) && !players[0].Group.HasPermission(Permissions.mute))
+                    {
+                        plr.mute = false;
+                        TShock.MutedPlayers.Remove(plr.Name);
+                        plr.SendMessage("You have been unmuted.");
+                        TShock.Utils.Broadcast(plr.Name + " has been unmuted by " + args.Player.Name, Color.Yellow);
+                    }
+                    else
+                    {
+                        if (!players[0].Group.HasPermission(Permissions.mute))
+                        {
+                            plr.mute = true;
+                            TShock.MutedPlayers.Add(plr.Name);
+                            plr.SendMessage("You have been muted.");
+                            TShock.Utils.Broadcast(plr.Name + " has been muted by " + args.Player.Name, Color.Yellow);
+                        }
+                        else
+                            args.Player.SendMessage("You cannot mute this player.");
+                    }
+                }
+            }
 		}
 
 		private static void Motd(CommandArgs args)

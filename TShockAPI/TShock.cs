@@ -67,6 +67,7 @@ namespace TShockAPI
         public static int disptime = 1000 * 60 * 15;
         public static List<string> DispenserTime = new List<string>();
         public static List<string> InventoryAllow = new List<string>();
+        public static List<string> MutedPlayers = new List<string>();
         public static DateTime Spawner = new DateTime();
         public static DateTime StackCheatChecker = new DateTime();
         public static DateTime InventoryCheckTime = new DateTime();
@@ -1033,6 +1034,11 @@ namespace TShockAPI
             if (!DispenserTime.Contains(player.Name))
             {
                 DispenserTime.Add(player.Name + ";" + Convert.ToString(DateTime.UtcNow.AddMilliseconds(-disptime)));
+            }
+
+            if (MutedPlayers.Contains(player.Name))
+            {
+                player.mute = true;
             }
 
 			player.LastNetPosition = new Vector2(Main.spawnTileX*16f, Main.spawnTileY*16f);
