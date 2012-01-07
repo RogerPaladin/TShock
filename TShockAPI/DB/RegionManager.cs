@@ -434,7 +434,8 @@ namespace TShockAPI.DB
 
 		public bool AddNewUser(string regionName, String userName)
 		{
-			try
+            string[] IDs;
+            try
 			{
 				string MergedIDs = string.Empty;
 				using (
@@ -445,10 +446,33 @@ namespace TShockAPI.DB
 						MergedIDs = reader.Get<string>("UserIds");
 				}
 
-				if (string.IsNullOrEmpty(MergedIDs))
-					MergedIDs = Convert.ToString(TShock.Users.GetUserID(userName));
-				else
-					MergedIDs = MergedIDs + "," + Convert.ToString(TShock.Users.GetUserID(userName));
+                if (string.IsNullOrEmpty(MergedIDs))
+                    MergedIDs = Convert.ToString(TShock.Users.GetUserID(userName));
+                else
+                {
+                    if (MergedIDs.Contains(","))
+                    {
+                        IDs = MergedIDs.Split(',');
+                        foreach (string ID in IDs)
+                        {
+                            if (ID.Equals(Convert.ToString(TShock.Users.GetUserID(userName))))
+                            {
+                                return true;
+                            }
+                        }
+                        MergedIDs = MergedIDs + "," + Convert.ToString(TShock.Users.GetUserID(userName));
+                    }
+                    else
+                    {
+                        if (MergedIDs.Equals(Convert.ToString(TShock.Users.GetUserID(userName))))
+                        {
+                        }
+                        else
+                        {
+                            MergedIDs = MergedIDs + "," + Convert.ToString(TShock.Users.GetUserID(userName));
+                        }
+                    }
+                }
 
 				int q = database.Query("UPDATE Regions SET UserIds=@0 WHERE LOWER (RegionName) = @1 AND WorldID=@2", MergedIDs,
 				                       regionName.ToLower(), Main.worldID.ToString());
@@ -543,7 +567,7 @@ namespace TShockAPI.DB
 
 		public Region GetRegionByName(String name)
 		{
-			return Regions.FirstOrDefault(r => r.Name.Equals(name) && r.WorldID == Main.worldID.ToString());
+			return Regions.FirstOrDefault(r => r.Name.ToLower().Equals(name.ToLower()) && r.WorldID == Main.worldID.ToString());
 		}
 
 		public Region ZacksGetRegionByName(String name)

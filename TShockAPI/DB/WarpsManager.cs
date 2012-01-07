@@ -66,7 +66,7 @@ namespace TShockAPI.DB
 		{
 			try
 			{
-				database.Query("DELETE FROM Warps WHERE WarpName=@0 AND WorldID=@1", name, Main.worldID.ToString());
+				database.Query("DELETE FROM Warps WHERE LOWER (WarpName) = @0 AND WorldID=@1", name.ToLower(), Main.worldID.ToString());
 				return true;
 			}
 			catch (Exception ex)
@@ -81,7 +81,7 @@ namespace TShockAPI.DB
 			try
 			{
 				using (
-					var reader = database.QueryReader("SELECT * FROM Warps WHERE WarpName=@0 AND WorldID=@1", name,
+					var reader = database.QueryReader("SELECT * FROM Warps WHERE LOWER (WarpName) = @0 AND WorldID=@1", name.ToLower(),
 					                                  Main.worldID.ToString()))
 				{
 					if (reader.Read())
@@ -148,9 +148,9 @@ namespace TShockAPI.DB
 		{
 			try
 			{
-				string query = "UPDATE Warps SET Private=@0 WHERE WarpName=@1 AND WorldID=@2";
+				string query = "UPDATE Warps SET Private=@0 WHERE LOWER (WarpName) = @1 AND WorldID=@2";
 
-				database.Query(query, state ? "1" : "0", warp, Main.worldID.ToString());
+				database.Query(query, state ? "1" : "0", warp.ToLower(), Main.worldID.ToString());
 
 				return true;
 			}

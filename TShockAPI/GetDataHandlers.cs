@@ -831,7 +831,7 @@ namespace TShockAPI
 				return true;
 			}
 
-            if (name.Contains("'") || name.Contains("\"") || name.Contains("/") || name.Contains(">") || name.Contains("<") || name.Contains("|") || name.Contains("\b") || name.Contains("\0"))
+            if (name.Contains("'") || name.Contains("*") || name.Contains("?") || name.Contains("\"") || name.Contains("/") || name.Contains(">") || name.Contains("<") || name.Contains("|") || name.Contains("\b") || name.Contains("\0") || name.Contains(":"))
             {
                 TShock.Utils.ForceKick(args.Player, "Forbidden characters in the name.");
                 return true;

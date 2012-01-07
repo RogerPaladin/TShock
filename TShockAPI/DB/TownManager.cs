@@ -258,10 +258,10 @@ namespace TShockAPI.DB
 
         public bool ChangeMayor(string TownName, string newMayor)
         {
-            var region = GetTownByName(TownName);
-            if (region != null)
+            var town = GetTownByName(TownName);
+            if (town != null)
             {
-                region.Mayor = newMayor;
+                town.Mayor = newMayor;
                 int q = database.Query("UPDATE Towns SET Mayor=@0 WHERE LOWER (TownName) = @1 AND WorldID=@2", newMayor,
                                        TownName.ToLower(), Main.worldID.ToString());
                 if (q > 0)
@@ -297,6 +297,31 @@ namespace TShockAPI.DB
                     Mayor = t.Mayor;
             }
             return Mayor;
+        }
+
+        public List<string> GetTownsPeople(string TownName)
+        {
+            List<string> TownsPeople = new List<string>();
+            try
+            {
+                var town = GetTownByName(TownName);
+                foreach (Region r in TShock.Regions.Regions)
+                {
+                    if (town.InArea(r.Area))
+                    {
+                        for (int i = 0; i < r.AllowedIDs.Count; i++)
+                        {
+                            if (!TownsPeople.Contains(TShock.Users.GetNameForID((int)r.AllowedIDs[i])))
+                                TownsPeople.Add(TShock.Users.GetNameForID((int)r.AllowedIDs[i]));
+                        }
+                    }
+                }
+                return TownsPeople;
+            }
+            catch
+            {
+                return null;
+            }
         }
 
         public class Town

@@ -494,13 +494,13 @@ namespace TShockAPI
                             {
                                 player.CurrentTown = TownName;
                                 player.InTown = true;
-                                player.SendMessage("Entering " + player.CurrentTown + " town. Current mayor is " + TShock.Towns.GetMayor(TownName), Color.Khaki);
+                                player.SendMessage("Entering " + player.CurrentTown + " town. Current mayor is <" + TShock.Towns.GetMayor(TownName) + ">", Color.MediumSlateBlue);
                             }
                             InTown = true;
                         }
                             if (!InTown && player.InTown)
                             {
-                                player.SendMessage("Leaving " + player.CurrentTown + " town.", Color.Khaki);
+                                player.SendMessage("Leaving " + player.CurrentTown + " town.", Color.MediumSlateBlue);
                                 player.CurrentTown = "";
                                 player.InTown = false;
                             }
@@ -1385,7 +1385,7 @@ namespace TShockAPI
             {
                 if ((DateTime.UtcNow - player.LastTileChangeNotify).TotalMilliseconds > 1000)
                 {
-                    player.SendMessage("This town <" + TownName + "> is protected by " + Mayor, Color.Yellow);
+                    player.SendMessage("This town <" + TownName + "> is protected by <" + Mayor + ">", Color.Yellow);
                     player.LastTileChangeNotify = DateTime.UtcNow;
                 }
                 return true;

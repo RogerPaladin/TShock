@@ -825,7 +825,7 @@ namespace TShockAPI
 			string reason = args.Parameters.Count > 1
 								? String.Join(" ", args.Parameters.GetRange(1, args.Parameters.Count - 1))
 								: "Manually added IP address ban.";
-			TShock.Bans.AddBan(ip, "", reason);
+			TShock.Bans.AddBan(ip, "", reason, args.Player.Name);
 		}
 
 		private static void UnBan(CommandArgs args)
@@ -2670,7 +2670,7 @@ namespace TShockAPI
         
         private static void HomeSet1(CommandArgs args)
         {
-            if (!TShock.Towns.MayorCheck(args.Player))
+            if (!args.Player.Group.HasPermission(Permissions.manageregion) && !TShock.Towns.MayorCheck(args.Player))
             {
                 args.Player.SendMessage("You are not the mayor!", Color.Red);
                 return;
@@ -2681,7 +2681,7 @@ namespace TShockAPI
 
         private static void HomeSet2(CommandArgs args)
         {
-            if (!TShock.Towns.MayorCheck(args.Player))
+            if (!args.Player.Group.HasPermission(Permissions.manageregion) && !TShock.Towns.MayorCheck(args.Player))
             {
                 args.Player.SendMessage("You are not the mayor!", Color.Red);
                 return;
@@ -2693,8 +2693,8 @@ namespace TShockAPI
         private static void HomeDefine(CommandArgs args)
         {
             string TownName = string.Empty;
-            
-            if (!TShock.Towns.MayorCheck(args.Player))
+
+            if (!args.Player.Group.HasPermission(Permissions.manageregion) && !TShock.Towns.MayorCheck(args.Player))
             {
                 args.Player.SendMessage("You are not the mayor!", Color.Red);
                 return;
@@ -2752,7 +2752,7 @@ namespace TShockAPI
 
         private static void HomeAllow(CommandArgs args)
         {
-            if (!TShock.Towns.MayorCheck(args.Player))
+            if (!args.Player.Group.HasPermission(Permissions.manageregion) && !TShock.Towns.MayorCheck(args.Player))
             {
                 args.Player.SendMessage("You are not the mayor!", Color.Red);
                 return;
@@ -2762,6 +2762,7 @@ namespace TShockAPI
             {
                 string playerName = args.Parameters[0];
                 string regionName = "";
+                string TownName = string.Empty;
 
                 for (int i = 1; i < args.Parameters.Count; i++)
                 {
@@ -2775,25 +2776,59 @@ namespace TShockAPI
                     }
                 }
                 var Region = TShock.Regions.GetRegionByName(regionName);
-                if (TShock.Users.GetUserByName(playerName) != null)
+
+                if (playerName.ToLower().Equals("all") || playerName.ToLower().Equals("*"))
                 {
                     if (Region.Owner.Equals(args.Player.Name) || args.Player.Group.HasPermission(Permissions.manageregion))
                     {
-                        if (TShock.Regions.AddNewUser(regionName, playerName))
+                        if (TShock.Towns.InArea(Region.Area.X, Region.Area.Y, out TownName))
                         {
-                            args.Player.SendMessage("Added user " + playerName + " to " + regionName + " region.", Color.Yellow);
+                            foreach (string s in TShock.Towns.GetTownsPeople(TownName))
+                            {
+                                if (TShock.Regions.AddNewUser(regionName, s))
+                                {
+                                }
+                                else
+                                {
+                                    args.Player.SendMessage("Region " + regionName + " not found", Color.Red);
+                                    return;
+                                }
+                            }
+                            args.Player.SendMessage("Added users to " + regionName + " region successfully!", Color.Green);
                         }
                         else
-                            args.Player.SendMessage("Region " + regionName + " not found", Color.Red);
+                        {
+                            args.Player.SendMessage("Region " + regionName + " is not in the city!", Color.Red);
+                        }
                     }
                     else
                     {
                         args.Player.SendMessage("Only the mayor " + Region.Owner + " can manage this region.", Color.Red);
                     }
+                    return;
                 }
                 else
                 {
-                    args.Player.SendMessage("Player " + playerName + " not found", Color.Red);
+                    if (TShock.Users.GetUserByName(playerName) != null)
+                    {
+                        if (Region.Owner.Equals(args.Player.Name) || args.Player.Group.HasPermission(Permissions.manageregion))
+                        {
+                            if (TShock.Regions.AddNewUser(regionName, playerName))
+                            {
+                                args.Player.SendMessage("Added user " + playerName + " to " + regionName + " region.", Color.Yellow);
+                            }
+                            else
+                                args.Player.SendMessage("Region " + regionName + " not found", Color.Red);
+                        }
+                        else
+                        {
+                            args.Player.SendMessage("Only the mayor " + Region.Owner + " can manage this region.", Color.Red);
+                        }
+                    }
+                    else
+                    {
+                        args.Player.SendMessage("Player " + playerName + " not found", Color.Red);
+                    }
                 }
             }
             else
@@ -2805,7 +2840,7 @@ namespace TShockAPI
             string Mayor = string.Empty;
             string TownName = string.Empty;
 
-            if (!TShock.Towns.MayorCheck(args.Player))
+            if (!args.Player.Group.HasPermission(Permissions.manageregion) && !TShock.Towns.MayorCheck(args.Player))
             {
                 args.Player.SendMessage("You are not the mayor!", Color.Red);
                 return;
@@ -2850,8 +2885,8 @@ namespace TShockAPI
         {
             string Mayor = string.Empty;
             string TownName = string.Empty;
-            
-            if (!TShock.Towns.MayorCheck(args.Player))
+
+            if (!args.Player.Group.HasPermission(Permissions.manageregion) && !TShock.Towns.MayorCheck(args.Player))
             {
                 args.Player.SendMessage("You are not the mayor!", Color.Red);
                 return;
@@ -3023,10 +3058,17 @@ namespace TShockAPI
         {
             string Mayor = string.Empty;
             string TownName = string.Empty;
+            string TownsPeople = string.Empty;
 
             if (TShock.Towns.InArea(args.Player.TileX, args.Player.TileY, out TownName))
             {
-                args.Player.SendMessage("This town <" + TownName + "> is protected by mayor " + TShock.Towns.GetMayor(TownName), Color.Yellow);
+                args.Player.SendMessage("This town <" + TownName + "> is protected by mayor <" + TShock.Towns.GetMayor(TownName) + ">", Color.MediumSlateBlue);
+                foreach (string s in TShock.Towns.GetTownsPeople(TownName))
+                {
+                    TownsPeople = TownsPeople + " " + s;
+                }
+                TownsPeople = TownsPeople.Remove(0, 1);
+                args.Player.SendMessage("Residents of the town: " + TownsPeople, Color.MediumSlateBlue);
             }
             else
                 args.Player.SendMessage("There are no towns here!", Color.Yellow);
