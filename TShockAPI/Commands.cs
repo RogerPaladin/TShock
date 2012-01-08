@@ -173,7 +173,7 @@ namespace TShockAPI
 			add(Permissions.pvpfun, Slap, "slap");
 			add(Permissions.editspawn, ToggleAntiBuild, "antibuild");
 			add(Permissions.editspawn, ProtectSpawn, "protectspawn");
-			add(Permissions.manageregion, Region, "region", "r");
+			add(Permissions.manageregion, Region, "region");
 			add(Permissions.manageregion, DebugRegions, "debugreg");
 			add(null, Help, "help");
 			add(null, Playing, "playing", "online", "who", "version");
@@ -244,6 +244,7 @@ namespace TShockAPI
             add(Permissions.managetown, TownChangeMayor, "tcm");
             add(Permissions.managetown, TownDelete, "tdel");
             add(null, TownInfo, "ti");
+            add(null, TownTell, "tt");
 		}
 
 		public static bool HandleCommand(TSPlayer player, string text)
@@ -3089,6 +3090,51 @@ namespace TShockAPI
             }
             else
                 args.Player.SendMessage("Invalid syntax! Proper syntax: /tdel [name]", Color.Red);
+        }
+
+        private static void TownTell(CommandArgs args)
+        {
+            string TownName = string.Empty;
+            string TownsPeople = string.Empty;
+            string Message = string.Empty;
+            TSPlayer plr;
+
+            if (!args.Player.Group.HasPermission(Permissions.manageregion) && !TShock.Towns.MayorCheck(args.Player))
+            {
+                args.Player.SendMessage("You are not the mayor!", Color.Red);
+                return;
+            }
+
+            if (args.Parameters.Count > 0)
+            {
+                for (int i = 0; i < args.Parameters.Count; i++)
+                {
+                    if (Message == "")
+                    {
+                        Message = args.Parameters[0];
+                    }
+                    else
+                    {
+                        Message = Message + " " + args.Parameters[i];
+                    }
+                }
+                var Town = TShock.Towns.GetTownByMayorName(args.Player.Name);
+                
+                foreach (string s in TShock.Towns.GetTownsPeople(Town.Name))
+                {
+                        var players = TShock.Utils.FindPlayer(s);
+                        if (players.Count > 0)
+                        {
+                            plr = players[0];
+                            plr.SendMessage("<Mayor " + args.Player.Name + "> " + Message, Color.MediumSlateBlue);
+                        }
+                }
+                args.Player.SendMessage("<Mayor " + args.Player.Name + "> " + Message, Color.MediumSlateBlue);
+            }
+            else
+            {
+                args.Player.SendMessage("Invalid syntax! Proper syntax: /tt [text]", Color.Red);
+            }
         }
 
         private static void TownInfo(CommandArgs args)

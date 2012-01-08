@@ -256,6 +256,11 @@ namespace TShockAPI.DB
             return Towns.FirstOrDefault(r => r.Name.ToLower().Equals(name.ToLower()) && r.WorldID == Main.worldID.ToString());
         }
 
+        public Town GetTownByMayorName(string MayorName)
+        {
+            return Towns.FirstOrDefault(r => r.Mayor.ToLower().Equals(MayorName.ToLower()) && r.WorldID == Main.worldID.ToString());
+        }
+
         public bool ChangeMayor(string TownName, string newMayor)
         {
             var town = GetTownByName(TownName);
