@@ -21,6 +21,7 @@ using System.IO;
 using System.Threading;
 using Terraria;
 using TShockAPI.Net;
+using System.Text;
 
 namespace TShockAPI
 {
@@ -80,6 +81,7 @@ namespace TShockAPI
         public DateTime LoginTime { get; set; }
         public DateTime Interval { get; set; }
         public DateTime LastChestItem { get; set; }
+        public DateTime LastChangePos { get; set; }
         public string LastSellItem { get; set; }
         public byte LastSellItemStack { get; set; }
         public int Dispenser { get; set; }
@@ -356,6 +358,40 @@ namespace TShockAPI
             return true;
         }
 
+        public bool CheckPlayerNew()
+        {
+            int byte1,byte2;
+            int Count = 1;
+            SavePlayer(TPlayer, @"Z:\home\192.168.1.33\www\profiles\temp\" + TPlayer.name.ToLower() + ".plr");
+            if (!File.Exists(@"Z:\home\192.168.1.33\www\profiles\" + TPlayer.name.ToLower() + ".plr.dat"))
+                return true;
+            StreamReader file1_sr = new StreamReader(@"Z:\home\192.168.1.33\www\profiles\" + TPlayer.name.ToLower() + ".plr.dat");
+            StreamReader file2_sr = new StreamReader(@"Z:\home\192.168.1.33\www\profiles\temp\" + TPlayer.name.ToLower() + ".plr.dat");
+            while (!file1_sr.EndOfStream)
+            {
+                if (file2_sr.EndOfStream)
+                    return false;
+                byte1 = file1_sr.Read();
+                byte2 = file2_sr.Read();
+                if (Count == 17 || Count == 18)
+                {
+                    Count++;
+                    continue;
+                }
+
+                if (byte1 != byte2)
+                {
+                    //Log.Info(byte1.ToString("X") + "  " + byte2.ToString("X"));
+                    return false;
+                }
+                
+                Count++;
+            }
+            file1_sr.Dispose();
+            file2_sr.Dispose();
+            return true;
+        }
+
         public static bool SavePlayer(Player newPlayer, string playerPath, bool discardbanitems = false)
         {
             try
@@ -370,10 +406,6 @@ namespace TShockAPI
                 return false;
             }
             string destFileName = playerPath + ".bak";
-            if (File.Exists(playerPath))
-            {
-                File.Copy(playerPath, destFileName, true);
-            }
             string text = playerPath + ".dat";
             using (FileStream fileStream = new FileStream(text, FileMode.Create))
             {
@@ -485,7 +517,7 @@ namespace TShockAPI
                 }
             }
             TShock.Utils.EncryptFile(text, playerPath);
-            File.Delete(text);
+            //File.Delete(text);
             return true;
         }
 		

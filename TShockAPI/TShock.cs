@@ -523,6 +523,7 @@ namespace TShockAPI
                             player.InRegion = false;
                         }
                         player.LastTilePos = new Vector2(player.TileX, player.TileY);
+                        player.LastChangePos = DateTime.Now;
                     }
                 }
             }
@@ -551,7 +552,7 @@ namespace TShockAPI
 				foreach (TSPlayer player in Players)
 				{
 					// prevent null point exceptions
-					if (player != null && player.IsLoggedIn)
+					if (player != null && player.IsLoggedIn && Config.StoreInventory)
 					{
                         Inventory.UpdateInventory(player);
 					}
@@ -662,15 +663,22 @@ namespace TShockAPI
 						player.SetBuff(23, 120); //Cursed
 					}*/
 
-                    if ((DateTime.UtcNow - StackCheatChecker).TotalMilliseconds > 5000)
+                    if ((DateTime.Now - StackCheatChecker).TotalMilliseconds > 5000)
                     {
-                        StackCheatChecker = DateTime.UtcNow;
+                        StackCheatChecker = DateTime.Now;
                         if (player.StackCheat(out item, out itemcount))
                         {
                             TShock.Utils.Broadcast(string.Format("{0} cheater!!! {1} x {2}", player.Name, item, itemcount), Color.Yellow);
                             //TShock.Utils.Ban(player, "Stack Cheat.", "Server", Convert.ToString(DateTime.Now));
                             TShock.Utils.ForceKick(player, string.Format("Stack Cheat. {0} x {1}", item, itemcount));
                         }
+                    }
+                    
+                    if ((DateTime.Now - player.LastChangePos).TotalMinutes > 10)
+                    {
+                        player.SavePlayer();
+                        TShock.Utils.ForceKick(player, "Kick for omission more than 10 minutes");
+                        Log.Info(player.Name + "was kicked for omission more than 10 minutes");
                     }
 
                     if (!player.Group.HasPermission(Permissions.usebanneditem))
@@ -1057,7 +1065,7 @@ namespace TShockAPI
                 }
 
             }
-            if (!player.CheckPlayer())
+            if (!player.CheckPlayerNew())
             {
                 TShock.Utils.Kick(player, "Your profile was modified! Login to launcher!");
             }

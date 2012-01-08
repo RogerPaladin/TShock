@@ -1614,10 +1614,10 @@ namespace TShockAPI
 						}
 						int lastTileX = (int) (args.Player.LastNetPosition.X/16f);
 						int lastTileY = (int) (args.Player.LastNetPosition.Y/16f);
-						if (!args.Player.Teleport(lastTileX, lastTileY))
+						/*if (!args.Player.Teleport(lastTileX, lastTileY))
 						{
 							args.Player.Spawn();
-						}
+						}*/
 						return true;
 					}
 					return true;
@@ -1628,7 +1628,7 @@ namespace TShockAPI
 					return true;
 				}
 
-				if (!args.Player.Group.HasPermission(Permissions.ignorenoclipdetection) &&
+				/*if (!args.Player.Group.HasPermission(Permissions.ignorenoclipdetection) &&
 				    Collision.SolidCollision(pos, args.TPlayer.width, args.TPlayer.height))
 				{
 					int lastTileX = (int) (args.Player.LastNetPosition.X/16f);
@@ -1639,7 +1639,7 @@ namespace TShockAPI
 						args.Player.Spawn();
 					}
 					return true;
-				}
+				}*/
 				args.Player.LastNetPosition = pos;
 			}
 
