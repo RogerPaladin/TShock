@@ -203,6 +203,7 @@ namespace TShockAPI
 			add(Permissions.buff, Buff, "buff");
 			add(Permissions.buffplayer, GBuff, "gbuff", "buffplayer");
 			add(Permissions.grow, Grow, "grow");
+            add(Permissions.grow, GrowTree, "gt");
 			add(Permissions.hardmode, StartHardMode, "hardmode");
 			add(Permissions.hardmode, DisableHardMode, "stophardmode", "disablehardmode");
 			add(Permissions.cfg, ServerInfo, "stats");
@@ -4668,6 +4669,30 @@ namespace TShockAPI
 			args.Player.SendTileSquare(x, y);
 			args.Player.SendMessage("Tried to grow a " + name, Color.Green);
 		}
+
+        private static void GrowTree(CommandArgs args)
+        {
+            if (args.Parameters.Count > 0)
+            {
+                args.Player.SendMessage("Invalid syntax! Proper syntax: /gt", Color.Red);
+                return;
+            }
+            
+            var name = "Fail";
+            var x = args.Player.TileX;
+            var y = args.Player.TileY + 3;
+            for (int i = x - 1; i < x + 2; i++)
+            {
+                Main.tile[i, y].active = true;
+                Main.tile[i, y].type = 2;
+                Main.tile[i, y].wall = 0;
+            }
+            Main.tile[x, y - 1].wall = 0;
+            WorldGen.GrowTree(x, y);
+            name = "Tree";
+            args.Player.SendTileSquare(x, y);
+            args.Player.SendMessage("Tried to grow a " + name, Color.Green);
+        }
 
 		#endregion Cheat Comamnds
 	}
