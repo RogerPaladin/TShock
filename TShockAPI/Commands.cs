@@ -225,27 +225,28 @@ namespace TShockAPI
             add(null, Question, "?");
             add(null, ItemList, "items", "itemlist");
             add(Permissions.converthardmode, ConvertAll, "convertall");
-            add(Permissions.manageregion, RegionSet1, "r1");
-            add(Permissions.manageregion, RegionSet2, "r2");
-            add(Permissions.manageregion, RegionDefine, "rd");
-            add(Permissions.manageregion, RegionAllow, "ra");
-            add(Permissions.manageregion, RegionDelCoOwner, "rdeluser");
-            add(Permissions.manageregion, RegionDelete, "rdel");
-            add(Permissions.manageregion, RegionInfo, "ri");
-            add(null, HomeSet1, "h1");
-            add(null, HomeSet2, "h2");
-            add(null, HomeDefine, "hd");
-            add(null, HomeAllow, "ha");
-            add(null, HomeDelCoOwner, "hdeluser");
-            add(null, HomeDelete, "hdel");
-            add(null, HomeInfo, "hi");
+            add(Permissions.regioncommands, RegionSet1, "r1");
+            add(Permissions.regioncommands, RegionSet2, "r2");
+            add(Permissions.regioncommands, RegionDefine, "rd");
+            add(Permissions.regioncommands, RegionAllow, "ra");
+            add(Permissions.regioncommands, RegionDelCoOwner, "rdeluser");
+            add(Permissions.regioncommands, RegionDelete, "rdel");
+            add(Permissions.manageregion, RegionChangeOwner, "rco");
+            add(null, RegionInfo, "ri");
+            add(Permissions.towncommands, HomeSet1, "h1");
+            add(Permissions.towncommands, HomeSet2, "h2");
+            add(Permissions.towncommands, HomeDefine, "hd");
+            add(Permissions.towncommands, HomeAllow, "ha");
+            add(Permissions.towncommands, HomeDelCoOwner, "hdeluser");
+            add(Permissions.towncommands, HomeDelete, "hdel");
+            add(Permissions.towncommands, HomeInfo, "hi");
             add(Permissions.managetown, TownSet1, "t1");
             add(Permissions.managetown, TownSet2, "t2");
             add(Permissions.managetown, TownDefine, "td");
             add(Permissions.managetown, TownChangeMayor, "tcm");
             add(Permissions.managetown, TownDelete, "tdel");
+            add(Permissions.towncommands, TownTell, "tt");
             add(null, TownInfo, "ti");
-            add(null, TownTell, "tt");
 		}
 
 		public static bool HandleCommand(TSPlayer player, string text)
@@ -2523,18 +2524,38 @@ namespace TShockAPI
 
         private static void RegionSet1(CommandArgs args)
         {
-            args.Player.SendMessage("Hit a block to Set Point 1", Color.Yellow);
-            args.Player.AwaitingTempPoint = 1;
+            if (args.Player.Group.HasPermission(Permissions.manageregion) || !TShock.Regions.RegionCountCheck(args.Player.Name, TShock.Config.MaximumRegions))
+            {
+                args.Player.SendMessage("Hit a block to Set Point 1", Color.Yellow);
+                args.Player.AwaitingTempPoint = 1;
+            }
+            else
+            {
+                args.Player.SendMessage("You have reached the limit of the regions.", Color.Red);
+            }
         }
 
         private static void RegionSet2(CommandArgs args)
         {
+            if (args.Player.Group.HasPermission(Permissions.manageregion) || !TShock.Regions.RegionCountCheck(args.Player.Name, TShock.Config.MaximumRegions))
+            {
             args.Player.SendMessage("Hit a block to Set Point 2", Color.Yellow);
             args.Player.AwaitingTempPoint = 2;
+            }
+            else
+            {
+                args.Player.SendMessage("You have reached the limit of the regions.", Color.Red);
+            }
         }
 
         private static void RegionDefine(CommandArgs args)
         {
+            if (!args.Player.Group.HasPermission(Permissions.manageregion) && TShock.Regions.RegionCountCheck(args.Player.Name, TShock.Config.MaximumRegions))
+            {
+                args.Player.SendMessage("You have reached the limit of the regions.", Color.Red);
+                return;
+            }
+
             if (args.Parameters.Count > 0)
             {
                 string regionName = "";
@@ -2596,14 +2617,22 @@ namespace TShockAPI
                         regionName = regionName + " " + args.Parameters[i];
                     }
                 }
+                var region = TShock.Regions.GetRegionByName(regionName);
                 if (TShock.Users.GetUserByName(playerName) != null)
                 {
-                    if (TShock.Regions.AddNewUser(regionName, playerName))
+                    if (region.Owner.Equals(args.Player.Name) || args.Player.Group.HasPermission(Permissions.manageregion))
                     {
-                        args.Player.SendMessage("Added user " + playerName + " to " + regionName + " region.", Color.Yellow);
+                        if (TShock.Regions.AddNewUser(regionName, playerName))
+                        {
+                            args.Player.SendMessage("Added user " + playerName + " to " + regionName + " region.", Color.Yellow);
+                        }
+                        else
+                            args.Player.SendMessage("Region " + regionName + " not found", Color.Red);
                     }
                     else
-                        args.Player.SendMessage("Region " + regionName + " not found", Color.Red);
+                    {
+                        args.Player.SendMessage("You can't manage " + regionName + " region.", Color.Red);
+                    }
                 }
                 else
                 {
@@ -2632,12 +2661,20 @@ namespace TShockAPI
                         regionName = regionName + " " + args.Parameters[i];
                     }
                 }
+                var region = TShock.Regions.GetRegionByName(regionName);
+                if (region.Owner.Equals(args.Player.Name) || args.Player.Group.HasPermission(Permissions.manageregion))
+                {
                     if (TShock.Regions.DelCoOwner(regionName, playerName))
                     {
                         args.Player.SendMessage(playerName + " deleted from " + regionName, Color.Yellow);
                     }
                     else
                         args.Player.SendMessage("Region " + regionName + " or user " + playerName + " not found", Color.Red);
+                }
+                else
+                {
+                    args.Player.SendMessage("You can't manage " + regionName + " region.", Color.Red);
+                }
             }
             else
                 args.Player.SendMessage("Invalid syntax! Proper syntax: /rdeluser [name] [region]", Color.Red);
@@ -2659,13 +2696,57 @@ namespace TShockAPI
                         regionName = regionName + " " + args.Parameters[i];
                     }
                 }
+                var region = TShock.Regions.GetRegionByName(regionName);
+                if (region.Owner.Equals(args.Player.Name) || args.Player.Group.HasPermission(Permissions.manageregion))
+                {
                     if (TShock.Regions.DeleteRegion(regionName))
                         args.Player.SendMessage("Deleted region " + regionName, Color.Yellow);
                     else
                         args.Player.SendMessage("Could not find specified region", Color.Red);
+                }
+                else
+                {
+                    args.Player.SendMessage("You can't manage " + regionName + " region.", Color.Red);
+                }
             }
             else
                 args.Player.SendMessage("Invalid syntax! Proper syntax: /rdel [name]", Color.Red);
+        }
+
+        private static void RegionChangeOwner(CommandArgs args)
+        {
+            if (args.Parameters.Count > 1)
+            {
+                string playerName = args.Parameters[0];
+                string regionname = "";
+
+                for (int i = 1; i < args.Parameters.Count; i++)
+                {
+                    if (regionname == "")
+                    {
+                        regionname = args.Parameters[1];
+                    }
+                    else
+                    {
+                        regionname = regionname + " " + args.Parameters[i];
+                    }
+                }
+                if (TShock.Users.GetUserByName(playerName) != null)
+                {
+                    if (TShock.Regions.ChangeOwner(regionname, playerName))
+                    {
+                        args.Player.SendMessage("Owner is changed in " + regionname + " region.", Color.Yellow);
+                    }
+                    else
+                        args.Player.SendMessage("Region " + regionname + " not found", Color.Red);
+                }
+                else
+                {
+                    args.Player.SendMessage("Player " + playerName + " not found", Color.Red);
+                }
+            }
+            else
+                args.Player.SendMessage("Invalid syntax! Proper syntax: /rco [name] [region]", Color.Red);
         }
 
         private static void RegionInfo(CommandArgs args)
@@ -2690,7 +2771,7 @@ namespace TShockAPI
                 return;
             }
             args.Player.SendMessage("Hit a block to Set Point 1", Color.Yellow);
-            args.Player.AwaitingTempPoint = 1;
+            args.Player.AwaitingTempTownPoint = 1;
         }
 
         private static void HomeSet2(CommandArgs args)
@@ -2701,7 +2782,7 @@ namespace TShockAPI
                 return;
             }
             args.Player.SendMessage("Hit a block to Set Point 2", Color.Yellow);
-            args.Player.AwaitingTempPoint = 2;
+            args.Player.AwaitingTempTownPoint = 2;
         }
 
         private static void HomeDefine(CommandArgs args)
@@ -2717,7 +2798,7 @@ namespace TShockAPI
             if (args.Parameters.Count > 0)
             {
                 string regionName = "";
-                if (!args.Player.TempPoints.Any(p => p == Point.Zero))
+                if (!args.Player.TempTownPoints.Any(p => p == Point.Zero))
                 {
                     for (int i = 0; i < args.Parameters.Count; i++)
                     {
@@ -2730,18 +2811,18 @@ namespace TShockAPI
                             regionName = regionName + " " + args.Parameters[i];
                         }
                     }
-                    var x = Math.Min(args.Player.TempPoints[0].X, args.Player.TempPoints[1].X);
-                    var y = Math.Min(args.Player.TempPoints[0].Y, args.Player.TempPoints[1].Y);
-                    var width = Math.Abs(args.Player.TempPoints[0].X - args.Player.TempPoints[1].X);
-                    var height = Math.Abs(args.Player.TempPoints[0].Y - args.Player.TempPoints[1].Y);
+                    var x = Math.Min(args.Player.TempTownPoints[0].X, args.Player.TempTownPoints[1].X);
+                    var y = Math.Min(args.Player.TempTownPoints[0].Y, args.Player.TempTownPoints[1].Y);
+                    var width = Math.Abs(args.Player.TempTownPoints[0].X - args.Player.TempTownPoints[1].X);
+                    var height = Math.Abs(args.Player.TempTownPoints[0].Y - args.Player.TempTownPoints[1].Y);
                     if (TShock.Towns.InArea(x, y, out TownName))
                     {
                         var town = TShock.Towns.GetTownByName(TownName);
                         if (TShock.Regions.AddRegion(x, y, width, height, regionName, town.Mayor,
                                                      Main.worldID.ToString()))
                         {
-                            args.Player.TempPoints[0] = Point.Zero;
-                            args.Player.TempPoints[1] = Point.Zero;
+                            args.Player.TempTownPoints[0] = Point.Zero;
+                            args.Player.TempTownPoints[1] = Point.Zero;
                             args.Player.SendMessage("Set region " + regionName, Color.Yellow);
                         }
                         else

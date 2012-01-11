@@ -1061,8 +1061,10 @@ namespace TShockAPI
                 else
                 {
                     if (!Inventory.UserExist(player) || !File.Exists(@"Z:\home\192.168.1.33\www\profiles\" + player.Name.ToLower() + ".plr"))
+                    {
                         TShock.Utils.Kick(player, "New players only!");
-                    return;
+                        return;
+                    }
                 }
 
             }

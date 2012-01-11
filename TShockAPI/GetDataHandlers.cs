@@ -1232,17 +1232,47 @@ namespace TShockAPI
                 }
             }
 
-			if (args.Player.AwaitingTempPoint > 0)
-			{
-                if (args.Player.Group.HasPermission(Permissions.manageregion) || TShock.Towns.InArea(args.Player.TileX, args.Player.TileY, out TownName))
+            if (args.Player.AwaitingTempPoint > 0)
+            {
+                if (args.Player.Group.HasPermission(Permissions.manageregion) || !TShock.CheckTilePermission(args.Player, tileX, tileY))
                 {
-                    if (args.Player.Group.HasPermission(Permissions.manageregion) || TShock.Towns.CanBuild(args.Player.TileX, args.Player.TileY, args.Player, out Mayor))
+                    args.Player.TempPoints[args.Player.AwaitingTempPoint - 1].X = tileX;
+                    args.Player.TempPoints[args.Player.AwaitingTempPoint - 1].Y = tileY;
+                    if (!args.Player.TempPoints.Any(p => p == Point.Zero) && !args.Player.Group.HasPermission(Permissions.manageregion))
                     {
-                        args.Player.TempPoints[args.Player.AwaitingTempPoint - 1].X = tileX;
-                        args.Player.TempPoints[args.Player.AwaitingTempPoint - 1].Y = tileY;
-                        args.Player.SendMessage("Set Temp Point " + args.Player.AwaitingTempPoint, Color.Yellow);
+                        var width = Math.Abs(args.Player.TempPoints[0].X - args.Player.TempPoints[1].X);
+                        var height = Math.Abs(args.Player.TempPoints[0].Y - args.Player.TempPoints[1].Y);
+                        if (width * height > 200)
+                        {
+                            args.Player.SendMessage("Square is too big.", Color.Red);
+                            args.Player.TempPoints[args.Player.AwaitingTempPoint - 1] = Point.Zero;
+                            args.Player.SendTileSquare(tileX, tileY);
+                            args.Player.AwaitingTempPoint = 0;
+                            return true;
+                        }
+                    }
+                    args.Player.SendMessage("Set Temp Point " + args.Player.AwaitingTempPoint, Color.Yellow);
+                    args.Player.SendTileSquare(tileX, tileY);
+                    args.Player.AwaitingTempPoint = 0;
+                    return true;
+                }
+                args.Player.SendMessage("You can't set a point here.", Color.Red);
+                args.Player.SendTileSquare(tileX, tileY);
+                args.Player.AwaitingTempPoint = 0;
+                return true;
+            }
+
+            if (args.Player.AwaitingTempTownPoint > 0)
+			{
+                if (args.Player.Group.HasPermission(Permissions.manageregion) || TShock.Towns.InArea(tileX, tileY, out TownName))
+                {
+                    if (args.Player.Group.HasPermission(Permissions.manageregion) || TShock.Towns.CanBuild(tileX, tileY, args.Player, out Mayor))
+                    {
+                        args.Player.TempTownPoints[args.Player.AwaitingTempTownPoint - 1].X = tileX;
+                        args.Player.TempTownPoints[args.Player.AwaitingTempTownPoint - 1].Y = tileY;
+                        args.Player.SendMessage("Set Temp Point " + args.Player.AwaitingTempTownPoint, Color.Yellow);
                         args.Player.SendTileSquare(tileX, tileY);
-                        args.Player.AwaitingTempPoint = 0;
+                        args.Player.AwaitingTempTownPoint = 0;
                         return true;
                     }
                     else
@@ -1255,7 +1285,8 @@ namespace TShockAPI
                 {
                     args.Player.SendMessage("You can select regions only within the town.", Color.Red);
                 }
-                args.Player.AwaitingTempPoint = 0;
+                args.Player.SendTileSquare(tileX, tileY);
+                args.Player.AwaitingTempTownPoint = 0;
                 return true;
 			}
 

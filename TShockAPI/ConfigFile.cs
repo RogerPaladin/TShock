@@ -259,6 +259,9 @@ namespace TShockAPI
         [Description("Remembers where a player set home.")]
         public bool RememberHome = true;
 
+        [Description("The maximum number of regions which the player can have.")]
+        public int MaximumRegions = 2;
+
 		public static ConfigFile Read(string path)
 		{
 			if (!File.Exists(path))

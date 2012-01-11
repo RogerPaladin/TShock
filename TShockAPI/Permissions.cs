@@ -100,6 +100,9 @@ namespace TShockAPI
 
 		[Description("User can edit regions")] public static readonly string manageregion;
 
+        [Description("User can edit regions - for users")]
+        public static readonly string regioncommands;
+
 		[Description("Meant for super admins only")] public static readonly string rootonly;
 
 		[Description("User can whisper to others")] public static readonly string whisper;
@@ -187,6 +190,9 @@ namespace TShockAPI
 
         [Description("User can edit towns")]
         public static readonly string managetown;
+
+        [Description("User can edit towns - user commands")]
+        public static readonly string towncommands;
 
 		static Permissions()
 		{

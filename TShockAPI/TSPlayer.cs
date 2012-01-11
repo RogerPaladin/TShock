@@ -43,6 +43,8 @@ namespace TShockAPI
 		public DateTime LastPvpChange;
 		public Point[] TempPoints = new Point[2];
 		public int AwaitingTempPoint { get; set; }
+        public Point[] TempTownPoints = new Point[2];
+        public int AwaitingTempTownPoint { get; set; }
 		public bool AwaitingName { get; set; }
 		public DateTime LastThreat { get; set; }
 		public DateTime LastTileChangeNotify { get; set; }

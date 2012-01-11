@@ -193,6 +193,7 @@ namespace TShockAPI.DB
 			}
 			return false;
 		}
+
         public void DeleteRegionAfterMinutes(string name)
         {
             try
@@ -320,8 +321,8 @@ namespace TShockAPI.DB
             RegionName = string.Empty;
             foreach (Region region in Regions)
 			{
-				if (x >= region.Area.Left && x <= region.Area.Right &&
-				    y >= region.Area.Top && y <= region.Area.Bottom &&
+				if (x > region.Area.Left && x < region.Area.Right &&
+				    y > region.Area.Top && y < region.Area.Bottom &&
 				    region.DisableBuild)
 				{
                     RegionName = region.Name;
@@ -335,8 +336,8 @@ namespace TShockAPI.DB
 		{
 			foreach (Region region in Regions)
 			{
-				if (x >= region.Area.Left && x <= region.Area.Right &&
-				    y >= region.Area.Top && y <= region.Area.Bottom &&
+				if (x > region.Area.Left && x < region.Area.Right &&
+				    y > region.Area.Top && y < region.Area.Bottom &&
 				    region.DisableBuild)
 				{
 					return region.Name;
@@ -557,6 +558,26 @@ namespace TShockAPI.DB
                     }
                     return true;
                 }
+            }
+            catch (Exception ex)
+            {
+                Log.Error(ex.ToString());
+            }
+            return false;
+        }
+
+        public bool RegionCountCheck(string name, int maximumregions)
+        {
+            int count = 0;
+            try
+            {
+                using (var reader = database.QueryReader("SELECT * FROM Regions WHERE LOWER (Owner) = @0 AND WorldID=@1", name.ToLower(), Main.worldID.ToString()))
+                {
+                    while (reader.Read())
+                        count++;
+                }
+                if (count >= maximumregions)
+                    return true;
             }
             catch (Exception ex)
             {

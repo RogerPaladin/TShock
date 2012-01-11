@@ -142,8 +142,8 @@ namespace TShockAPI.DB
             TownName = string.Empty;
             foreach (Town town in Towns)
             {
-                if (x >= town.Area.Left && x <= town.Area.Right &&
-                    y >= town.Area.Top && y <= town.Area.Bottom)
+                if (x > town.Area.Left && x < town.Area.Right &&
+                    y > town.Area.Top && y < town.Area.Bottom)
                 {
                     TownName = town.Name;
                     return true;
