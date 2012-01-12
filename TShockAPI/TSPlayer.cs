@@ -375,7 +375,7 @@ namespace TShockAPI
                     return false;
                 byte1 = file1_sr.Read();
                 byte2 = file2_sr.Read();
-                if (Count == 17 || Count == 18)
+                if (Count == 17 || Count == 18 || Count == 919 || Count == 920)
                 {
                     Count++;
                     continue;
