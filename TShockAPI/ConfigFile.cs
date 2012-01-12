@@ -262,6 +262,9 @@ namespace TShockAPI
         [Description("The maximum number of regions which the player can have.")]
         public int MaximumRegions = 2;
 
+        [Description("The maximum square per region which the player can placed.")]
+        public int MaximumSquarePerRegion = 200;
+
 		public static ConfigFile Read(string path)
 		{
 			if (!File.Exists(path))

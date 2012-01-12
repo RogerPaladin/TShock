@@ -794,6 +794,42 @@ namespace TShockAPI
 
         }
 
+        public int GetDistanceToSpawn(int x, int y)
+        {
+            int Distance = 0;
+            Point Spawn = new Point(Main.spawnTileX, Main.spawnTileY);
+            Distance = Math.Abs(x - Spawn.X) + Math.Abs(y - Spawn.Y);
+            return Distance;
+        }
+
+        public double RegionPrice(int RegionX, int RegionY, int RegionWidth, int RegionHeight, out double tilecost)
+        {
+            double price = 0;
+            double modifier = 1;
+            int tiles = 0;
+            Point RegionCenter = new Point(RegionX + RegionWidth / 2, RegionY + RegionHeight / 2);
+            int Distance = TShock.Utils.GetDistanceToSpawn(RegionCenter.X, RegionCenter.Y);
+            tiles = (RegionHeight * RegionWidth) - TShock.Config.MaximumSquarePerRegion;
+            if (Distance < 100)
+            {
+                if (tiles < 0)
+                    tiles = Math.Abs(tiles);
+                modifier = 1;
+            }
+            else
+            {
+                modifier = (double)100 / (double)Distance;
+            }
+
+            if (tiles < 0)
+            {
+                tiles = 0;
+            }
+            price = tiles * 2 * modifier;
+            tilecost = Math.Round(2 * modifier, 2);
+            return Math.Round(price, 2);
+        }
+
 		public int SearchProjectile(short identity)
 		{
 			for (int i = 0; i < Main.maxProjectiles; i++)

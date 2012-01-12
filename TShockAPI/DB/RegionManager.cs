@@ -586,6 +586,35 @@ namespace TShockAPI.DB
             return false;
         }
 
+        public double RegionPrice(string name, out double tilecost)
+        {
+            double price = 0;
+            double modifier = 1;
+            tilecost = 0;
+            int tiles = 0;
+            var region = GetRegionByName(name);
+            Point RegionCenter = new Point(region.Area.X + region.Area.Width / 2, region.Area.Y + region.Area.Height / 2);
+            int Distance = TShock.Utils.GetDistanceToSpawn(RegionCenter.X, RegionCenter.Y);
+            tiles = (region.Area.Height * region.Area.Width) - TShock.Config.MaximumSquarePerRegion;
+            if (Distance < 100)
+            {
+                if (tiles < 0)
+                    tiles = Math.Abs(tiles);
+                modifier = 1;
+            }
+            else
+            {
+                modifier = (double)100 / (double)Distance;
+            }
+            if (tiles < 0)
+            {
+                tiles = 0;
+            }
+            price = tiles* 2 * modifier;
+            tilecost = Math.Round(2 * modifier, 2);
+            return Math.Round(price, 2);
+        }
+
 		/// <summary>
 		/// Gets all the regions names from world
 		/// </summary>

@@ -44,6 +44,9 @@ namespace TShockAPI
 		public Point[] TempPoints = new Point[2];
 		public int AwaitingTempPoint { get; set; }
         public Point[] TempTownPoints = new Point[2];
+        public Point[] PointsToBuy = new Point[2];
+        public double PointsPrice { get; set; }
+        public bool PointsPaid = false;
         public int AwaitingTempTownPoint { get; set; }
 		public bool AwaitingName { get; set; }
 		public DateTime LastThreat { get; set; }

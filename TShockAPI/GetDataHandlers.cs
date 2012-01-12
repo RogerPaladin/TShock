@@ -1216,6 +1216,7 @@ namespace TShockAPI
             Random Rand = new Random();
             string Mayor = string.Empty;
             string TownName = string.Empty;
+            double tilecost;
 
 			if (OnTileEdit(tileX, tileY, tiletype, type))
 				return true;
@@ -1238,13 +1239,21 @@ namespace TShockAPI
                 {
                     args.Player.TempPoints[args.Player.AwaitingTempPoint - 1].X = tileX;
                     args.Player.TempPoints[args.Player.AwaitingTempPoint - 1].Y = tileY;
+                    args.Player.PointsToBuy[args.Player.AwaitingTempPoint - 1].X = tileX;
+                    args.Player.PointsToBuy[args.Player.AwaitingTempPoint - 1].Y = tileY;
                     if (!args.Player.TempPoints.Any(p => p == Point.Zero) && !args.Player.Group.HasPermission(Permissions.manageregion))
                     {
                         var width = Math.Abs(args.Player.TempPoints[0].X - args.Player.TempPoints[1].X);
                         var height = Math.Abs(args.Player.TempPoints[0].Y - args.Player.TempPoints[1].Y);
-                        if (width * height > 200)
+                        double price = TShock.Utils.RegionPrice(args.Player.TempPoints[0].X, args.Player.TempPoints[0].Y, width, height, out tilecost);
+                        if (width * height > TShock.Config.MaximumSquarePerRegion)
                         {
                             args.Player.SendMessage("Square is too big.", Color.Red);
+                            args.Player.SendMessage(String.Format("Estimated cost in the region of {0} tiles = {1} RCoins.", width * height, price), Color.MediumSpringGreen);
+                            args.Player.SendMessage("1 tile cost " + tilecost + " RCoins", Color.PeachPuff);
+                            args.Player.SendMessage("To buy this region type /rb", Color.Coral);
+                            //args.Player.PointsToBuy = args.Player.TempPoints;
+                            args.Player.PointsPrice = price;
                             args.Player.TempPoints[args.Player.AwaitingTempPoint - 1] = Point.Zero;
                             args.Player.SendTileSquare(tileX, tileY);
                             args.Player.AwaitingTempPoint = 0;
