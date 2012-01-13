@@ -1928,7 +1928,7 @@ namespace TShockAPI
 				bucket = 2;
 			}
 
-            if (lava && bucket != 2 && !!args.Player.Group.HasPermission(Permissions.canlava))
+            if (lava && bucket != 2 && !args.Player.Group.HasPermission(Permissions.canlava))
 			{
 				args.Player.Disable();
 				args.Player.SendTileSquare(tileX, tileY);
