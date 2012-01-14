@@ -763,6 +763,20 @@ namespace TShockAPI
             }
             return false;
         }
+
+        public bool ActiveBlockCheck(int x, int y)
+        {
+            int[] X = new int[2] { x, x + 1};
+            int[] Y = new int[2] { y + 1, y + 1};
+            for (int i = 0; i <= 1; i++)
+            {
+                if (Main.tile[X[i], Y[i]].type == 130)
+                {
+                        return true;
+                }
+            }
+            return false;
+        }
         /// <summary>
         /// Return a time for a Player
         /// </summary>

@@ -365,36 +365,49 @@ namespace TShockAPI
 
         public bool CheckPlayerNew()
         {
-            int byte1,byte2;
-            int Count = 1;
-            SavePlayer(TPlayer, @"Z:\home\192.168.1.33\www\profiles\temp\" + TPlayer.name.ToLower() + ".plr");
-            if (!File.Exists(@"Z:\home\192.168.1.33\www\profiles\" + TPlayer.name.ToLower() + ".plr.dat"))
-                return true;
-            StreamReader file1_sr = new StreamReader(@"Z:\home\192.168.1.33\www\profiles\" + TPlayer.name.ToLower() + ".plr.dat");
-            StreamReader file2_sr = new StreamReader(@"Z:\home\192.168.1.33\www\profiles\temp\" + TPlayer.name.ToLower() + ".plr.dat");
-            while (!file1_sr.EndOfStream)
+            try
             {
-                if (file2_sr.EndOfStream)
-                    return false;
-                byte1 = file1_sr.Read();
-                byte2 = file2_sr.Read();
-                if (Count == 17 || Count == 18 || Count == 919 || Count == 920)
+                int byte1, byte2;
+                int Count = 1;
+                SavePlayer(TPlayer, @"Z:\home\192.168.1.33\www\profiles\temp\" + TPlayer.name.ToLower() + ".plr");
+                if (!File.Exists(@"Z:\home\192.168.1.33\www\profiles\" + TPlayer.name.ToLower() + ".plr.dat"))
+                    return true;
+                StreamReader file1_sr = new StreamReader(@"Z:\home\192.168.1.33\www\profiles\" + TPlayer.name.ToLower() + ".plr.dat");
+                StreamReader file2_sr = new StreamReader(@"Z:\home\192.168.1.33\www\profiles\temp\" + TPlayer.name.ToLower() + ".plr.dat");
+                while (!file1_sr.EndOfStream)
                 {
-                    Count++;
-                    continue;
-                }
+                    if (file2_sr.EndOfStream)
+                        return false;
+                    byte1 = file1_sr.Read();
+                    byte2 = file2_sr.Read();
+                    if (Count == 17 || Count == 18 || Count == 919 || Count == 920)
+                    {
+                        Count++;
+                        continue;
+                    }
 
-                if (byte1 != byte2)
-                {
-                    //Log.Info(byte1.ToString("X") + "  " + byte2.ToString("X"));
-                    return false;
+                    if (Count > 919)
+                    {
+                        break;
+                    }
+
+                    if (byte1 != byte2)
+                    {
+                        //Log.Info(byte1.ToString("X") + "  " + byte2.ToString("X"));
+                        return false;
+                    }
+
+                    Count++;
                 }
-                
-                Count++;
+                file1_sr.Dispose();
+                file2_sr.Dispose();
+                return true;
             }
-            file1_sr.Dispose();
-            file2_sr.Dispose();
-            return true;
+            catch(Exception e)
+            {
+                Log.ConsoleInfo(e.Message);
+                return false;
+            }
         }
 
         public static bool SavePlayer(Player newPlayer, string playerPath, bool discardbanitems = false)

@@ -1325,6 +1325,13 @@ namespace TShockAPI
 					args.Player.SendTileSquare(tileX, tileY);
 					return true;
 				}
+                if (type == 1 && tiletype == 21 && TShock.Utils.ActiveBlockCheck(tileX, tileY) && !args.Player.Group.HasPermission(Permissions.adminstatus))
+                {
+                    args.Player.SendMessage("Chest cheat detected!", Color.Red);
+                    Log.ConsoleInfo(args.Player.Name + " tried to use chest cheat in X = " + tileX + "; Y = " + tileY);
+                    args.Player.SendTileSquare(tileX, tileY);
+                    return true;
+                }
 				if (tiletype == 141 && !args.Player.Group.HasPermission(Permissions.usebanneditem) &&
 				    TShock.Itembans.ItemIsBanned("Explosives", args.Player))
 				{
@@ -2313,6 +2320,7 @@ namespace TShockAPI
 			var stacks = args.Data.ReadInt8();
 			var prefix = args.Data.ReadInt8();
 			var type = args.Data.ReadInt16();
+            string regionname = string.Empty;
 
 			if (OnItemDrop(id, pos, vel, stacks, prefix, type))
 				return true;
@@ -2341,6 +2349,18 @@ namespace TShockAPI
 				args.Player.SendData(PacketTypes.ItemDrop, "", id);
 				return true;
 			}
+
+            if (TShock.Regions.InArea((int)(pos.X / 16f), (int)(pos.Y / 16f), out regionname))
+            {
+                if (regionname == "Sell" && item.type != 328 && item.type != 261 && item.type != 48 && item.type != 93 && item.type != 58 && item.type != 306 && item.type != 71 && item.type != 72 && item.type != 73 && item.type != 74 && item.type != 2 && item.type != 9 && item.type != 30 && item.type != 23 && item.type != 184 && item.type != 0)
+                {
+                    args.Player.SendMessage("You sold " + stacks + " " + item.name + " for " + stacks * 0.01 + " RCoins.");
+                    Log.ConsoleInfo("[Sell] " + args.Player.Name + " sold " + stacks + " " + item.name);
+                    TShock.Users.SetRCoins(args.Player.Name, stacks * 0.01);
+                    args.Player.SendData(PacketTypes.ItemDrop, "", id);
+                    return true;
+                }
+            }
 
 			return false;
 		}

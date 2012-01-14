@@ -248,6 +248,7 @@ namespace TShockAPI
             add(Permissions.managetown, TownDelete, "tdel");
             add(Permissions.towncommands, TownTell, "tt");
             add(null, TownInfo, "ti");
+            add(Permissions.adminstatus, FindChestCheat, "findchests");
 		}
 
 		public static bool HandleCommand(TSPlayer player, string text)
@@ -4839,5 +4840,19 @@ namespace TShockAPI
         }
 
 		#endregion Cheat Comamnds
+
+        private static void FindChestCheat(CommandArgs args)
+        {
+            for (int x = 0; x < Main.maxTilesX; x++)
+            {
+                for (int y = 0; y < Main.maxTilesY; y++)
+                {
+                    if (Main.tile[x, y].type == 21 && TShock.Utils.ActiveBlockCheck(x,y))
+                    {
+                        args.Player.SendMessage(x + "; " + y);
+                    }
+                }
+            }
+        }
 	}
 }
