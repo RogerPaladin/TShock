@@ -754,7 +754,7 @@ namespace TShockAPI
                 {
                     if (user.PlayingTime < 10)
                     {
-                        if (item.maxStack == 250 && stack == 250 || item.name.Contains("Soul") && stack > 200)
+                        if (item.maxStack == 250 && stack == 250 && item.type != 2)
                         {
                             Log.ConsoleInfo("[CheatDetector] " + args.Player.Name + " drop " + stack + " " + item.name);
                             TShock.Utils.Ban(args.Player, "Cheater");
@@ -2383,7 +2383,7 @@ namespace TShockAPI
             {
                 if (user.PlayingTime < 10)
                 {
-                    if (item.maxStack == 250 && stacks == 250 || item.name.Contains("Soul") && stacks > 200)
+                    if (item.maxStack == 250 && stacks == 250 && item.type != 2)
                     {
                         Log.ConsoleInfo("[CheatDetector] " + args.Player.Name + " drop " + stacks + " " + item.name);
                         TShock.Utils.Ban(args.Player, "Cheater");
