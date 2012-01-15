@@ -344,10 +344,10 @@ namespace TShockAPI
 
 		private static void SendHeartbeat()
 		{
-			LastHeartbeat = DateTime.UtcNow.Subtract(new TimeSpan(0, 0, 30));
+			LastHeartbeat = DateTime.Now.Subtract(new TimeSpan(0, 0, 30));
 			while (true)
 			{
-				if ((DateTime.UtcNow - LastHeartbeat).Seconds >= 30)
+				if ((DateTime.Now - LastHeartbeat).Seconds >= 30)
 				{
 					var packet = ConstructPacket("heartbeat TerrariaShock", false);
 					if (listener == null)
@@ -365,7 +365,7 @@ namespace TShockAPI
 							Log.Error(e.ToString());
 						}
 					listener.Send(packet, packet.Length, TShock.Config.MasterServer, 27950);
-					LastHeartbeat = DateTime.UtcNow;
+					LastHeartbeat = DateTime.Now;
 				}
 				Thread.Sleep(10000);
 			}

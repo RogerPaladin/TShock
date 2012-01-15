@@ -33,13 +33,13 @@ namespace TShockAPI
         public int Interval { get; set; }
         public bool Prepared = false;
 
-        DateTime lastrestart = DateTime.UtcNow;
+        DateTime lastrestart = DateTime.Now;
 
         public bool IsRestartTime
         {
             get
             {
-                return (Interval > 0) && ((DateTime.UtcNow - lastrestart).TotalMinutes >= Interval);
+                return (Interval > 0) && ((DateTime.Now - lastrestart).TotalMinutes >= Interval);
             }
         }
 
@@ -47,13 +47,13 @@ namespace TShockAPI
         {
             get
             {
-                return (Interval > 0) && (Interval - (DateTime.UtcNow - lastrestart).TotalMinutes <= 5);
+                return (Interval > 0) && (Interval - (DateTime.Now - lastrestart).TotalMinutes <= 5);
             }
         }
 
         public void Restart()
         {
-            lastrestart = DateTime.UtcNow;
+            lastrestart = DateTime.Now;
             DoRestart();
         }
 

@@ -726,6 +726,7 @@ namespace TShockAPI
 			byte stack = args.Data.ReadInt8();
 			byte prefix = args.Data.ReadInt8();
 			short type = args.Data.ReadInt16();
+            var user = TShock.Users.GetUserByName(args.Player.Name);
 
 			if (OnPlayerSlot(plr, slot, stack, prefix, type))
 				return true;
@@ -748,6 +749,26 @@ namespace TShockAPI
 			{
 				if (TShock.Config.StoreInventory)
                     TShock.Inventory.UpdateInventory(args.Player);
+                
+                if (user.PlayingTime < 100)
+                {
+                    if (user.PlayingTime < 10)
+                    {
+                        if (item.maxStack == 250 && stack == 250 || item.name.Contains("Soul") && stack > 200)
+                        {
+                            Log.ConsoleInfo("[CheatDetector] " + args.Player.Name + " drop " + stack + " " + item.name);
+                            TShock.Utils.Ban(args.Player, "Cheater");
+                            return true;
+                        }
+                    }
+
+                    if (item.type == 368 || item.type == 533 || item.name.Contains("Hallowed") && !item.name.Contains("Seeds") || item.name.Contains("Soul") && stack > 200)
+                    {
+                        Log.ConsoleInfo("[CheatDetector] " + args.Player.Name + " drop " + stack + " " + item.name);
+                        TShock.Utils.Ban(args.Player, "Cheater");
+                        return true;
+                    }
+                }
 			}
 
 			return false;
@@ -1029,7 +1050,7 @@ namespace TShockAPI
 			if (size > 5)
 				return true;
 
-			if ((DateTime.UtcNow - args.Player.LastThreat).TotalMilliseconds < 5000)
+			if ((DateTime.Now - args.Player.LastThreat).TotalMilliseconds < 5000)
 			{
 				args.Player.SendTileSquare(tileX, tileY, size);
 				return true;
@@ -1370,10 +1391,10 @@ namespace TShockAPI
 			}
             if (!args.Player.Group.HasPermission(Permissions.manageregion) && !args.Player.IsLoggedIn)
             {
-                if ((DateTime.UtcNow - args.Player.LastTileChangeNotify).TotalMilliseconds > 1000)
+                if ((DateTime.Now - args.Player.LastTileChangeNotify).TotalMilliseconds > 1000)
                 {
                     args.Player.SendMessage("Login to change this region", Color.Red);
-                    args.Player.LastTileChangeNotify = DateTime.UtcNow;
+                    args.Player.LastTileChangeNotify = DateTime.Now;
                 }
                 args.Player.SendTileSquare(tileX, tileY);
                 return true;
@@ -1385,13 +1406,13 @@ namespace TShockAPI
                 args.Player.SendTileSquare(tileX, tileY);
                 if (TShock.Users.Buy(args.Player.Name, 3, true))
                 {
-                    if ((DateTime.UtcNow - args.Player.LastTileChangeNotify).TotalMilliseconds > 1000)
+                    if ((DateTime.Now - args.Player.LastTileChangeNotify).TotalMilliseconds > 1000)
                     {
-                        args.Player.LastTileChangeNotify = DateTime.UtcNow;
-                        if ((DateTime.UtcNow - Convert.ToDateTime(TShock.Utils.DispencerTime(args.Player.Name))).TotalMilliseconds > TShock.disptime)
+                        args.Player.LastTileChangeNotify = DateTime.Now;
+                        if ((DateTime.Now - Convert.ToDateTime(TShock.Utils.DispencerTime(args.Player.Name))).TotalMilliseconds > TShock.disptime)
                         {
                             TShock.DispenserTime.Remove(args.Player.Name + ";" + Convert.ToString(TShock.Utils.DispencerTime(args.Player.Name)));
-                            TShock.DispenserTime.Add(args.Player.Name + ";" + Convert.ToString(DateTime.UtcNow));
+                            TShock.DispenserTime.Add(args.Player.Name + ";" + Convert.ToString(DateTime.Now));
                             args.Player.Dispenser++;
                             if (args.Player.Dispenser >= 2)
                             {
@@ -1426,8 +1447,8 @@ namespace TShockAPI
                             return true;
                         }
                         args.Player.Dispenser = 0;
-                        double minutes = Math.Round(15 - (DateTime.UtcNow - Convert.ToDateTime(TShock.Utils.DispencerTime(args.Player.Name))).TotalMinutes, 0);
-                        double seconds = Math.Round(900 - (DateTime.UtcNow - Convert.ToDateTime(TShock.Utils.DispencerTime(args.Player.Name))).TotalSeconds, 0) - (minutes * 60 - 30);
+                        double minutes = Math.Round(15 - (DateTime.Now - Convert.ToDateTime(TShock.Utils.DispencerTime(args.Player.Name))).TotalMinutes, 0);
+                        double seconds = Math.Round(900 - (DateTime.Now - Convert.ToDateTime(TShock.Utils.DispencerTime(args.Player.Name))).TotalSeconds, 0) - (minutes * 60 - 30);
                         args.Player.SendMessage(string.Format("Please wait for {0} minutes {1} seconds", minutes, seconds), Color.Orchid);
                         return true;
                     }
@@ -1444,9 +1465,9 @@ namespace TShockAPI
             if (TShock.Utils.Altar(tileX, tileY, 58, 8, 1) && !args.Player.Group.HasPermission(Permissions.altaredit))
             {
                 args.Player.SendTileSquare(tileX, tileY);
-                if ((DateTime.UtcNow - args.Player.LastTileChangeNotify).TotalMilliseconds > 1000)
+                if ((DateTime.Now - args.Player.LastTileChangeNotify).TotalMilliseconds > 1000)
                 {
-                    if ((DateTime.UtcNow - TShock.Spawner).TotalMilliseconds > 1000 * 60 * 30)
+                    if ((DateTime.Now - TShock.Spawner).TotalMilliseconds > 1000 * 60 * 30)
                     {
                         args.Player.DamagePlayer(100);
                         NPC skeletron = TShock.Utils.GetNPCById(35);
@@ -1459,13 +1480,13 @@ namespace TShockAPI
                         TSPlayer.Server.SpawnNPC(eye.type, eye.name, 3, (int)args.Player.TileX, (int)args.Player.TileY);
                         TSPlayer.Server.SpawnNPC(eater.type, eater.name, 3, (int)args.Player.TileX, (int)args.Player.TileY);
                         TShock.Utils.Broadcast(string.Format("{0} awakened an ancient evil in PVP arena!", args.Player.Name), Color.Moccasin);
-                        TShock.Spawner = DateTime.UtcNow;
-                        args.Player.LastTileChangeNotify = DateTime.UtcNow;
+                        TShock.Spawner = DateTime.Now;
+                        args.Player.LastTileChangeNotify = DateTime.Now;
                         return true;
                     }
-                    args.Player.LastTileChangeNotify = DateTime.UtcNow;
-                    double minutes = Math.Round(30 - (DateTime.UtcNow - TShock.Spawner).TotalMinutes, 0);
-                    double seconds = Math.Round(1800 - (DateTime.UtcNow - TShock.Spawner).TotalSeconds, 0) - (minutes * 60 - 30);
+                    args.Player.LastTileChangeNotify = DateTime.Now;
+                    double minutes = Math.Round(30 - (DateTime.Now - TShock.Spawner).TotalMinutes, 0);
+                    double seconds = Math.Round(1800 - (DateTime.Now - TShock.Spawner).TotalSeconds, 0) - (minutes * 60 - 30);
                     args.Player.SendMessage(string.Format("Please wait for {0} minutes {1} seconds", minutes, seconds), Color.Orchid);
                     return true;
                 }
@@ -1485,14 +1506,14 @@ namespace TShockAPI
             if (Main.tile[tileX, tileY].type == 0x55 && !args.Player.Group.HasPermission(Permissions.altaredit))
             {
                 args.Player.SendTileSquare(tileX, tileY);
-                if ((DateTime.UtcNow - args.Player.LastTileChangeNotify).TotalMilliseconds > 1000)
+                if ((DateTime.Now - args.Player.LastTileChangeNotify).TotalMilliseconds > 1000)
                 {
                     for (int i = 0; i < 20; i++)
                         args.Player.GiveItem(heart.type, heart.name, heart.width, heart.height, heart.maxStack);
                     for (int i = 0; i < 10; i++)
                         args.Player.GiveItem(star.type, star.name, star.width, star.height, star.maxStack);
                     args.Player.SendMessage("You healed by Black Roger's soul :D");
-                    args.Player.LastTileChangeNotify = DateTime.UtcNow;
+                    args.Player.LastTileChangeNotify = DateTime.Now;
                     return true;
                 }
                 return true;
@@ -1536,7 +1557,7 @@ namespace TShockAPI
 				return true;
 			}
 
-			if ((DateTime.UtcNow - args.Player.LastThreat).TotalMilliseconds < 5000)
+			if ((DateTime.Now - args.Player.LastThreat).TotalMilliseconds < 5000)
 			{
 				args.Player.SendTileSquare(tileX, tileY);
 				return true;
@@ -1581,13 +1602,13 @@ namespace TShockAPI
 
 			if (args.TPlayer.hostile != pvp)
 			{
-				long seconds = (long) (DateTime.UtcNow - args.Player.LastPvpChange).TotalSeconds;
+				long seconds = (long) (DateTime.Now - args.Player.LastPvpChange).TotalSeconds;
 				if (seconds > 5)
 				{
 					TSPlayer.All.SendMessage(string.Format("{0} has {1} PvP!", args.Player.Name, pvp ? "enabled" : "disabled"),
 					                         Main.teamColor[args.Player.Team]);
 				}
-				args.Player.LastPvpChange = DateTime.UtcNow;
+				args.Player.LastPvpChange = DateTime.Now;
 			}
 
 			args.TPlayer.hostile = pvp;
@@ -1802,7 +1823,7 @@ namespace TShockAPI
 				return true;
 			}
 
-			if ((DateTime.UtcNow - args.Player.LastThreat).TotalMilliseconds < 5000)
+			if ((DateTime.Now - args.Player.LastThreat).TotalMilliseconds < 5000)
 			{
 				args.Player.RemoveProjectile(ident, owner);
 				return true;
@@ -1856,7 +1877,7 @@ namespace TShockAPI
 				return true;
 			}
 
-			if ((DateTime.UtcNow - args.Player.LastThreat).TotalMilliseconds < 5000)
+			if ((DateTime.Now - args.Player.LastThreat).TotalMilliseconds < 5000)
 			{
 				args.Player.RemoveProjectile(ident, owner);
 				return true;
@@ -1965,7 +1986,7 @@ namespace TShockAPI
 				return true;
 			}
 
-			if ((DateTime.UtcNow - args.Player.LastThreat).TotalMilliseconds < 5000)
+			if ((DateTime.Now - args.Player.LastThreat).TotalMilliseconds < 5000)
 			{
 				args.Player.SendTileSquare(tileX, tileY);
 				return true;
@@ -2297,7 +2318,7 @@ namespace TShockAPI
 				args.Player.SendData(PacketTypes.PlayerBuff, "", id);
 				return true;
 			}
-			if ((DateTime.UtcNow - args.Player.LastThreat).TotalMilliseconds < 5000)
+			if ((DateTime.Now - args.Player.LastThreat).TotalMilliseconds < 5000)
 			{
 				args.Player.SendData(PacketTypes.PlayerBuff, "", id);
 				return true;
@@ -2336,6 +2357,12 @@ namespace TShockAPI
 				return true;
 			}
 
+            if (!args.Player.IsLoggedIn)
+            {
+                args.Player.SendMessage("Login to drop the items.", Color.Red);
+                return true;
+            }
+
 			Item item = new Item();
 			item.netDefaults(type);
 			if (stacks > item.maxStack || TShock.Itembans.ItemIsBanned(item.name, args.Player))
@@ -2350,6 +2377,28 @@ namespace TShockAPI
 				return true;
 			}
 
+            var user = TShock.Users.GetUserByName(args.Player.Name);
+
+            if (user.PlayingTime < 100)
+            {
+                if (user.PlayingTime < 10)
+                {
+                    if (item.maxStack == 250 && stacks == 250 || item.name.Contains("Soul") && stacks > 200)
+                    {
+                        Log.ConsoleInfo("[CheatDetector] " + args.Player.Name + " drop " + stacks + " " + item.name);
+                        TShock.Utils.Ban(args.Player, "Cheater");
+                        return true;
+                    }
+                }
+
+                if (item.type == 368 || item.type == 533 || item.name.Contains("Hallowed") && !item.name.Contains("Seeds") || item.name.Contains("Soul") && stacks > 200)
+                {
+                    Log.ConsoleInfo("[CheatDetector] " + args.Player.Name + " drop " + stacks + " " + item.name);
+                    TShock.Utils.Ban(args.Player, "Cheater");
+                    return true;
+                }
+            }
+            
             if (TShock.Regions.InArea((int)(pos.X / 16f), (int)(pos.Y / 16f), out regionname))
             {
                 if (regionname == "Sell" && item.type != 328 && item.type != 261 && item.type != 48 && item.type != 93 && item.type != 58 && item.type != 306 && item.type != 71 && item.type != 72 && item.type != 73 && item.type != 74 && item.type != 2 && item.type != 9 && item.type != 30 && item.type != 23 && item.type != 184 && item.type != 0)
@@ -2419,7 +2468,7 @@ namespace TShockAPI
 				return true;
 			}
 
-			if ((DateTime.UtcNow - args.Player.LastThreat).TotalMilliseconds < 5000)
+			if ((DateTime.Now - args.Player.LastThreat).TotalMilliseconds < 5000)
 			{
 				args.Player.SendData(PacketTypes.PlayerHp, "", id);
 				args.Player.SendData(PacketTypes.PlayerUpdate, "", id);
@@ -2470,7 +2519,7 @@ namespace TShockAPI
 				return true;
 			}
 
-			if ((DateTime.UtcNow - args.Player.LastThreat).TotalMilliseconds < 5000)
+			if ((DateTime.Now - args.Player.LastThreat).TotalMilliseconds < 5000)
 			{
 				args.Player.SendData(PacketTypes.NpcUpdate, "", id);
 				return true;
@@ -2509,7 +2558,7 @@ namespace TShockAPI
 				return true;
 			}
 
-			if ((DateTime.UtcNow - args.Player.LastThreat).TotalMilliseconds < 5000)
+			if ((DateTime.Now - args.Player.LastThreat).TotalMilliseconds < 5000)
 			{
 				args.Player.SendData(PacketTypes.PlayerAnimation, "", args.Player.Index);
 				return true;
