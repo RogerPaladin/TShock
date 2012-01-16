@@ -501,6 +501,7 @@ namespace TShockAPI
 					args.Player.SendMessage("Account " + user.Name + " has been registered.", Color.Green);
 					args.Player.SendMessage("Your password is " + user.Password);
 					TShock.Users.AddUser(user);
+                    args.Player.SavePlayer();
 					Log.ConsoleInfo(args.Player.Name + " registered an Account: " + user.Name);
 				}
 				else

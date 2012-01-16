@@ -750,7 +750,7 @@ namespace TShockAPI
 				if (TShock.Config.StoreInventory)
                     TShock.Inventory.UpdateInventory(args.Player);
                 
-                if (user.PlayingTime < 100)
+                if (user.PlayingTime < 60)
                 {
                     if (user.PlayingTime < 10)
                     {
@@ -1349,7 +1349,7 @@ namespace TShockAPI
                 if (type == 1 && tiletype == 21 && TShock.Utils.ActiveBlockCheck(tileX, tileY) && !args.Player.Group.HasPermission(Permissions.adminstatus))
                 {
                     args.Player.SendMessage("Chest cheat detected!", Color.Red);
-                    Log.ConsoleInfo(args.Player.Name + " tried to use chest cheat in X = " + tileX + "; Y = " + tileY);
+                    Log.ConsoleInfo("[CheatDetector]" + args.Player.Name + " tried to use chest cheat in X = " + tileX + "; Y = " + tileY);
                     args.Player.SendTileSquare(tileX, tileY);
                     return true;
                 }
@@ -2379,7 +2379,7 @@ namespace TShockAPI
 
             var user = TShock.Users.GetUserByName(args.Player.Name);
 
-            if (user.PlayingTime < 100)
+            if (user.PlayingTime < 60)
             {
                 if (user.PlayingTime < 10)
                 {

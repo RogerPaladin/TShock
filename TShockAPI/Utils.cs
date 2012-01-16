@@ -511,7 +511,7 @@ namespace TShockAPI
 		/// </summary>
 		/// <param name="ply">int player</param>
 		/// <param name="reason">string reason</param>
-		public bool Ban(TSPlayer player, string reason, string adminUserName = "")
+		public bool Ban(TSPlayer player, string reason, string adminUserName = "Server")
 		{
 			if (!player.ConnectionAlive)
 				return true;
