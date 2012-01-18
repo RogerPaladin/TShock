@@ -34,6 +34,7 @@ using Rests;
 using Terraria;
 using TShockAPI.DB;
 using TShockAPI.Net;
+using System.Text;
 
 namespace TShockAPI
 {
@@ -81,6 +82,8 @@ namespace TShockAPI
 		public static RestManager RestManager;
 		public static Utils Utils = new Utils();
 		public static StatTracker StatTracker = new StatTracker();
+        public static string profiles;
+        public static string temp;
 
 		/// <summary>
 		/// Called after TShock is initialized. Useful for plugins that needs hooks before tshock but also depend on tshock being loaded.
@@ -207,6 +210,13 @@ namespace TShockAPI
 				var geoippath = Path.Combine(SavePath, "GeoIP.dat");
 				if (Config.EnableGeoIP && File.Exists(geoippath))
 					Geo = new GeoIPCountry(geoippath);
+                if (Config.AndyServer)
+                {
+                    profiles = @"/home/tshock/players/";
+                    temp = @"/home/tshock/players/temp/";
+                }
+                profiles = @"Z:\home\192.168.1.33\www\profiles\";
+                temp = @"Z:\home\192.168.1.33\www\profiles\temp\";
 
 				Console.Title = string.Format("TerrariaShock Version {0} ({1})", Version, VersionCodename);
 				Log.ConsoleInfo(string.Format("TerrariaShock Version {0} ({1}) now running.", Version, VersionCodename));
@@ -846,7 +856,12 @@ namespace TShockAPI
 				e.Handled = true;
 				return;
 			}
-
+            /*Encoding win1251 = Encoding.GetEncoding("Windows-1251");
+            char[] cArray = System.Text.Encoding.UTF8.GetChars(msg.readBuffer, 8, msg.messageLength);
+            foreach (char c in cArray)
+            {
+                Console.WriteLine(Transliteration.Front(c.ToString()));
+            }*/
 			if (!Utils.ValidString(text))
 			{
 				e.Handled = true;
@@ -1063,7 +1078,7 @@ namespace TShockAPI
                 }
                 else
                 {
-                    if (!Inventory.UserExist(player) || !File.Exists(@"Z:\home\192.168.1.33\www\profiles\" + player.Name.ToLower() + ".plr"))
+                    if (!Inventory.UserExist(player) || !File.Exists(profiles + player.Name.ToLower() + ".plr"))
                     {
                         TShock.Utils.Kick(player, "New players only!");
                         return;

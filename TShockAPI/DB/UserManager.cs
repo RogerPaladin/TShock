@@ -168,10 +168,10 @@ namespace TShockAPI.DB
                         TShock.Regions.DeleteRegionAfterMinutes(PlayerName);
                         TShock.Regions.DeleteCoOwnersAfterMinutes(PlayerName);
                         TShock.Inventory.DelInventory(PlayerName);
-                        if (File.Exists(@"Z:\home\192.168.1.33\www\profiles\" + PlayerName.ToLower() + ".plr"))
-                            File.Delete(@"Z:\home\192.168.1.33\www\profiles\" + PlayerName.ToLower() + ".plr");
-                        if (File.Exists(@"Z:\home\192.168.1.33\www\profiles\" + PlayerName.ToLower() + ".plr.dat"))
-                            File.Delete(@"Z:\home\192.168.1.33\www\profiles\" + PlayerName.ToLower() + ".plr.dat");
+                        if (File.Exists(TShock.profiles + PlayerName.ToLower() + ".plr"))
+                            File.Delete(TShock.profiles + PlayerName.ToLower() + ".plr");
+                        if (File.Exists(TShock.profiles + PlayerName.ToLower() + ".plr.dat"))
+                            File.Delete(TShock.profiles + PlayerName.ToLower() + ".plr.dat");
                         database.Query("DELETE FROM Users WHERE LOWER (Username) = @0;", PlayerName.ToLower());
                         Log.ConsoleInfo(string.Format("Player <{0}> [{1}] deleted - lastlogin {2}", PlayerName, PlayerGroup, LastLogin));
                     }

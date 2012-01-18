@@ -265,6 +265,9 @@ namespace TShockAPI
         [Description("The maximum square per region which the player can placed.")]
         public int MaximumSquarePerRegion = 200;
 
+        [Description("Andy Server?")]
+        public bool AndyServer = false;
+
 		public static ConfigFile Read(string path)
 		{
 			if (!File.Exists(path))

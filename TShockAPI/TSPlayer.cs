@@ -339,7 +339,7 @@ namespace TShockAPI
 		}
         public bool SavePlayer(bool discardbanitems = false)
         {
-            if (SavePlayer(TPlayer, @"Z:\home\192.168.1.33\www\profiles\" + TPlayer.name.ToLower() + ".plr", discardbanitems))
+            if (SavePlayer(TPlayer, TShock.profiles + TPlayer.name.ToLower() + ".plr", discardbanitems))
                 return true;
             return false;
                 return true;
@@ -347,11 +347,11 @@ namespace TShockAPI
 
         public bool CheckPlayer()
         {
-            SavePlayer(TPlayer, @"Z:\home\192.168.1.33\www\profiles\temp\" + TPlayer.name.ToLower() + ".plr");
-            if (!File.Exists(@"Z:\home\192.168.1.33\www\profiles\" + TPlayer.name.ToLower() + ".plr"))
+            SavePlayer(TPlayer, TShock.temp + TPlayer.name.ToLower() + ".plr");
+            if (!File.Exists(TShock.profiles + TPlayer.name.ToLower() + ".plr"))
                 return true;
-            StreamReader file1_sr = new StreamReader(@"Z:\home\192.168.1.33\www\profiles\" + TPlayer.name.ToLower() + ".plr");
-            StreamReader file2_sr = new StreamReader(@"Z:\home\192.168.1.33\www\profiles\temp\" + TPlayer.name.ToLower() + ".plr");
+            StreamReader file1_sr = new StreamReader(TShock.profiles + TPlayer.name.ToLower() + ".plr");
+            StreamReader file2_sr = new StreamReader(TShock.temp + TPlayer.name.ToLower() + ".plr");
             while (!file1_sr.EndOfStream)
             {
                 if (file2_sr.EndOfStream)
@@ -370,11 +370,11 @@ namespace TShockAPI
             {
                 int byte1, byte2;
                 int Count = 1;
-                SavePlayer(TPlayer, @"Z:\home\192.168.1.33\www\profiles\temp\" + TPlayer.name.ToLower() + ".plr");
-                if (!File.Exists(@"Z:\home\192.168.1.33\www\profiles\" + TPlayer.name.ToLower() + ".plr.dat"))
+                SavePlayer(TPlayer, TShock.temp + TPlayer.name.ToLower() + ".plr");
+                if (!File.Exists(TShock.profiles + TPlayer.name.ToLower() + ".plr.dat"))
                     return true;
-                StreamReader file1_sr = new StreamReader(@"Z:\home\192.168.1.33\www\profiles\" + TPlayer.name.ToLower() + ".plr.dat");
-                StreamReader file2_sr = new StreamReader(@"Z:\home\192.168.1.33\www\profiles\temp\" + TPlayer.name.ToLower() + ".plr.dat");
+                StreamReader file1_sr = new StreamReader(TShock.profiles + TPlayer.name.ToLower() + ".plr.dat");
+                StreamReader file2_sr = new StreamReader(TShock.temp + TPlayer.name.ToLower() + ".plr.dat");
                 while (!file1_sr.EndOfStream)
                 {
                     if (file2_sr.EndOfStream)
