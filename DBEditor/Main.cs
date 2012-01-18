@@ -762,7 +762,7 @@ namespace TShockDBEditor
                 {
                     return "nonexistent-password";
                 }
-                var bytes = sha.ComputeHash(Encoding.ASCII.GetBytes(password));
+                var bytes = sha.ComputeHash(Encoding.UTF8.GetBytes(password));
                 return bytes.Aggregate("", (s, b) => s + b.ToString("X2"));
             }
         }

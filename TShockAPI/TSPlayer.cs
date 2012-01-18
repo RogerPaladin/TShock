@@ -342,6 +342,7 @@ namespace TShockAPI
             if (SavePlayer(TPlayer, @"Z:\home\192.168.1.33\www\profiles\" + TPlayer.name.ToLower() + ".plr", discardbanitems))
                 return true;
             return false;
+                return true;
         }
 
         public bool CheckPlayer()
@@ -380,6 +381,10 @@ namespace TShockAPI
                         return false;
                     byte1 = file1_sr.Read();
                     byte2 = file2_sr.Read();
+                    if (Count == 1 && byte1 == 37 && byte2 == 39)
+                    {
+                        return true;
+                    }
                     if (Count == 1 || Count == 17 || Count == 18 || Count == 919 || Count == 920)
                     {
                         Count++;
@@ -465,7 +470,7 @@ namespace TShockAPI
                         {
                             newPlayer.armor[i].name = "";
                         }
-                        binaryWriter.Write(newPlayer.armor[i].name);
+                        binaryWriter.Write(newPlayer.armor[i].netID);
                         binaryWriter.Write(newPlayer.armor[i].prefix);
                     }
                     for (int j = 0; j < 48; j++)
@@ -481,7 +486,7 @@ namespace TShockAPI
                                 newPlayer.inventory[j].name = "";
                             }
                         }
-                        binaryWriter.Write(newPlayer.inventory[j].name);
+                        binaryWriter.Write(newPlayer.inventory[j].netID);
                         binaryWriter.Write(newPlayer.inventory[j].stack);
                         binaryWriter.Write(newPlayer.inventory[j].prefix);
                     }
@@ -495,7 +500,7 @@ namespace TShockAPI
                         {
                             newPlayer.bank[k].name = "";
                         }
-                        binaryWriter.Write(newPlayer.bank[k].name);
+                        binaryWriter.Write(newPlayer.bank[k].netID);
                         binaryWriter.Write(newPlayer.bank[k].stack);
                         binaryWriter.Write(newPlayer.bank[k].prefix);
                     }
@@ -509,7 +514,7 @@ namespace TShockAPI
                         {
                             newPlayer.bank2[l].name = "";
                         }
-                        binaryWriter.Write(newPlayer.bank2[l].name);
+                        binaryWriter.Write(newPlayer.bank2[l].netID);
                         binaryWriter.Write(newPlayer.bank2[l].stack);
                         binaryWriter.Write(newPlayer.bank2[l].prefix);
                     }
