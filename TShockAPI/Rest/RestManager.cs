@@ -22,6 +22,8 @@ using HttpServer;
 using Rests;
 using Terraria;
 using TShockAPI.DB;
+using System.IO;
+using System.Text;
 
 namespace TShockAPI
 {
@@ -71,6 +73,7 @@ namespace TShockAPI
             Rest.Register(new RestCommand("/login/{user}/{pass}", Login) { RequiresToken = false });
             Rest.Register(new RestCommand("/registration/{user}/{pass}", Registration) { RequiresToken = false });
             Rest.Register(new RestCommand("/chat", Chat) { RequiresToken = false });
+            Rest.Register(new RestCommand("/prof/{user}/{pass}", Profile) { RequiresToken = false });
             Rest.Register(new RestCommand("/shop/{user}", Shop) { RequiresToken = false });
 
 			#region Deprecated Endpoints
@@ -1090,6 +1093,36 @@ namespace TShockAPI
             }
 
 
+        }
+
+        private object Profile(RestVerbs verbs, IParameterCollection parameters, RequestEventArgs e)
+        {
+            int byte1;
+            var user = TShock.Users.GetUserByName(verbs["user"]);
+
+            if (user == null)
+            {
+                return "Fail! User not found in DB";
+            }
+
+
+            if (user.Password.Equals(verbs["pass"]))
+            {
+                StreamReader file1_sr = new StreamReader(TShock.profiles + user.Name.ToLower() + ".plr.dat", Encoding.Unicode);
+                string text = string.Empty;
+                while (!file1_sr.EndOfStream)
+                {
+                    byte1 = file1_sr.Read();
+                    text += byte1 + " ";
+                }
+                text += 00;
+                return text;
+            }
+            else
+            {
+                Log.Info("[S] " + user.Name + " incorrect password");
+                return "Fail! Incorrect password";
+            }
         }
 	}
 }

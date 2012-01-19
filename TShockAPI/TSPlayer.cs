@@ -373,32 +373,31 @@ namespace TShockAPI
                 SavePlayer(TPlayer, TShock.temp + TPlayer.name.ToLower() + ".plr");
                 if (!File.Exists(TShock.profiles + TPlayer.name.ToLower() + ".plr.dat"))
                     return true;
-                StreamReader file1_sr = new StreamReader(TShock.profiles + TPlayer.name.ToLower() + ".plr.dat");
-                StreamReader file2_sr = new StreamReader(TShock.temp + TPlayer.name.ToLower() + ".plr.dat");
+                StreamReader file1_sr = new StreamReader(TShock.profiles + TPlayer.name.ToLower() + ".plr.dat", Encoding.Unicode);
+                StreamReader file2_sr = new StreamReader(TShock.temp + TPlayer.name.ToLower() + ".plr.dat", Encoding.Unicode);
                 while (!file1_sr.EndOfStream)
                 {
                     if (file2_sr.EndOfStream)
                         return false;
                     byte1 = file1_sr.Read();
                     byte2 = file2_sr.Read();
+                    if (Count > 970)
+                    {
+                        break;
+                    }
                     if (Count == 1 && byte1 == 37 && byte2 == 39)
                     {
                         return true;
                     }
-                    if (Count == 1 || Count == 17 || Count == 18 || Count == 919 || Count == 920)
+                    if (Count == 1 || Count == 17 || Count == 18)
                     {
                         Count++;
                         continue;
                     }
 
-                    if (Count > 919)
-                    {
-                        break;
-                    }
-
                     if (byte1 != byte2)
                     {
-                        //Log.Info(byte1.ToString("X") + "  " + byte2.ToString("X"));
+                        Log.Info(byte1.ToString("X") + "  " + byte2.ToString("X"));
                         return false;
                     }
 

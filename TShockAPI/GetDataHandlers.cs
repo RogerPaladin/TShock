@@ -2401,7 +2401,14 @@ namespace TShockAPI
             
             if (TShock.Regions.InArea((int)(pos.X / 16f), (int)(pos.Y / 16f), out regionname))
             {
-                if (regionname == "Sell" && item.type != 328 && item.type != 261 && item.type != 48 && item.type != 93 && item.type != 58 && item.type != 306 && item.type != 71 && item.type != 72 && item.type != 73 && item.type != 74 && item.type != 2 && item.type != 9 && item.type != 30 && item.type != 23 && item.type != 184 && item.type != 0)
+                if (regionname == "Sell" && item.type != 0 && item.type != 328 && item.type != 261 && item.type != 48 && item.type != 93 && 
+                                            item.type != 58 && item.type != 306 && item.type != 71 && item.type != 72 && 
+                                            item.type != 73 && item.type != 74 && item.type != 2 && item.type != 9 && 
+                                            item.type != 30 && item.type != 23 && item.type != 184 &&
+                                            !item.name.Contains("Arrow") && !item.name.Equals("Musket Ball") &&
+                                            !item.name.Equals("Silver Bullet") && !item.name.Equals("Acorn") &&
+                                            !item.name.Contains("Seeds") && !item.name.Equals("Torch") && !item.name.Equals("Shuriken") &&
+                                            !item.name.Equals("Glowstick") && !item.name.Equals("Throwing Knife") && !item.name.Equals("Spiky Ball"))
                 {
                     args.Player.SendMessage("You sold " + stacks + " " + item.name + " for " + stacks * 0.01 + " RCoins.");
                     Log.ConsoleInfo("[Sell] " + args.Player.Name + " sold " + stacks + " " + item.name);

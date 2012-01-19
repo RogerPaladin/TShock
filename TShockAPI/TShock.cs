@@ -210,13 +210,17 @@ namespace TShockAPI
 				var geoippath = Path.Combine(SavePath, "GeoIP.dat");
 				if (Config.EnableGeoIP && File.Exists(geoippath))
 					Geo = new GeoIPCountry(geoippath);
+
                 if (Config.AndyServer)
                 {
                     profiles = @"/home/tshock/players/";
                     temp = @"/home/tshock/players/temp/";
                 }
-                profiles = @"Z:\home\192.168.1.33\www\profiles\";
-                temp = @"Z:\home\192.168.1.33\www\profiles\temp\";
+                else
+                {
+                    profiles = @"Z:\home\192.168.1.33\www\profiles\";
+                    temp = @"Z:\home\192.168.1.33\www\profiles\temp\";
+                }
 
 				Console.Title = string.Format("TerrariaShock Version {0} ({1})", Version, VersionCodename);
 				Log.ConsoleInfo(string.Format("TerrariaShock Version {0} ({1}) now running.", Version, VersionCodename));

