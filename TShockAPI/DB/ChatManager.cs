@@ -12,7 +12,7 @@ namespace TShockAPI.DB
             {
                 database = db;
 
-                var table = new SqlTable("chat",
+                var table = new SqlTable("Chat",
                     new SqlColumn("ID", MySqlDbType.Int32) { Primary = true, AutoIncrement = true },
                     new SqlColumn("Username", MySqlDbType.VarChar, 32),
                     new SqlColumn("ToUsername", MySqlDbType.VarChar, 32),
@@ -42,7 +42,7 @@ namespace TShockAPI.DB
                 int i = 20;
                 try
                 {
-                    using (var reader = database.QueryReader("Select * FROM chat WHERE ToUsername = '' ORDER BY ID DESC LIMIT 20"))
+                    using (var reader = database.QueryReader("Select * FROM Chat WHERE ToUsername = '' ORDER BY ID DESC LIMIT 20"))
                     {
                         while (reader.Read())
                         {
