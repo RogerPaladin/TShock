@@ -227,21 +227,35 @@ namespace TShockAPI.DB
                     bank1[k] = player.TPlayer.bank[k].name + ":" + player.TPlayer.bank[k].stack;
                     bank2[k] = player.TPlayer.bank2[k].name + ":" + player.TPlayer.bank2[k].stack;
             }
-              if ("Copper Shortsword:1" == inv[0] && "Copper Pickaxe:1" == inv[1] && "Copper Axe:1" == inv[2])
-              {
-              }
-                else
-              {
-                return false;
-              }
 
-              for (int i = 3; i < 48; i++)
-            {
-                if (":0" != inv[i])
+                if ("Copper Shortsword:1" == inv[0] && "Copper Pickaxe:1" == inv[1] && "Copper Axe:1" == inv[2])
+                {
+                }
+                else
                 {
                     return false;
                 }
-            }
+
+                if ("Carrot:1" == inv[3])
+                {
+                    for (int i = 4; i < 48; i++)
+                    {
+                        if (":0" != inv[i])
+                        {
+                            return false;
+                        }
+                    }
+                }
+                else
+                {
+                    for (int i = 3; i < 48; i++)
+                    {
+                        if (":0" != inv[i])
+                        {
+                            return false;
+                        }
+                    }
+                }
             for (int i = 0; i < 20; i++)
             {
                 bank1[i] = player.TPlayer.bank[i].name + ":" + player.TPlayer.bank[i].stack;
