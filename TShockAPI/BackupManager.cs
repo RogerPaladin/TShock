@@ -28,7 +28,7 @@ namespace TShockAPI
 		public int Interval { get; set; }
 		public int KeepFor { get; set; }
 
-		private DateTime lastbackup = DateTime.Now;
+		private DateTime lastbackup = DateTime.UtcNow;
 
 		public BackupManager(string path)
 		{
@@ -37,12 +37,12 @@ namespace TShockAPI
 
 		public bool IsBackupTime
 		{
-			get { return (Interval > 0) && ((DateTime.Now - lastbackup).TotalMinutes >= Interval); }
+			get { return (Interval > 0) && ((DateTime.UtcNow - lastbackup).TotalMinutes >= Interval); }
 		}
 
 		public void Backup()
 		{
-			lastbackup = DateTime.Now;
+			lastbackup = DateTime.UtcNow;
 			ThreadPool.QueueUserWorkItem(DoBackup);
 			ThreadPool.QueueUserWorkItem(DeleteOld);
 		}
@@ -54,7 +54,7 @@ namespace TShockAPI
 				string worldname = Main.worldPathName;
 				string name = Path.GetFileName(worldname);
 
-				Main.worldPathName = Path.Combine(BackupPath, string.Format("{0}.{1:dd.MM.yy-HH.mm.ss}.bak", name, DateTime.Now));
+				Main.worldPathName = Path.Combine(BackupPath, string.Format("{0}.{1:dd.MM.yy-HH.mm.ss}.bak", name, DateTime.UtcNow));
 
 				string worldpath = Path.GetDirectoryName(Main.worldPathName);
 				if (worldpath != null && !Directory.Exists(worldpath))
@@ -90,7 +90,7 @@ namespace TShockAPI
 				return;
 			foreach (var fi in new DirectoryInfo(BackupPath).GetFiles("*.bak"))
 			{
-				if ((DateTime.Now - fi.LastWriteTimeUtc).TotalMinutes > KeepFor)
+				if ((DateTime.UtcNow - fi.LastWriteTimeUtc).TotalMinutes > KeepFor)
 				{
 					fi.Delete();
 				}

@@ -418,7 +418,7 @@ namespace TShockAPI
 		{
 			if (!File.Exists(Path.Combine(SavePath, "auth.lck")) && !File.Exists(Path.Combine(SavePath, "authcode.txt")))
 			{
-				var r = new Random((int) DateTime.Now.ToBinary());
+				var r = new Random((int) DateTime.UtcNow.ToBinary());
 				AuthToken = r.Next(100000, 10000000);
 				Console.ForegroundColor = ConsoleColor.Yellow;
 				Console.WriteLine("TShock Notice: To become SuperAdmin, join the game and type /auth " + AuthToken);
@@ -472,8 +472,8 @@ namespace TShockAPI
 			}
 		}
 
-		private DateTime LastCheck = DateTime.Now;
-		private DateTime LastSave = DateTime.Now;
+		private DateTime LastCheck = DateTime.UtcNow;
+		private DateTime LastSave = DateTime.UtcNow;
 
 		private void OnUpdate()
 		{
@@ -529,17 +529,17 @@ namespace TShockAPI
                             player.InRegion = false;
                         }
                         player.LastTilePos = new Vector2(player.TileX, player.TileY);
-                        player.LastChangePos = DateTime.Now;
+                        player.LastChangePos = DateTime.UtcNow;
                     }
                 }
             }
             #endregion
 
             //call these every second, not every update
-			if ((DateTime.Now - LastCheck).TotalSeconds >= 1)
+			if ((DateTime.UtcNow - LastCheck).TotalSeconds >= 1)
 			{
 				OnSecondUpdate();
-				LastCheck = DateTime.Now;
+				LastCheck = DateTime.UtcNow;
 			}
 
             if (Restart.PrepareToRestart && !Restart.Prepared)
@@ -553,7 +553,7 @@ namespace TShockAPI
             if (Restart.IsRestartTime)
                 Restart.Restart();
 
-			if ((DateTime.Now - LastSave).TotalMinutes >= 15)
+			if ((DateTime.UtcNow - LastSave).TotalMinutes >= 15)
 			{
 				foreach (TSPlayer player in Players)
 				{
@@ -561,12 +561,12 @@ namespace TShockAPI
 					if (player != null && player.IsLoggedIn && Config.StoreInventory)
 					{
                         Inventory.UpdateInventory(player);
-                        TShock.Users.PlayingTime(player.Name, Convert.ToInt32((DateTime.Now - player.LoginTime).TotalMinutes));
-                        TShock.Users.SetRCoins(player.Name, Math.Round(0.1 * (DateTime.Now - player.LoginTime).TotalMinutes, 2));
-                        player.LoginTime = DateTime.Now;
+                        TShock.Users.PlayingTime(player.Name, Convert.ToInt32((DateTime.UtcNow - player.LoginTime).TotalMinutes));
+                        TShock.Users.SetRCoins(player.Name, Math.Round(0.1 * (DateTime.UtcNow - player.LoginTime).TotalMinutes, 2));
+                        player.LoginTime = DateTime.UtcNow;
 					}
 				}
-				LastSave = DateTime.Now;
+				LastSave = DateTime.UtcNow;
 			}
 		}
 
@@ -635,7 +635,7 @@ namespace TShockAPI
 					{
 						player.ProjectileThreshold = 0;
 					}
-					if (player.Dead && (DateTime.Now - player.LastDeath).Seconds >= 3 && player.Difficulty != 2)
+					if (player.Dead && (DateTime.UtcNow - player.LastDeath).Seconds >= 3 && player.Difficulty != 2)
 					{
 						player.Spawn();
 					}
@@ -672,18 +672,18 @@ namespace TShockAPI
 						player.SetBuff(23, 120); //Cursed
 					}*/
 
-                    if ((DateTime.Now - StackCheatChecker).TotalMilliseconds > 5000)
+                    if ((DateTime.UtcNow - StackCheatChecker).TotalMilliseconds > 5000)
                     {
-                        StackCheatChecker = DateTime.Now;
+                        StackCheatChecker = DateTime.UtcNow;
                         if (player.StackCheat(out item, out itemcount))
                         {
                             TShock.Utils.Broadcast(string.Format("{0} cheater!!! {1} x {2}", player.Name, item, itemcount), Color.Yellow);
-                            //TShock.Utils.Ban(player, "Stack Cheat.", "Server", Convert.ToString(DateTime.Now));
+                            //TShock.Utils.Ban(player, "Stack Cheat.", "Server", Convert.ToString(DateTime.UtcNow));
                             TShock.Utils.ForceKick(player, string.Format("Stack Cheat. {0} x {1}", item, itemcount));
                         }
                     }
                     
-                    if ((DateTime.Now - player.LastChangePos).TotalMinutes > 10)
+                    if ((DateTime.UtcNow - player.LastChangePos).TotalMinutes > 10)
                     {
                         player.SavePlayer();
                         TShock.Utils.ForceKick(player, "Kick for omission more than 10 minutes");
@@ -709,12 +709,12 @@ namespace TShockAPI
 
                     if (!player.IsLoggedIn)
                     {
-                        if ((DateTime.Now - player.Interval).TotalMilliseconds > 5000)
+                        if ((DateTime.UtcNow - player.Interval).TotalMilliseconds > 5000)
                         {
-                            player.SendMessage(string.Format("Login in {0} seconds", TShock.Config.TimeToLogin * 60 - Math.Round((DateTime.Now - player.LoginTime).TotalSeconds, 0)), Color.Red);
-                            player.Interval = DateTime.Now;
+                            player.SendMessage(string.Format("Login in {0} seconds", TShock.Config.TimeToLogin * 60 - Math.Round((DateTime.UtcNow - player.LoginTime).TotalSeconds, 0)), Color.Red);
+                            player.Interval = DateTime.UtcNow;
                         }
-                        if ((DateTime.Now - player.LoginTime).TotalMinutes >= TShock.Config.TimeToLogin)
+                        if ((DateTime.UtcNow - player.LoginTime).TotalMinutes >= TShock.Config.TimeToLogin)
                         {
                             TShock.Utils.Broadcast(player.Name + " Not logged in.", Color.Yellow);
                             TShock.Utils.Kick(player, "Not logged in.");
@@ -781,7 +781,7 @@ namespace TShockAPI
 				}
 			}
 			Players[ply] = player;
-            player.LoginTime = DateTime.Now;
+            player.LoginTime = DateTime.UtcNow;
 		}
 
 		private void OnJoin(int ply, HandledEventArgs handler)
@@ -823,8 +823,8 @@ namespace TShockAPI
 
                 if (tsplr.IsLoggedIn)
                 {
-                    TShock.Users.PlayingTime(tsplr.Name, Convert.ToInt32((DateTime.Now - tsplr.LoginTime).TotalMinutes));
-                    TShock.Users.SetRCoins(tsplr.Name, Math.Round(0.1 * (DateTime.Now - tsplr.LoginTime).TotalMinutes, 2));
+                    TShock.Users.PlayingTime(tsplr.Name, Convert.ToInt32((DateTime.UtcNow - tsplr.LoginTime).TotalMinutes));
+                    TShock.Users.SetRCoins(tsplr.Name, Math.Round(0.1 * (DateTime.UtcNow - tsplr.LoginTime).TotalMinutes, 2));
                     if (Config.StoreInventory)
                         Inventory.UpdateInventory(tsplr);
                     tsplr.SavePlayer();
@@ -1054,7 +1054,7 @@ namespace TShockAPI
 
             if (!DispenserTime.Contains(player.Name))
             {
-                DispenserTime.Add(player.Name + ";" + Convert.ToString(DateTime.Now.AddMilliseconds(-disptime)));
+                DispenserTime.Add(player.Name + ";" + Convert.ToString(DateTime.UtcNow.AddMilliseconds(-disptime)));
             }
 
             if (MutedPlayers.Contains(player.Name))
@@ -1359,10 +1359,10 @@ namespace TShockAPI
 
             if (!player.Group.HasPermission(Permissions.canbuild))
 			{
-                if ((DateTime.Now - player.LastTileChangeNotify).TotalMilliseconds > 1000)
+                if ((DateTime.UtcNow - player.LastTileChangeNotify).TotalMilliseconds > 1000)
                 {
                     player.SendMessage("You do not have permission to build!", Color.Red);
-                    player.LastTileChangeNotify = DateTime.Now;
+                    player.LastTileChangeNotify = DateTime.UtcNow;
                 }
 				return true;
 			}
@@ -1370,10 +1370,10 @@ namespace TShockAPI
 			{
 				if (!player.Group.HasPermission(Permissions.editspawn))
 				{
-                    if ((DateTime.Now - player.LastTileChangeNotify).TotalMilliseconds > 1000)
+                    if ((DateTime.UtcNow - player.LastTileChangeNotify).TotalMilliseconds > 1000)
                     {
                         player.SendMessage("World protected from changes.", Color.Red);
-                        player.LastTileChangeNotify = DateTime.Now;
+                        player.LastTileChangeNotify = DateTime.UtcNow;
                     }
                     return true;
 				}
@@ -1385,10 +1385,10 @@ namespace TShockAPI
 					var flag = CheckSpawn(tileX, tileY);
 					if (flag)
 					{
-				        if ((DateTime.Now - player.LastTileChangeNotify).TotalMilliseconds > 1000)
+				        if ((DateTime.UtcNow - player.LastTileChangeNotify).TotalMilliseconds > 1000)
                         {
                             player.SendMessage("Spawn protected from changes.", Color.Red);
-                            player.LastTileChangeNotify = DateTime.Now;
+                            player.LastTileChangeNotify = DateTime.UtcNow;
                         }
                         return true;
 					}
@@ -1402,10 +1402,10 @@ namespace TShockAPI
                     return false;
                 }
 
-                if ((DateTime.Now - player.LastTileChangeNotify).TotalMilliseconds > 1000)
+                if ((DateTime.UtcNow - player.LastTileChangeNotify).TotalMilliseconds > 1000)
                 {
                     player.SendMessage("This region <" + RegionName + "> is protected by " + CoOwner, Color.Yellow);
-                    player.LastTileChangeNotify = DateTime.Now;
+                    player.LastTileChangeNotify = DateTime.UtcNow;
                 }
                 return true;
             }
@@ -1417,10 +1417,10 @@ namespace TShockAPI
 
             if (!player.Group.HasPermission(Permissions.editspawn) && !Towns.CanBuild(tileX, tileY, player, out Mayor) && Towns.InArea(tileX, tileY, out TownName))
             {
-                if ((DateTime.Now - player.LastTileChangeNotify).TotalMilliseconds > 1000)
+                if ((DateTime.UtcNow - player.LastTileChangeNotify).TotalMilliseconds > 1000)
                 {
                     player.SendMessage("This town <" + TownName + "> is protected by <" + Mayor + ">", Color.Yellow);
-                    player.LastTileChangeNotify = DateTime.Now;
+                    player.LastTileChangeNotify = DateTime.UtcNow;
                 }
                 return true;
             }

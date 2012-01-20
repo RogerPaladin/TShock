@@ -31,10 +31,10 @@ namespace TShockAPI
 
 		public void CheckIn()
 		{
-			if ((DateTime.Now - lastcheck).TotalMinutes >= checkinFrequency)
+			if ((DateTime.UtcNow - lastcheck).TotalMinutes >= checkinFrequency)
 			{
 				ThreadPool.QueueUserWorkItem(CallHome);
-				lastcheck = DateTime.Now;
+				lastcheck = DateTime.UtcNow;
 			}
 		}
 

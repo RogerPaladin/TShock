@@ -114,7 +114,7 @@ namespace TShockAPI
 				try
 				{
 					var listenEP = new IPEndPoint(IPAddress.Any, ListenPort);
-					LastRequest = DateTime.Now;
+					LastRequest = DateTime.UtcNow;
 					byte[] bytes = listener.Receive(ref listenEP);
 					var packet = ParsePacket(bytes, listenEP);
 					listener.Send(packet, packet.Length, listenEP);
@@ -153,7 +153,7 @@ namespace TShockAPI
 			var packetstring = Encoding.UTF8.GetString(PadPacket(bytes));
 			var redirect = false;
 			var print = true;
-			if ((DateTime.Now - LastRequest).Milliseconds >= 100)
+			if ((DateTime.UtcNow - LastRequest).Milliseconds >= 100)
 			{
 				if (packetstring.StartsWith("rcon") || packetstring.Substring(4).StartsWith("rcon") ||
 				    packetstring.Substring(5).StartsWith("rcon"))
@@ -344,10 +344,10 @@ namespace TShockAPI
 
 		private static void SendHeartbeat()
 		{
-			LastHeartbeat = DateTime.Now.Subtract(new TimeSpan(0, 0, 30));
+			LastHeartbeat = DateTime.UtcNow.Subtract(new TimeSpan(0, 0, 30));
 			while (true)
 			{
-				if ((DateTime.Now - LastHeartbeat).Seconds >= 30)
+				if ((DateTime.UtcNow - LastHeartbeat).Seconds >= 30)
 				{
 					var packet = ConstructPacket("heartbeat TerrariaShock", false);
 					if (listener == null)
@@ -365,7 +365,7 @@ namespace TShockAPI
 							Log.Error(e.ToString());
 						}
 					listener.Send(packet, packet.Length, TShock.Config.MasterServer, 27950);
-					LastHeartbeat = DateTime.Now;
+					LastHeartbeat = DateTime.UtcNow;
 				}
 				Thread.Sleep(10000);
 			}

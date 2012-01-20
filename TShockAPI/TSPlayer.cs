@@ -603,7 +603,7 @@ namespace TShockAPI
 
 		public virtual void Disable(string reason = "")
 		{
-			LastThreat = DateTime.Now;
+			LastThreat = DateTime.UtcNow;
 			SetBuff(33, 330, true); //Weak
 			SetBuff(32, 330, true); //Slow
 			SetBuff(23, 330, true); //Cursed
@@ -620,10 +620,10 @@ namespace TShockAPI
 		public virtual void Whoopie(object time)
 		{
 			var time2 = (int) time;
-			var launch = DateTime.Now;
+			var launch = DateTime.UtcNow;
 			var startname = Name;
 			SendMessage("You are now being annoyed.", Color.Red);
-			while ((DateTime.Now - launch).TotalSeconds < time2 && startname == Name)
+			while ((DateTime.UtcNow - launch).TotalSeconds < time2 && startname == Name)
 			{
 				SendData(PacketTypes.NpcSpecial, number: Index, number2: 2f);
 				Thread.Sleep(50);
@@ -632,7 +632,7 @@ namespace TShockAPI
 
 		public virtual void SetBuff(int type, int time = 3600, bool bypass = false)
 		{
-			if ((DateTime.Now - LastThreat).TotalMilliseconds < 5000 && !bypass)
+			if ((DateTime.UtcNow - LastThreat).TotalMilliseconds < 5000 && !bypass)
 				return;
 
 			SendData(PacketTypes.PlayerAddBuff, number: Index, number2: type, number3: time);

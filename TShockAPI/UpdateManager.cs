@@ -35,10 +35,10 @@ namespace TShockAPI
 
 		public static void UpdateProcedureCheck()
 		{
-			if ((DateTime.Now - lastcheck).TotalMinutes >= CheckXMinutes)
+			if ((DateTime.UtcNow - lastcheck).TotalMinutes >= CheckXMinutes)
 			{
 				ThreadPool.QueueUserWorkItem(CheckUpdate);
-				lastcheck = DateTime.Now;
+				lastcheck = DateTime.UtcNow;
 			}
 		}
 

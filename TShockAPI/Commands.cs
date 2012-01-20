@@ -3510,8 +3510,8 @@ namespace TShockAPI
         private static void AltarTimer(CommandArgs args)
         {
             TShock.DispenserTime.Remove(args.Player.Name + ";" + Convert.ToString(TShock.Utils.DispencerTime(args.Player.Name)));
-            TShock.DispenserTime.Add(args.Player.Name + ";" + Convert.ToString(DateTime.Now.AddMilliseconds(-TShock.disptime)));
-            TShock.Spawner = DateTime.Now.AddMinutes(-30);
+            TShock.DispenserTime.Add(args.Player.Name + ";" + Convert.ToString(DateTime.UtcNow.AddMilliseconds(-TShock.disptime)));
+            TShock.Spawner = DateTime.UtcNow.AddMinutes(-30);
             args.Player.SendMessage("Altar timers reset successfull.", Color.Green);
         }
 
@@ -3626,7 +3626,7 @@ namespace TShockAPI
 			{
 				try
 				{
-					TShock.Users.AddUser(new User(args.Player.IP, "", "", "superadmin", DateTime.Now, 0, 0));
+					TShock.Users.AddUser(new User(args.Player.IP, "", "", "superadmin", DateTime.UtcNow, 0, 0));
 					args.Player.Group = TShock.Utils.GetGroup("superadmin");
 					args.Player.SendMessage("This IP address is now superadmin. Please perform the following command:");
 					args.Player.SendMessage("/user add <username>:<password> superadmin");

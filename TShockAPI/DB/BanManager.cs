@@ -114,7 +114,7 @@ namespace TShockAPI.DB
         {
             try
             {
-                return database.Query("INSERT INTO Bans (IP, Name, Reason, BannedBy, BannedTime) VALUES (@0, @1, @2, @3, @4);", ip, name, reason, bannedby, Convert.ToString(DateTime.Now)) != 0;
+                return database.Query("INSERT INTO Bans (IP, Name, Reason, BannedBy, BannedTime) VALUES (@0, @1, @2, @3, @4);", ip, name, reason, bannedby, Convert.ToString(DateTime.UtcNow)) != 0;
             }
             catch (Exception ex)
             {
@@ -176,7 +176,7 @@ namespace TShockAPI.DB
             Name = string.Empty;
             Reason = string.Empty;
             BannedBy = string.Empty;
-            BannedTime = DateTime.Now;
+            BannedTime = DateTime.UtcNow;
         }
     }
 }

@@ -108,7 +108,7 @@ namespace TShockAPI.DB
                 if (!TShock.Groups.GroupExists(user.Group))
                     throw new GroupNotExistsException(user.Group);
 
-                if (database.Query("INSERT INTO Users (Username, Password, UserGroup, IP, LastLogin, PlayingTime, RCoins) VALUES (@0, @1, @2, @3, @4, @5, @6);", user.Name, TShock.Utils.HashPassword(user.Password), user.Group, user.Address, Convert.ToString(DateTime.Now.ToFileTime()), 0, 0) < 1)
+                if (database.Query("INSERT INTO Users (Username, Password, UserGroup, IP, LastLogin, PlayingTime, RCoins) VALUES (@0, @1, @2, @3, @4, @5, @6);", user.Name, TShock.Utils.HashPassword(user.Password), user.Group, user.Address, Convert.ToString(DateTime.UtcNow.ToFileTime()), 0, 0) < 1)
                     throw new UserExistsException(user.Name);
             }
             catch (Exception ex)
@@ -153,9 +153,9 @@ namespace TShockAPI.DB
             string MergedIDs = string.Empty;
             string PlayerName = string.Empty;
             string PlayerGroup = string.Empty;
-            DateTime LastLogin = DateTime.Now;
+            DateTime LastLogin = DateTime.UtcNow;
             
-            using (var reader = database.QueryReader("SELECT * FROM Users WHERE LastLogin < @0;", DateTime.Now.AddMinutes(-time).ToFileTime()))
+            using (var reader = database.QueryReader("SELECT * FROM Users WHERE LastLogin < @0;", DateTime.UtcNow.AddMinutes(-time).ToFileTime()))
            {
                 while (reader.Read())
                 {
@@ -187,7 +187,7 @@ namespace TShockAPI.DB
         {
             try
             {
-                if (database.Query("UPDATE Users SET LastLogin = @0, IP = @1 WHERE LOWER (Username) = @2;", Convert.ToString(DateTime.Now.ToFileTime()), user.IP, user.Name.ToLower()) == 0)
+                if (database.Query("UPDATE Users SET LastLogin = @0, IP = @1 WHERE LOWER (Username) = @2;", Convert.ToString(DateTime.UtcNow.ToFileTime()), user.IP, user.Name.ToLower()) == 0)
                     throw new UserNotExistException(user.Name);
             }
             catch (Exception ex)
@@ -204,7 +204,7 @@ namespace TShockAPI.DB
         {
             try
             {
-                if (database.Query("UPDATE Users SET LastLogin = @0, IP = @1 WHERE LOWER (Username) = @2;", Convert.ToString(DateTime.Now.ToFileTime()), IP, username.ToLower()) == 0)
+                if (database.Query("UPDATE Users SET LastLogin = @0, IP = @1 WHERE LOWER (Username) = @2;", Convert.ToString(DateTime.UtcNow.ToFileTime()), IP, username.ToLower()) == 0)
                     throw new UserNotExistException(username);
             }
             catch (Exception ex)
@@ -645,7 +645,7 @@ namespace TShockAPI.DB
             Name = "";
             Password = "";
             Group = "";
-            LastLogin = DateTime.Now;
+            LastLogin = DateTime.UtcNow;
             PlayingTime = 0;
             RCoins = 0;
         }
