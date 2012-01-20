@@ -1,4 +1,4 @@
-﻿/*
+/*
 TShock, a server mod for Terraria
 Copyright (C) 2011 The TShock Team
 
@@ -29,6 +29,12 @@ namespace TShockAPI
 {
 	public class Utils
 	{
+	    public static bool saving = false;
+
+		public Utils()
+		{
+		}
+
 		public Random Random = new Random();
 		//private static List<Group> groups = new List<Group>();
 
@@ -106,7 +112,8 @@ namespace TShockAPI
 		/// </summary>
 		public void SaveWorld()
 		{
-			WorldGen.saveWorld();
+            saving = true;
+            WorldGen.realsaveWorld();
             foreach (TSPlayer player in TShock.Players)
             {
                 if (player != null && player.Active && player.IsLoggedIn)
@@ -117,9 +124,9 @@ namespace TShockAPI
                         player.SendMessage("Your profile saved sucessfully", Color.Chartreuse);
                 }
             }
-			Broadcast("World saved.", Color.Yellow);
+            Broadcast("World saved.", Color.Yellow);
             Console.WriteLine("All profiles saved!");
-			Log.Info(string.Format("World saved at ({0})", Main.worldPathName));
+            Log.Info(string.Format("World saved at ({0})", Main.worldPathName));
 		}
 
         /// <summary>
@@ -183,7 +190,7 @@ namespace TShockAPI
 		/// <param name="msg">string message</param>
 		public void Broadcast(string msg)
 		{
-            Broadcast(msg, Color.Green);
+			Broadcast(msg, Color.Green);
 		}
 
 		public void Broadcast(string msg, byte red, byte green, byte blue)
@@ -844,11 +851,11 @@ namespace TShockAPI
             return Math.Round(price, 2);
         }
 
-		public int SearchProjectile(short identity)
+		public int SearchProjectile(short identity, int owner)
 		{
 			for (int i = 0; i < Main.maxProjectiles; i++)
 			{
-				if (Main.projectile[i].identity == identity)
+				if (Main.projectile[i].identity == identity && Main.projectile[i].owner == owner)
 					return i;
 			}
 			return 1000;

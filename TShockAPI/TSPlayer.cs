@@ -17,6 +17,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 */
 using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.IO;
 using System.Threading;
 using Terraria;
@@ -298,8 +299,8 @@ namespace TShockAPI
 
 			SendWorldInfo(Main.spawnTileX, Main.spawnTileY, false);
 
-			TPlayer.position.X = tilex;
-			TPlayer.position.Y = tiley;
+			TPlayer.position.X = tilex * 16;
+			TPlayer.position.Y = tiley * 16;
 
 			return true;
 		}
@@ -600,12 +601,20 @@ namespace TShockAPI
 			SendData(PacketTypes.PlayerTeam, "", Index);
 		}
 
-		public virtual void Disable()
+		public virtual void Disable(string reason = "")
 		{
 			LastThreat = DateTime.Now;
 			SetBuff(33, 330, true); //Weak
 			SetBuff(32, 330, true); //Slow
 			SetBuff(23, 330, true); //Cursed
+            if (!string.IsNullOrEmpty(reason))
+                Log.ConsoleInfo(string.Format("Player {0} has been disabled for {1}", Name, reason));
+
+            var trace = new StackTrace();
+            StackFrame frame = null;
+            frame = trace.GetFrame(1);
+            if (frame != null && frame.GetMethod().DeclaringType != null)
+                Log.Debug(frame.GetMethod().DeclaringType.Name + " called Disable()");
 		}
 
 		public virtual void Whoopie(object time)
@@ -787,6 +796,11 @@ namespace TShockAPI
 
 		public void StoreSlot(int slot, int netID, int prefix, int stack)
 		{
+			if(slot > (this.inventory.Length - 1)) //if the slot is out of range then dont save
+			{
+				return;
+			}	
+			
 			this.inventory[slot].netID = netID;
 			if (this.inventory[slot].netID != 0)
 			{

@@ -134,6 +134,7 @@ namespace TShockAPI
 			add(Permissions.maintenance, CheckUpdates, "checkupdates");
 			add(Permissions.causeevents, DropMeteor, "dropmeteor");
 			add(Permissions.causeevents, Star, "star");
+    			add(Permissions.causeevents, Ore, "genore");
 			add(Permissions.causeevents, Fullmoon, "fullmoon");
 			add(Permissions.causeevents, Bloodmoon, "bloodmoon");
 			add(Permissions.causeevents, Invade, "invade");
@@ -160,8 +161,11 @@ namespace TShockAPI
 			add(Permissions.managegroup, AddGroup, "addgroup");
 			add(Permissions.managegroup, DeleteGroup, "delgroup");
 			add(Permissions.managegroup, ModifyGroup, "modgroup");
-			add(Permissions.manageitem, AddItem, "additem");
-			add(Permissions.manageitem, DeleteItem, "delitem");
+			add(Permissions.manageitem, AddItem, "additem", "banitem");
+			add(Permissions.manageitem, DeleteItem, "delitem", "unbanitem");
+			add(Permissions.manageitem, ListItems, "listitems", "listbanneditems");
+			add(Permissions.manageitem, AddItemGroup, "additemgroup");
+			add(Permissions.manageitem, DeleteItemGroup, "delitemgroup");			
 			add(Permissions.cfg, SetSpawn, "setspawn");
 			add(Permissions.cfg, Reload, "reload");
 			add(Permissions.cfg, ServerPassword, "serverpassword");
@@ -1022,6 +1026,82 @@ namespace TShockAPI
 			Projectile.NewProjectile(vector.X, vector.Y, speedX, speedY, 12, 0x3e8, 10f, Main.myPlayer);
 		}
 
+        private static void Ore(CommandArgs args)
+        {
+            if (WorldGen.genRand == null)
+                WorldGen.genRand = new Random();
+
+            TSPlayer ply = args.Player;
+
+
+
+            int num = WorldGen.altarCount % 3;
+			int num2 = WorldGen.altarCount / 3 + 1;
+			float num3 = (float)(Main.maxTilesX / 4200);
+			int num4 = 1 - num;
+			num3 = num3 * 310f - (float)(85 * num);
+			num3 *= 0.85f;
+			num3 /= (float)num2;
+
+            if (args.Parameters.Count < 1)
+            {
+                ply.SendMessage("Picking a random ore!", Color.Green);
+                num = WorldGen.genRand.Next(2);
+            }
+            else if (args.Parameters[0] == "cobalt")
+            {
+                num = 0;
+            }
+            else if (args.Parameters[0] == "mythril")
+            {
+                num = 1;
+            }
+            else
+            {
+                num = 2;
+            }
+
+		if (num == 0)
+		{
+			num = 107;
+			num3 *= 1.05f;
+		}
+		else if (num == 1)
+		{
+			num = 108;
+		}
+		else
+		{
+			num = 111;
+		}
+
+
+            if (args.Parameters.Count > 1)
+            {
+                float.TryParse(args.Parameters[1], out num3);
+                num3 = Math.Min(num3, 1000f);
+            }
+
+			int num5 = 0;
+			while ((float)num5 < num3)
+			{
+				int i2 = WorldGen.genRand.Next(100, Main.maxTilesX - 100);
+				double num6 = Main.worldSurface;
+				if (num == 108)
+				{
+					num6 = Main.rockLayer;
+				}
+				if (num == 111)
+				{
+					num6 = (Main.rockLayer + Main.rockLayer + (double)Main.maxTilesY) / 3.0;
+				}
+				int j2 = WorldGen.genRand.Next((int)num6, Main.maxTilesY - 150);
+				WorldGen.OreRunner(i2, j2, (double)WorldGen.genRand.Next(5, 9 + num4), WorldGen.genRand.Next(5, 9 + num4), num);
+				num5++;
+			}
+            ply.SendMessage(String.Format("Spawned {0} tiles of {1}", Math.Floor(num3), num), Color.Green );
+        }
+
 		private static void Fullmoon(CommandArgs args)
 		{
 			TSPlayer.Server.SetFullMoon(true);
@@ -1289,19 +1369,19 @@ namespace TShockAPI
 			}
 		}
 
-        	private static void StartHardMode(CommandArgs args)
-        	{
-        		if (!TShock.Config.DisableHardmode)
-            			WorldGen.StartHardmode();
-            		else
-            			args.Player.SendMessage("Hardmode is disabled via config", Color.Red);
-        	}
+			private static void StartHardMode(CommandArgs args)
+			{
+				if (!TShock.Config.DisableHardmode)
+						WorldGen.StartHardmode();
+					else
+						args.Player.SendMessage("Hardmode is disabled via config", Color.Red);
+			}
 
-        	private static void DisableHardMode(CommandArgs args)
-        	{
-            		Main.hardMode = false;
-            		args.Player.SendMessage("Hardmode is now disabled", Color.Green);
-        	}
+			private static void DisableHardMode(CommandArgs args)
+			{
+					Main.hardMode = false;
+					args.Player.SendMessage("Hardmode is now disabled", Color.Green);
+			}
 
 		private static void ConvertCorruption(CommandArgs args)
 		{
@@ -1828,7 +1908,7 @@ namespace TShockAPI
 
 		private static void AddItem(CommandArgs args)
 		{
-			if (args.Parameters.Count > 0)
+			if (args.Parameters.Count == 1)
 			{
 				var items = TShock.Utils.GetItemByIdOrName(args.Parameters[0]);
 				if (items.Count == 0)
@@ -1855,13 +1935,13 @@ namespace TShockAPI
 			}
 			else
 			{
-				args.Player.SendMessage("Invalid use: /addItem \"item name\" or /addItem ##", Color.Red);
+				args.Player.SendMessage("Invalid use: /additem \"item name\" or /additem ##", Color.Red);
 			}
 		}
 
 		private static void DeleteItem(CommandArgs args)
 		{
-			if (args.Parameters.Count > 0)
+			if (args.Parameters.Count == 1)
 			{
 				var items = TShock.Utils.GetItemByIdOrName(args.Parameters[0]);
 				if (items.Count == 0)
@@ -1888,10 +1968,113 @@ namespace TShockAPI
 			}
 			else
 			{
-				args.Player.SendMessage("Invalid use: /delItem \"item name\" or /delItem ##", Color.Red);
+				args.Player.SendMessage("Invalid use: /delitem \"item name\" or /delitem ##", Color.Red);
 			}
 		}
+		
+		private static void ListItems(CommandArgs args)
+		{
+			args.Player.SendMessage("The banned items are: " + String.Join(",", TShock.Itembans.ItemBans), Color.Yellow);
+		}
+		
+		private static void AddItemGroup(CommandArgs args)
+		{
+			if (args.Parameters.Count == 2)
+			{
+				var items = TShock.Utils.GetItemByIdOrName(args.Parameters[0]);
+				if (items.Count == 0)
+				{
+					args.Player.SendMessage("Invalid item type!", Color.Red);
+				}
+				else if (items.Count > 1)
+				{
+					args.Player.SendMessage(string.Format("More than one ({0}) item matched!", items.Count), Color.Red);
+				}
+				else
+				{
+					var item = items[0];
+					if (item.type >= 1)
+					{
+						if(TShock.Groups.GroupExists(args.Parameters[1]))
+						{
+							ItemBan ban = TShock.Itembans.GetItemBanByName(item.name);
+							
+							if(!ban.AllowedGroups.Contains(args.Parameters[1]))
+							{
+								TShock.Itembans.AllowGroup(item.name, args.Parameters[1]);
+								args.Player.SendMessage("Banned item " + item.name + " has been allowed for group " + args.Parameters[1] + ".", Color.Green);
+							}
+							else
+							{
+								args.Player.SendMessage("Banned item " + item.name + " is already allowed for group " + args.Parameters[1] + "!", Color.OrangeRed);	
+							}
+						}
+						else
+						{
+							args.Player.SendMessage("Group " + args.Parameters[1] + " not found!", Color.Red);
+						}
+					}
+					else
+					{
+						args.Player.SendMessage("Invalid item type!", Color.Red);
+					}
+				}
+			}
+			else
+			{
+				args.Player.SendMessage("Invalid use: /additemgroup \"item name\" \"group name\"", Color.Red);
+			}
+		}		
 
+		private static void DeleteItemGroup(CommandArgs args)
+		{
+			if (args.Parameters.Count == 2)
+			{
+				var items = TShock.Utils.GetItemByIdOrName(args.Parameters[0]);
+				if (items.Count == 0)
+				{
+					args.Player.SendMessage("Invalid item type!", Color.Red);
+				}
+				else if (items.Count > 1)
+				{
+					args.Player.SendMessage(string.Format("More than one ({0}) item matched!", items.Count), Color.Red);
+				}
+				else
+				{
+					var item = items[0];
+					if (item.type >= 1)
+					{
+						if(TShock.Groups.GroupExists(args.Parameters[1]))
+						{
+							ItemBan ban = TShock.Itembans.GetItemBanByName(item.name);
+							
+							if(ban.AllowedGroups.Contains(args.Parameters[1]))
+							{
+								TShock.Itembans.RemoveGroup(item.name, args.Parameters[1]);
+								args.Player.SendMessage("Removed access for group " + args.Parameters[1] + " to banned item " + item.name + ".", Color.Green);
+							}
+							else
+							{
+								args.Player.SendMessage("Group " + args.Parameters[1] + " has not access to banned item " + item.name + "!", Color.Red);	
+							}
+						}
+						else
+						{
+							args.Player.SendMessage("Group " + args.Parameters[1] + " not found!", Color.Red);
+						}
+					}
+					else
+					{
+						args.Player.SendMessage("Invalid item type!", Color.Red);
+					}
+				}
+			}
+			else
+			{
+				args.Player.SendMessage("Invalid use: /delitemgroup \"item name\" \"group name\"", Color.Red);
+			}
+		}
+		
 		#endregion Item Management
 
 		#region Server Config Commands

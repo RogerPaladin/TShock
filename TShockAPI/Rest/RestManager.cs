@@ -42,6 +42,7 @@ namespace TShockAPI
 			Rest.Register(new RestCommand("/tokentest", TokenTest) {RequiresToken = true});
 
 			Rest.Register(new RestCommand("/users/activelist", UserList) {RequiresToken = true});
+			Rest.Register(new RestCommand("/v2/users/activelist", UserListV2) { RequiresToken = true });
 			Rest.Register(new RestCommand("/v2/users/read", UserInfoV2) { RequiresToken = true });
 			Rest.Register(new RestCommand("/v2/users/destroy", UserDestroyV2) { RequiresToken = true });
 			Rest.Register(new RestCommand("/v2/users/update", UserUpdateV2) { RequiresToken = true });
@@ -55,6 +56,8 @@ namespace TShockAPI
 			Rest.Register(new RestCommand("/world/read", WorldRead) {RequiresToken = true});
 			Rest.Register(new RestCommand("/world/meteor", WorldMeteor) {RequiresToken = true});
 			Rest.Register(new RestCommand("/world/bloodmoon/{bool}", WorldBloodmoon) {RequiresToken = true});
+			Rest.Register(new RestCommand("/v2/world/save", WorldSave) { RequiresToken = true});
+			Rest.Register(new RestCommand("/v2/world/autosave/state/{bool}", ChangeWorldSaveSettings) { RequiresToken = true });
 			Rest.Register(new RestCommand("/v2/world/butcher", Butcher) {RequiresToken = true});
 
 			Rest.Register(new RestCommand("/v2/players/read", PlayerReadV2) { RequiresToken = true });
@@ -153,7 +156,7 @@ namespace TShockAPI
 		private object TokenTest(RestVerbs verbs, IParameterCollection parameters, RequestEventArgs e)
 		{
 			return new Dictionary<string, string>
-			       	{{"status", "200"}, {"response", "Token is valid and was passed through correctly."}};
+					{{"status", "200"}, {"response", "Token is valid and was passed through correctly."}};
 		}
 
 		private object Status(RestVerbs verbs, IParameterCollection parameters, RequestEventArgs e)
@@ -201,21 +204,15 @@ namespace TShockAPI
 
 		#region RestUserMethods
 
-		private object UserList(RestVerbs verbs, IParameterCollection parameters, RequestEventArgs e)
+		private object UserListV2(RestVerbs verbs, IParameterCollection parameters, RequestEventArgs e)
 		{
 			var ret = new RestObject("200");
 			string playerlist = "";
 			foreach (var TSPlayer in TShock.Players)
 			{
-				if (playerlist == "")
-				{
-					playerlist += TSPlayer.UserAccountName;
-				} else
-				{
-					playerlist += ", " + TSPlayer.UserAccountName;
-				}
+				playerlist += playerlist == "" ? TSPlayer.UserAccountName : "\t" + TSPlayer.UserAccountName;
 			}
-			ret["activeuesrs"] = playerlist;
+			ret["activeusers"] = playerlist;
 			return ret;
 		}
 
@@ -418,6 +415,36 @@ namespace TShockAPI
 
 		#region RestWorldMethods
 
+		private object ChangeWorldSaveSettings(RestVerbs verbs, IParameterCollection parameters, RequestEventArgs e)
+		{
+			bool state;
+			bool.TryParse(verbs["state"], out state);
+
+				if (state == true)
+				{
+					TShock.Config.AutoSave = true;
+				}
+				else
+				{
+					TShock.Config.AutoSave = false;
+				}
+
+				RestObject rj = new RestObject("200");
+				rj["response"] = "Value changed";
+				rj["state"] = state;
+
+				return rj;
+		}
+
+        private object WorldSave(RestVerbs verbs, IParameterCollection parameters, RequestEventArgs e)
+		{
+			TShock.Utils.SaveWorld();
+
+			RestObject rj = new RestObject("200");
+			rj["response"] = "World saved.";
+			return rj;
+		}
+
 		private object Butcher(RestVerbs verbs, IParameterCollection parameters, RequestEventArgs e)
 		{
 			bool killFriendly;
@@ -462,10 +489,10 @@ namespace TShockAPI
 
 		private object WorldMeteor(RestVerbs verbs, IParameterCollection parameters, RequestEventArgs e)
 		{
+			if (WorldGen.genRand == null)
+				WorldGen.genRand = new Random();
 			WorldGen.dropMeteor();
-			var returnBlock = new Dictionary<string, string>();
-			returnBlock.Add("status", "200");
-			returnBlock.Add("response", "Meteor has been spawned.");
+			var returnBlock = new Dictionary<string, string> {{"status", "200"}, {"response", "Meteor has been spawned."}};
 			return returnBlock;
 		}
 
@@ -750,6 +777,25 @@ namespace TShockAPI
 			returnBlock.Add("id", user.ID.ToString());
 			returnBlock.Add("deprecated", "This endpoint is deprecated. It will be fully removed from code in TShock 3.6.");
 			return returnBlock;
+		}
+
+		private object UserList(RestVerbs verbs, IParameterCollection parameters, RequestEventArgs e)
+		{
+			var ret = new RestObject("200");
+			string playerlist = "";
+			foreach (var TSPlayer in TShock.Players)
+			{
+				if (playerlist == "")
+				{
+					playerlist += TSPlayer.UserAccountName;
+				}
+				else
+				{
+					playerlist += ", " + TSPlayer.UserAccountName;
+				}
+			}
+			ret["activeuesrs"] = playerlist;
+			return ret;
 		}
 
 		private object BanDestroy(RestVerbs verbs, IParameterCollection parameters, RequestEventArgs e)

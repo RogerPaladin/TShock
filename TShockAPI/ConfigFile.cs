@@ -268,6 +268,16 @@ namespace TShockAPI
         [Description("Andy Server?")]
         public bool AndyServer = false;
 
+        [Description("The maximum damage a player/npc can inflict")] public int MaxDamage = 175;
+        
+        [Description("The maximum damage a projectile can inflict")] public int MaxProjDamage = 175;
+
+        [Description("Ignores checking to see if player 'can' update a projectile")] public bool IgnoreProjUpdate = false;
+
+        [Description("Ignores checking to see if player 'can' kill a projectile")] public bool IgnoreProjKill = false;
+
+	    [Description("Ignores all no clip checks for players")] public bool IgnoreNoClip = false;
+
 		public static ConfigFile Read(string path)
 		{
 			if (!File.Exists(path))

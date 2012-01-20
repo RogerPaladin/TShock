@@ -63,6 +63,9 @@ namespace TShockAPI
 		[Description("Prevents you from being kicked by hacked health detection")] public static readonly string
 			ignorestathackdetection;
 
+	    [Description("Prevents your actions from being ignored if damage is too high")] public static readonly string
+	        ignoredamagecap;
+
 		[Description("Specific log messages are sent to users with this permission")] public static readonly string logs;
 
 		[Description("Allows you to bypass the max slots for up to 5 slots above your max")] public static readonly string
@@ -194,6 +197,11 @@ namespace TShockAPI
         [Description("User can edit towns - user commands")]
         public static readonly string towncommands;
 
+        [Description("User can summon bosses using items")]
+	    public static readonly string summonboss;
+
+        [Description("User can start invasions (Goblin/Snow Legion) using items")]
+        public static readonly string startinvasion;
 		static Permissions()
 		{
 			foreach (var field in typeof (Permissions).GetFields())
