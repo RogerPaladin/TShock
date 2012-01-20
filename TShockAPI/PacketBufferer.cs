@@ -200,7 +200,7 @@ namespace TShockAPI
 			}
 			catch (SocketException e)
 			{
-                Log.Error(e.ToString());
+                //Log.Error(e.ToString());
 			}
 			catch (IOException e)
 			{
