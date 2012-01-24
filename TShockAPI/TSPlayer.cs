@@ -395,7 +395,7 @@ namespace TShockAPI
                         file2_sr.Dispose();
                         return true;
                     }
-                    if (Count == 1 || Count == 17 || Count == 18)
+                    if (Count == 1 || Count == 9 || Count == 17 || Count == 18)
                     {
                         Count++;
                         continue;

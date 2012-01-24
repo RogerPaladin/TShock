@@ -172,7 +172,7 @@ namespace TShockAPI
             string Vips = String.Empty;
             foreach (TSPlayer player in TShock.Players)
             {
-                if (player != null && player.Active)
+                if (player != null && player.Active && !TShock.isGhost.Contains(player.Name))
                 {
                     count++;
                     if (player.Group.HasPermission(Permissions.adminstatus))

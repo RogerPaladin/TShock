@@ -387,7 +387,7 @@ namespace TShockAPI
 
 		private static bool OnPlayerSpawn(byte player, int spawnX, int spawnY)
 		{
-			if (PlayerSpawn == null)
+            if (PlayerSpawn == null)
 				return false;
 
 			var args = new SpawnEventArgs
@@ -1015,13 +1015,15 @@ namespace TShockAPI
 				Log.Info(string.Format("{0} ({1}) from '{2}' group from '{3}' joined. ({4}/{5})", args.Player.Name, args.Player.IP,
 									   args.Player.Group.Name, args.Player.Country, TShock.Utils.ActivePlayers(),
 									   TShock.Config.MaxSlots));
-				TShock.Utils.Broadcast(args.Player.Name + " has joined from the " + args.Player.Country, Color.Yellow);
+                if (TShock.isGhost.Contains(args.Player.Name))
+				    TShock.Utils.Broadcast(args.Player.Name + " has joined from the " + args.Player.Country, Color.Yellow);
 			}
 			else
 			{
 				Log.Info(string.Format("{0} ({1}) from '{2}' group joined. ({3}/{4})", args.Player.Name, args.Player.IP,
 									   args.Player.Group.Name, TShock.Utils.ActivePlayers(), TShock.Config.MaxSlots));
-				TShock.Utils.Broadcast(args.Player.Name + " has joined", Color.Yellow);
+                if (TShock.isGhost.Contains(args.Player.Name))
+                    TShock.Utils.Broadcast(args.Player.Name + " has joined", Color.Yellow);
 			}
 
 			if (TShock.Config.DisplayIPToAdmins)
@@ -2026,7 +2028,7 @@ namespace TShockAPI
 			var spawnx = args.Data.ReadInt32();
 			var spawny = args.Data.ReadInt32();
 
-			if (OnPlayerSpawn(player, spawnx, spawny))
+            if (OnPlayerSpawn(player, spawnx, spawny))
 				return true;
 
 			if (args.Player.InitSpawn && args.TPlayer.inventory[args.TPlayer.selectedItem].type != 50)

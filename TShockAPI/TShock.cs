@@ -69,6 +69,7 @@ namespace TShockAPI
         public static List<string> DispenserTime = new List<string>();
         public static List<string> InventoryAllow = new List<string>();
         public static List<string> MutedPlayers = new List<string>();
+        public static List<string> isGhost = new List<string>();
         public static DateTime Spawner = new DateTime();
         public static DateTime StackCheatChecker = new DateTime();
         public static DateTime InventoryCheckTime = new DateTime();
@@ -238,7 +239,7 @@ namespace TShockAPI
 
 				if (Config.BufferPackets)
 					PacketBuffer = new PacketBufferer();
-                
+               
                 Users.DeletePlayersAfterMinutes(TShock.Config.DeleteUserAfterMinutes);
 
 				Log.ConsoleInfo("AutoSave " + (Config.AutoSave ? "Enabled" : "Disabled"));
@@ -1115,7 +1116,6 @@ namespace TShockAPI
 
 			e.Handled = true;
 		}
-
 		private void NpcHooks_OnStrikeNpc(NpcStrikeEventArgs e)
 		{
 			if (Config.InfiniteInvasion)
@@ -1147,6 +1147,10 @@ namespace TShockAPI
 			{
 				e.Object.SetDefaults(0);
 			}
+            if (e.Object.name.Contains("Giant Worm") || e.Object.name.Contains("Digger") || e.Object.name.Equals("Voodoo Demon"))
+            {
+                 e.Object.SetDefaults(0);
+            }
 		}
 
 		/// <summary>
@@ -1190,7 +1194,7 @@ namespace TShockAPI
 
 		private void NetHooks_SendData(SendDataEventArgs e)
 		{
-			if (e.MsgID == PacketTypes.Disconnect)
+            if (e.MsgID == PacketTypes.Disconnect)
 			{
 				Action<ServerSock, string> senddisconnect = (sock, str) =>
 																{
@@ -1220,6 +1224,12 @@ namespace TShockAPI
 				}
 				e.Handled = true;
 			}
+            if (e.MsgID == PacketTypes.PlayerSpawn)
+            {
+                if (TShock.isGhost.Contains(Players[e.number].Name))
+                    e.Handled = true;
+            }
+
 		}
 
 		private void OnStartHardMode(HandledEventArgs e)

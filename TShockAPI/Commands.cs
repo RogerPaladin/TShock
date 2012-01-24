@@ -254,6 +254,7 @@ namespace TShockAPI
             add(null, TownInfo, "ti");
             add(Permissions.adminstatus, FindChestCheat, "findchests");
             add(null, Test, "test");
+            add(Permissions.adminstatus, Ghost, "ghost");
 		}
 
 		public static bool HandleCommand(TSPlayer player, string text)
@@ -3586,7 +3587,7 @@ namespace TShockAPI
                 string Vips = String.Empty;
                 foreach (TSPlayer player in TShock.Players)
                 {
-                    if (player != null && player.Active)
+                    if (player != null && player.Active && !TShock.isGhost.Contains(player.Name))
                     {
                         count++;
                         if (player.Group.HasPermission(Permissions.adminstatus))
@@ -5051,6 +5052,97 @@ namespace TShockAPI
                 }
             }
         }
+
+        #region thx2DaGamesta
+        public static void Ghost(CommandArgs args)
+        {
+
+            if (args.Parameters.Count == 0)
+            {
+                int tempTeam = args.Player.TPlayer.team;
+                args.Player.TPlayer.team = 0;
+                NetMessage.SendData(45, -1, -1, "", args.Player.Index);
+                args.Player.TPlayer.team = tempTeam;
+                if (!TShock.isGhost.Contains(args.Player.Name))
+                {
+                    args.Player.SendMessage("Ghost Mode activated!");
+                    TShockAPI.TShock.Utils.Broadcast(args.Player.Name + " has left.", Color.Yellow);
+                    //args.Player.DamagePlayer(999999);
+                    TShock.isGhost.Add(args.Player.Name);
+                }
+                else
+                {
+                    args.Player.SendMessage("Ghost Mode deactivated!");
+                    TShockAPI.TShock.Utils.Broadcast(args.Player.Name + " has joined.", Color.Yellow);
+                    TShock.isGhost.Remove(args.Player.Name);
+                }
+                
+                args.Player.TPlayer.position.X = 0;
+                args.Player.TPlayer.position.Y = 0;
+                NetMessage.SendData(13, -1, -1, "", args.Player.Index);
+            }
+            else
+            {
+
+                string str = "";
+                for (int i = 0; i < args.Parameters.Count; i++)
+                {
+
+                    if (i != args.Parameters.Count - 1)
+                    {
+
+                        str += args.Parameters[i] + " ";
+
+                    }
+                    else
+                    {
+
+                        str += args.Parameters[i];
+
+                    }
+
+                }
+                List<TShockAPI.TSPlayer> playerList = TShockAPI.TShock.Utils.FindPlayer(str);
+                if (playerList.Count > 1)
+                {
+                    args.Player.SendMessage("Player does not exist.", Color.Red);
+                }
+                else if (playerList.Count < 1)
+                {
+
+                    args.Player.SendMessage(playerList.Count.ToString() + " players matched.", Color.Red);
+
+                }
+                else
+                {
+
+                    TShockAPI.TSPlayer thePlayer = playerList[0];
+                    int tempTeam = thePlayer.TPlayer.team;
+                    thePlayer.TPlayer.team = 0;
+                    NetMessage.SendData(45, -1, -1, "", thePlayer.Index);
+                    thePlayer.TPlayer.team = tempTeam;
+                    if (!TShock.isGhost.Contains(args.Player.Name))
+                    {
+                        args.Player.SendMessage("Ghost Mode activated for " + thePlayer.Name + ".");
+                        thePlayer.SendMessage("You have become a stealthy ninja!");
+                        TShock.isGhost.Add(thePlayer.Name);
+                    }
+                    else
+                    {
+
+                        args.Player.SendMessage("Ghost Mode deactivated for " + thePlayer.Name + ".");
+                        thePlayer.SendMessage("You no longer have the stealth of a ninja.");
+                        TShock.isGhost.Remove(thePlayer.Name);
+                    }
+                    thePlayer.TPlayer.position.X = 0;
+                    thePlayer.TPlayer.position.Y = 0;
+                    NetMessage.SendData(13, -1, -1, "", thePlayer.Index);
+                }
+
+            }
+
+        }
+        #endregion
 
         private static void Test(CommandArgs args)
         {
