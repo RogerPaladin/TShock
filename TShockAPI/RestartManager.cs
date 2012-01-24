@@ -75,7 +75,7 @@ namespace TShockAPI
             WorldGen.saveWorld();
             Console.WriteLine("All profiles saved!");
             Netplay.disconnect = true;
-            Process.GetProcessById(TShock.id).Kill();
+            Process.GetProcessById(TShock.proc.Id).Kill();
         }
     }
 }

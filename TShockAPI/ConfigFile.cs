@@ -70,7 +70,7 @@ namespace TShockAPI
         public bool AdminChatEnabled = true;
 
 		[Description("Backup frequency in minutes. So, a value of 60 = 60 minutes. Backups are stored in the \\tshock\\backups folder.")] 
-        public int BackupInterval;
+        public int BackupInterval = 20;
 
 		[Description("How long backups are kept in minutes. 2880 = 2 days.")] 
         public int BackupKeepFor = 60;
@@ -91,7 +91,7 @@ namespace TShockAPI
         public bool AutoSave = true;
         
         [Description("Auto restart server every x minutes.")]
-        public int AutoRestart = 180;
+        public int AutoRestart = 60;
 		
         [Description("Number of failed login attempts before kicking the player.")] 
         public int MaximumLoginAttempts = 3;

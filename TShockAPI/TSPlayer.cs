@@ -343,7 +343,6 @@ namespace TShockAPI
             if (SavePlayer(TPlayer, TShock.profiles + TPlayer.name.ToLower() + ".plr", discardbanitems))
                 return true;
             return false;
-                return true;
         }
 
         public bool CheckPlayer()
@@ -379,15 +378,21 @@ namespace TShockAPI
                 while (!file1_sr.EndOfStream)
                 {
                     if (file2_sr.EndOfStream)
+                    {
+                        file1_sr.Dispose();
+                        file2_sr.Dispose();
                         return false;
+                    }
                     byte1 = file1_sr.Read();
                     byte2 = file2_sr.Read();
-                    if (Count > 970)
+                    if (Count > 450)
                     {
                         break;
                     }
                     if (Count == 1 && byte1 == 37 && byte2 == 39)
                     {
+                        file1_sr.Dispose();
+                        file2_sr.Dispose();
                         return true;
                     }
                     if (Count == 1 || Count == 17 || Count == 18)
@@ -398,7 +403,9 @@ namespace TShockAPI
 
                     if (byte1 != byte2)
                     {
-                        Log.Info(byte1.ToString("X") + "  " + byte2.ToString("X"));
+                        //Log.Info(byte1.ToString("X") + "  " + byte2.ToString("X"));
+                        file1_sr.Dispose();
+                        file2_sr.Dispose();
                         return false;
                     }
 
@@ -424,124 +431,132 @@ namespace TShockAPI
             catch
             {
             }
-            if (playerPath == null || playerPath == "")
+            try
             {
-                return false;
-            }
-            string destFileName = playerPath + ".bak";
-            string text = playerPath + ".dat";
-            using (FileStream fileStream = new FileStream(text, FileMode.Create))
-            {
-                using (BinaryWriter binaryWriter = new BinaryWriter(fileStream))
+                if (playerPath == null || playerPath == "")
                 {
-                    binaryWriter.Write(Main.curRelease);
-                    binaryWriter.Write(newPlayer.name);
-                    binaryWriter.Write(newPlayer.difficulty);
-                    binaryWriter.Write(newPlayer.hair);
-                    binaryWriter.Write(newPlayer.male);
-                    binaryWriter.Write(newPlayer.statLife);
-                    binaryWriter.Write(newPlayer.statLifeMax);
-                    binaryWriter.Write(400);
-                    binaryWriter.Write(400);
-                    binaryWriter.Write(newPlayer.hairColor.R);
-                    binaryWriter.Write(newPlayer.hairColor.G);
-                    binaryWriter.Write(newPlayer.hairColor.B);
-                    binaryWriter.Write(newPlayer.skinColor.R);
-                    binaryWriter.Write(newPlayer.skinColor.G);
-                    binaryWriter.Write(newPlayer.skinColor.B);
-                    binaryWriter.Write(newPlayer.eyeColor.R);
-                    binaryWriter.Write(newPlayer.eyeColor.G);
-                    binaryWriter.Write(newPlayer.eyeColor.B);
-                    binaryWriter.Write(newPlayer.shirtColor.R);
-                    binaryWriter.Write(newPlayer.shirtColor.G);
-                    binaryWriter.Write(newPlayer.shirtColor.B);
-                    binaryWriter.Write(newPlayer.underShirtColor.R);
-                    binaryWriter.Write(newPlayer.underShirtColor.G);
-                    binaryWriter.Write(newPlayer.underShirtColor.B);
-                    binaryWriter.Write(newPlayer.pantsColor.R);
-                    binaryWriter.Write(newPlayer.pantsColor.G);
-                    binaryWriter.Write(newPlayer.pantsColor.B);
-                    binaryWriter.Write(newPlayer.shoeColor.R);
-                    binaryWriter.Write(newPlayer.shoeColor.G);
-                    binaryWriter.Write(newPlayer.shoeColor.B);
-                    for (int i = 0; i < 11; i++)
+                    return false;
+                }
+                string destFileName = playerPath + ".bak";
+                string text = playerPath + ".dat";
+                using (FileStream fileStream = new FileStream(text, FileMode.Create))
+                {
+                    using (BinaryWriter binaryWriter = new BinaryWriter(fileStream))
                     {
-                        if (newPlayer.armor[i].name == null)
+                        binaryWriter.Write(Main.curRelease);
+                        binaryWriter.Write(newPlayer.name);
+                        binaryWriter.Write(newPlayer.difficulty);
+                        binaryWriter.Write(newPlayer.hair);
+                        binaryWriter.Write(newPlayer.male);
+                        binaryWriter.Write(newPlayer.statLife);
+                        binaryWriter.Write(newPlayer.statLifeMax);
+                        binaryWriter.Write(400);
+                        binaryWriter.Write(400);
+                        binaryWriter.Write(newPlayer.hairColor.R);
+                        binaryWriter.Write(newPlayer.hairColor.G);
+                        binaryWriter.Write(newPlayer.hairColor.B);
+                        binaryWriter.Write(newPlayer.skinColor.R);
+                        binaryWriter.Write(newPlayer.skinColor.G);
+                        binaryWriter.Write(newPlayer.skinColor.B);
+                        binaryWriter.Write(newPlayer.eyeColor.R);
+                        binaryWriter.Write(newPlayer.eyeColor.G);
+                        binaryWriter.Write(newPlayer.eyeColor.B);
+                        binaryWriter.Write(newPlayer.shirtColor.R);
+                        binaryWriter.Write(newPlayer.shirtColor.G);
+                        binaryWriter.Write(newPlayer.shirtColor.B);
+                        binaryWriter.Write(newPlayer.underShirtColor.R);
+                        binaryWriter.Write(newPlayer.underShirtColor.G);
+                        binaryWriter.Write(newPlayer.underShirtColor.B);
+                        binaryWriter.Write(newPlayer.pantsColor.R);
+                        binaryWriter.Write(newPlayer.pantsColor.G);
+                        binaryWriter.Write(newPlayer.pantsColor.B);
+                        binaryWriter.Write(newPlayer.shoeColor.R);
+                        binaryWriter.Write(newPlayer.shoeColor.G);
+                        binaryWriter.Write(newPlayer.shoeColor.B);
+                        for (int i = 0; i < 11; i++)
                         {
-                            newPlayer.armor[i].name = "";
+                            if (newPlayer.armor[i].name == null)
+                            {
+                                newPlayer.armor[i].name = "";
+                            }
+                            binaryWriter.Write(newPlayer.armor[i].netID);
+                            binaryWriter.Write(newPlayer.armor[i].prefix);
                         }
-                        binaryWriter.Write(newPlayer.armor[i].netID);
-                        binaryWriter.Write(newPlayer.armor[i].prefix);
-                    }
-                    for (int j = 0; j < 48; j++)
-                    {
-                        if (newPlayer.inventory[j].name == null)
+                        for (int j = 0; j < 48; j++)
                         {
-                            newPlayer.inventory[j].name = "";
-                        }
-                        if (discardbanitems == true)
-                        {
-                            if (TShock.Itembans.ItemIsBanned(newPlayer.inventory[j].name))
+                            if (newPlayer.inventory[j].name == null)
                             {
                                 newPlayer.inventory[j].name = "";
                             }
+                            if (discardbanitems == true)
+                            {
+                                if (TShock.Itembans.ItemIsBanned(newPlayer.inventory[j].name))
+                                {
+                                    newPlayer.inventory[j].name = "";
+                                }
+                            }
+                            binaryWriter.Write(newPlayer.inventory[j].netID);
+                            binaryWriter.Write(newPlayer.inventory[j].stack);
+                            binaryWriter.Write(newPlayer.inventory[j].prefix);
                         }
-                        binaryWriter.Write(newPlayer.inventory[j].netID);
-                        binaryWriter.Write(newPlayer.inventory[j].stack);
-                        binaryWriter.Write(newPlayer.inventory[j].prefix);
-                    }
-                    for (int k = 0; k < Chest.maxItems; k++)
-                    {
-                        if (newPlayer.bank[k].name == null)
+                        for (int k = 0; k < Chest.maxItems; k++)
                         {
-                            newPlayer.bank[k].name = "";
+                            if (newPlayer.bank[k].name == null)
+                            {
+                                newPlayer.bank[k].name = "";
+                            }
+                            if (TShock.Itembans.ItemIsBanned(newPlayer.bank[k].name = ""))
+                            {
+                                newPlayer.bank[k].name = "";
+                            }
+                            binaryWriter.Write(newPlayer.bank[k].netID);
+                            binaryWriter.Write(newPlayer.bank[k].stack);
+                            binaryWriter.Write(newPlayer.bank[k].prefix);
                         }
-                        if (TShock.Itembans.ItemIsBanned(newPlayer.bank[k].name = ""))
+                        for (int l = 0; l < Chest.maxItems; l++)
                         {
-                            newPlayer.bank[k].name = "";
+                            if (newPlayer.bank2[l].name == null)
+                            {
+                                newPlayer.bank2[l].name = "";
+                            }
+                            if (TShock.Itembans.ItemIsBanned(newPlayer.bank2[l].name = ""))
+                            {
+                                newPlayer.bank2[l].name = "";
+                            }
+                            binaryWriter.Write(newPlayer.bank2[l].netID);
+                            binaryWriter.Write(newPlayer.bank2[l].stack);
+                            binaryWriter.Write(newPlayer.bank2[l].prefix);
                         }
-                        binaryWriter.Write(newPlayer.bank[k].netID);
-                        binaryWriter.Write(newPlayer.bank[k].stack);
-                        binaryWriter.Write(newPlayer.bank[k].prefix);
-                    }
-                    for (int l = 0; l < Chest.maxItems; l++)
-                    {
-                        if (newPlayer.bank2[l].name == null)
+                        for (int m = 0; m < 10; m++)
                         {
-                            newPlayer.bank2[l].name = "";
+                            binaryWriter.Write(newPlayer.buffType[m]);
+                            binaryWriter.Write(newPlayer.buffTime[m]);
                         }
-                        if (TShock.Itembans.ItemIsBanned(newPlayer.bank2[l].name = ""))
+                        for (int n = 0; n < 200; n++)
                         {
-                            newPlayer.bank2[l].name = "";
+                            if (newPlayer.spN[n] == null)
+                            {
+                                binaryWriter.Write(-1);
+                                break;
+                            }
+                            binaryWriter.Write(newPlayer.spX[n]);
+                            binaryWriter.Write(newPlayer.spY[n]);
+                            binaryWriter.Write(newPlayer.spI[n]);
+                            binaryWriter.Write(newPlayer.spN[n]);
                         }
-                        binaryWriter.Write(newPlayer.bank2[l].netID);
-                        binaryWriter.Write(newPlayer.bank2[l].stack);
-                        binaryWriter.Write(newPlayer.bank2[l].prefix);
+                        binaryWriter.Write(newPlayer.hbLocked);
+                        binaryWriter.Close();
                     }
-                    for (int m = 0; m < 10; m++)
-                    {
-                        binaryWriter.Write(newPlayer.buffType[m]);
-                        binaryWriter.Write(newPlayer.buffTime[m]);
-                    }
-                    for (int n = 0; n < 200; n++)
-                    {
-                        if (newPlayer.spN[n] == null)
-                        {
-                            binaryWriter.Write(-1);
-                            break;
-                        }
-                        binaryWriter.Write(newPlayer.spX[n]);
-                        binaryWriter.Write(newPlayer.spY[n]);
-                        binaryWriter.Write(newPlayer.spI[n]);
-                        binaryWriter.Write(newPlayer.spN[n]);
-                    }
-                    binaryWriter.Write(newPlayer.hbLocked);
-                    binaryWriter.Close();
                 }
+                TShock.Utils.EncryptFile(text, playerPath);
+                //File.Delete(text);
+                return true;
             }
-            TShock.Utils.EncryptFile(text, playerPath);
-            //File.Delete(text);
-            return true;
+            catch (Exception ex)
+            {
+                Log.Error(ex.ToString());
+                return false;
+            }
         }
 		
         public virtual bool SendTileSquare(int x, int y, int size = 10)

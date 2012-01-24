@@ -1535,19 +1535,20 @@ namespace TShockAPI
 				return true;
 			}
 
-			if (args.Player.TileKillThreshold >= TShock.Config.TileKillThreshold)
+			/*if (args.Player.TileKillThreshold >= TShock.Config.TileKillThreshold)
 			{
 				args.Player.Disable("Reached TileKill threshold");
 				args.Player.SendTileSquare(tileX, tileY);
 				return true;
-			}
+			}*/
 
-			if (args.Player.TilePlaceThreshold >= TShock.Config.TilePlaceThreshold)
+			/*
+            if (args.Player.TilePlaceThreshold >= TShock.Config.TilePlaceThreshold)
 			{
 				args.Player.Disable("Reached TilePlace threshold");
 				args.Player.SendTileSquare(tileX, tileY);
 				return true;
-			}
+			}*/
 
 			if ((DateTime.UtcNow - args.Player.LastThreat).TotalMilliseconds < 5000)
 			{
@@ -1809,12 +1810,12 @@ namespace TShockAPI
 				return true;
 			}
 
-			if (args.Player.ProjectileThreshold >= TShock.Config.ProjectileThreshold)
+			/*if (args.Player.ProjectileThreshold >= TShock.Config.ProjectileThreshold)
 			{
 				args.Player.Disable("Reached projectile update threshold");
 				args.Player.RemoveProjectile(ident, owner);
 				return true;
-			}
+			}*/
 
 			if ((DateTime.UtcNow - args.Player.LastThreat).TotalMilliseconds < 5000)
 			{

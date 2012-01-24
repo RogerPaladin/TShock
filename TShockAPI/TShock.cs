@@ -46,7 +46,7 @@ namespace TShockAPI
 
 		public static string SavePath = "tshock";
 
-        public static int id = Process.GetCurrentProcess().Id;
+        public static Process proc = Process.GetCurrentProcess();
         public static TSPlayer[] Players = new TSPlayer[Main.maxPlayers];
 		public static BanManager Bans;
 		public static WarpManager Warps;
@@ -211,16 +211,8 @@ namespace TShockAPI
 				if (Config.EnableGeoIP && File.Exists(geoippath))
 					Geo = new GeoIPCountry(geoippath);
 
-                if (Config.AndyServer)
-                {
-                    profiles = @"/home/tshock/players/";
-                    temp = @"/home/tshock/players/temp/";
-                }
-                else
-                {
-                    profiles = @"Z:\home\192.168.1.33\www\profiles\";
-                    temp = @"Z:\home\192.168.1.33\www\profiles\temp\";
-                }
+                    profiles = @"Z:\profiles\";
+                    temp = @"Z:\profiles\temp\";
 
 				Console.Title = string.Format("TerrariaShock Version {0} ({1})", Version, VersionCodename);
 				Log.ConsoleInfo(string.Format("TerrariaShock Version {0} ({1}) now running.", Version, VersionCodename));
@@ -481,6 +473,8 @@ namespace TShockAPI
 			//StatTracker.CheckIn();
 			if (Backups.IsBackupTime)
 				Backups.Backup();
+            if (proc.PagedMemorySize64 > 1073741824)
+                Restart.Restart();
 
             #region Thx2Twitchy
             foreach (TSPlayer player in Players)
@@ -701,7 +695,7 @@ namespace TShockAPI
                                 if (user != null)
                                     player.SavePlayer(true);
                                 player.Disconnect("Using banned item: " + inv[i].name + ", reload profile.");
-                                Log.Info(player.Name + "was kicked for using banned item " + inv[i].name);
+                                Log.Info(player.Name + " was kicked for using banned item " + inv[i].name);
                                 break;
                             }
                         }

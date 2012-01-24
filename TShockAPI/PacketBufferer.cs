@@ -108,8 +108,33 @@ namespace TShockAPI
 
 		private void GameHooks_Update()
 		{
-			FlushAll();
-		}
+            FlushAll();
+            /*#region test
+            for (int i = 0; i < Netplay.serverSock.Length; i++)
+            {
+                if (Netplay.serverSock[i] == null || !Netplay.serverSock[i].active)
+                    continue;
+
+                if (!Netplay.serverSock[i].tcpClient.Client.Poll(0, SelectMode.SelectWrite))
+                    continue;
+
+                byte[] buff = buffers[i].GetBytes(BytesPerUpdate);
+                if (buff == null)
+                    continue;
+
+                try
+                {
+                    Netplay.serverSock[i].tcpClient.Client.Send(buff);
+                }
+                catch (ObjectDisposedException)
+                {
+                }
+                catch (SocketException)
+                {
+                }
+            }
+            #endregion*/
+        }
 
 		public void FlushAll()
 		{
@@ -196,15 +221,18 @@ namespace TShockAPI
 			}
 			catch (ObjectDisposedException e)
 			{
-                Log.Error(e.ToString());
+                //Log.Error(e.ToString());
+                //TShock.Restart.DoRestart();
 			}
 			catch (SocketException e)
 			{
                 //Log.Error(e.ToString());
+                //TShock.Restart.DoRestart();
 			}
 			catch (IOException e)
 			{
-                Log.Error(e.ToString());
+                //Log.Error(e.ToString());
+                //TShock.Restart.DoRestart();
 			}
 			return false;
 		}

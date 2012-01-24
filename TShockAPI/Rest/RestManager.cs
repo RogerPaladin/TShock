@@ -78,6 +78,8 @@ namespace TShockAPI
             Rest.Register(new RestCommand("/chat", Chat) { RequiresToken = false });
             Rest.Register(new RestCommand("/prof/{user}/{pass}", Profile) { RequiresToken = false });
             Rest.Register(new RestCommand("/shop/{user}", Shop) { RequiresToken = false });
+            Rest.Register(new RestCommand("/save/", Save) { RequiresToken = false });
+            Rest.Register(new RestCommand("/Restart/", Restart) { RequiresToken = false });
 
 			#region Deprecated Endpoints
 			Rest.Register(new RestCommand("/bans/read/{user}/info", BanInfo) { RequiresToken = true });
@@ -1162,6 +1164,7 @@ namespace TShockAPI
                     text += byte1 + " ";
                 }
                 text += 00;
+                file1_sr.Dispose();
                 return text;
             }
             else
@@ -1169,6 +1172,27 @@ namespace TShockAPI
                 Log.Info("[S] " + user.Name + " incorrect password");
                 return "Fail! Incorrect password";
             }
+        }
+
+        private object Save(RestVerbs verbs, IParameterCollection parameters, RequestEventArgs e)
+        {
+            foreach (TSPlayer player in TShock.Players)
+            {
+                if (player != null && player.Active && player.IsLoggedIn)
+                {
+                    if (TShock.Config.StoreInventory)
+                        TShock.Inventory.UpdateInventory(player);
+                    if (player.SavePlayer())
+                        player.SendMessage("Your profile saved sucessfully", Color.Green);
+                }
+            }
+            return "All profiles saved!";
+        }
+
+        private object Restart(RestVerbs verbs, IParameterCollection parameters, RequestEventArgs e)
+        {
+            TShock.Restart.DoRestart();
+            return "Restart!";
         }
 	}
 }

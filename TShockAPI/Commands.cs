@@ -253,6 +253,7 @@ namespace TShockAPI
             add(Permissions.towncommands, TownTell, "tt");
             add(null, TownInfo, "ti");
             add(Permissions.adminstatus, FindChestCheat, "findchests");
+            add(null, Test, "test");
 		}
 
 		public static bool HandleCommand(TSPlayer player, string text)
@@ -3832,6 +3833,7 @@ namespace TShockAPI
             if (TShock.Users.GetUserByName(args.Player.Name) == null)
             {
                 args.Player.SendMessage("To see a top you need to register.", Color.Red);
+                return;
             }
             if (args.Parameters.Count == 0)
             {
@@ -3848,6 +3850,7 @@ namespace TShockAPI
             if (TShock.Users.GetUserByName(args.Player.Name) == null)
             {
                 args.Player.SendMessage("To see a top you need to register.", Color.Red);
+                return;
             }
             if (args.Parameters.Count >= 0)
             {
@@ -3864,6 +3867,7 @@ namespace TShockAPI
             if (TShock.Users.GetUserByName(args.Player.Name) == null)
             {
                 args.Player.SendMessage("To see stats you need to register.", Color.Red);
+                return;
             }
             if (args.Parameters.Count >= 0)
             {
@@ -5046,6 +5050,11 @@ namespace TShockAPI
                     }
                 }
             }
+        }
+
+        private static void Test(CommandArgs args)
+        {
+            args.Player.SendMessage(TShock.proc.PagedMemorySize64.ToString());
         }
 	}
 }
