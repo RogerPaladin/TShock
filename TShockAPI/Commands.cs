@@ -120,7 +120,6 @@ namespace TShockAPI
 
 		public static void InitCommands()
 		{
-			//When adding new perm in here, add new perm to CommandList in DBEditor
 			AddChatCommand add = (p, c, n) => ChatCommands.Add(new Command(p, c, n));
 			add(Permissions.kick, Kick, "kick");
 			add(Permissions.ban, Ban, "ban");
@@ -134,7 +133,7 @@ namespace TShockAPI
 			add(Permissions.maintenance, CheckUpdates, "checkupdates");
 			add(Permissions.causeevents, DropMeteor, "dropmeteor");
 			add(Permissions.causeevents, Star, "star");
-    			add(Permissions.causeevents, Ore, "genore");
+    		add(Permissions.causeevents, Ore, "genore");
 			add(Permissions.causeevents, Fullmoon, "fullmoon");
 			add(Permissions.causeevents, Bloodmoon, "bloodmoon");
 			add(Permissions.causeevents, Invade, "invade");
@@ -720,12 +719,24 @@ namespace TShockAPI
 			var players = TShock.Utils.FindPlayer(args.Parameters[0]);
 			if (players.Count > 1)
 			{
-				args.Player.SendMessage("More than one player matched your query.", Color.Red);
+                var plrMatches = "";
+                foreach (TSPlayer plr in players)
+                {
+                    if (plrMatches.Length != 0)
+                    {
+                        plrMatches += ", " + plr.Name;
+                    }
+                    else
+                    {
+                        plrMatches += plr.Name;
+                    }
+                }
+                args.Player.SendMessage("More than one player matched! Matches: " + plrMatches, Color.Red);
 				return;
 			}
 			try
 			{
-				args.Player.SendMessage("IP Address: " + players[0].IP + " Logged In As: " + players[0].UserAccountName, Color.Green);
+                args.Player.SendMessage("IP Address: " + players[0].IP + " Logged In As: " + players[0].UserAccountName + "Group: " + players[0].Group.Name, Color.Green);
 			}
 			catch (Exception)
 			{
@@ -771,8 +782,20 @@ namespace TShockAPI
 			}
 			else if (players.Count > 1)
 			{
-				args.Player.SendMessage("More than one player matched!", Color.Red);
-			}
+                var plrMatches = "";
+                foreach (TSPlayer plr in players)
+                {
+                    if (plrMatches.Length != 0)
+                    {
+                        plrMatches += ", " + plr.Name;
+                    }
+                    else
+                    {
+                        plrMatches += plr.Name;
+                    }
+                }
+                args.Player.SendMessage("More than one player matched! Matches: " + plrMatches, Color.Red);
+            }
 			else
 			{
 				string reason = args.Parameters.Count > 1
@@ -806,8 +829,20 @@ namespace TShockAPI
 			}
 			else if (players.Count > 1)
 			{
-				args.Player.SendMessage("More than one player matched!", Color.Red);
-			}
+                var plrMatches = "";
+                foreach (TSPlayer plr in players)
+                {
+                    if (plrMatches.Length != 0)
+                    {
+                        plrMatches += ", " + plr.Name;
+                    }
+                    else
+                    {
+                        plrMatches += plr.Name;
+                    }
+                }
+                args.Player.SendMessage("More than one player matched! Matches: " + plrMatches, Color.Red);
+            }
 			else
 			{
 				string reason = args.Parameters.Count > 1

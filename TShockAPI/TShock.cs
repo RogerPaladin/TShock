@@ -1431,7 +1431,6 @@ namespace TShockAPI
 
 			return false;
 		}
-
 		public static bool CheckSpawn(int x, int y)
 		{
 			Vector2 tile = new Vector2(x, y);

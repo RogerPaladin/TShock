@@ -196,6 +196,8 @@ namespace TShockAPI
 		[Description("Enable Server Side Inventory checks, EXPERIMENTAL")] 
         public bool ServerSideInventory;
 
+        [Description("Time, in milliseconds, to disallow discarding items after logging in when ServerSideInventory is ON")] public int LogonDiscardThreshold=250;
+
 		[Description("Disables reporting of playercount to the stat system.")] 
         public bool DisablePlayerCountReporting;
 
@@ -247,6 +249,9 @@ namespace TShockAPI
 		[Description("Allows users to login with any username with /login")] 
         public bool AllowLoginAnyUsername = false;
 
+		[Description("Ignore shrapnel from crystal bullets for Projectile Threshold.")] public bool 
+			ProjIgnoreShrapnel = true;
+		
         [Description("Display the users group when they chat.")]
         public bool ChatDisplayGroup = false;
 
@@ -273,10 +278,12 @@ namespace TShockAPI
         [Description("The maximum damage a projectile can inflict")] public int MaxProjDamage = 175;
 
         [Description("Ignores checking to see if player 'can' update a projectile")] public bool IgnoreProjUpdate = false;
-
+		
         [Description("Ignores checking to see if player 'can' kill a projectile")] public bool IgnoreProjKill = false;
 
 	    [Description("Ignores all no clip checks for players")] public bool IgnoreNoClip = false;
+
+	    [Description("Allow Ice placement even when user does not have canbuild")] public bool AllowIce = false;
 
 		public static ConfigFile Read(string path)
 		{
