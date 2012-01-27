@@ -617,6 +617,18 @@ namespace TShockAPI
 								(float) 0);
 		}
 
+        public virtual void SetPvP(bool pvp)
+        {
+            if (TPlayer.hostile != pvp)
+            {
+                LastPvpChange = DateTime.UtcNow;
+                TPlayer.hostile = pvp;
+                All.SendMessage(string.Format("{0} has {1} PvP!", Name, pvp ? "enabled" : "disabled"), Main.teamColor[Team]);
+            }
+            //Broadcast anyways to keep players synced
+            NetMessage.SendData((int)PacketTypes.TogglePvp, -1, -1, "", Index);
+        }
+
 		public virtual void SetTeam(int team)
 		{
 			Main.player[Index].team = team;
