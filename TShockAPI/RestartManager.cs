@@ -70,6 +70,8 @@ namespace TShockAPI
                         TShock.Inventory.UpdateInventory(player);
                     if (player.SavePlayer())
                         player.SendMessage("Your profile saved sucessfully", Color.Green);
+                    if (player.InTrade)
+                        TShock.Utils.DeclineTrade(player);
                 }
             }
             WorldGen.saveWorld();

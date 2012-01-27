@@ -85,9 +85,11 @@ namespace TShockAPI
         public DateTime LastExplosive { get; set; }
         public DateTime LastCorruption { get; set; }
         public DateTime LoginTime { get; set; }
+        public DateTime MainLoginTime { get; set; }
         public DateTime Interval { get; set; }
         public DateTime LastChestItem { get; set; }
         public DateTime LastChangePos { get; set; }
+        public DateTime TradeTime { get; set; }
         public string LastSellItem { get; set; }
         public byte LastSellItemStack { get; set; }
         public int Dispenser { get; set; }
@@ -97,6 +99,14 @@ namespace TShockAPI
         public bool InRegion = false;
         public bool InTown = false;
         public List<Point> IceTiles;
+        public TSPlayer TradeMan = null;
+        public TSPlayer TradeRequestedByMan = null;
+        public bool InTrade = false;
+        public Item TradeItem = null;
+        public byte TradeItemStack = 0;
+        public byte TradeItemPrefix = 0;
+        public bool TradeAccept = false;
+        public double TradeRC = 0;
 
 		public bool RealPlayer
 		{

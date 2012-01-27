@@ -1222,7 +1222,7 @@ namespace TShockAPI
                 return true;
             }
 
-            if (name.ToLower().Equals("all"))
+            if (name.ToLower().Equals("all") || name.ToLower().Equals("accept") || name.ToLower().Equals("decline") || name.ToLower().Equals("rc"))
             {
                 TShock.Utils.ForceKick(args.Player, "Reserved name.");
                 return true;
@@ -2744,7 +2744,7 @@ namespace TShockAPI
 				args.Player.SendData(PacketTypes.ItemDrop, "", id);
 				return true;
 			}
-			if ((DateTime.UtcNow - args.Player.LoginTime).TotalSeconds < TShock.Config.LogonDiscardThreshold)
+            if ((DateTime.UtcNow - args.Player.MainLoginTime).TotalSeconds < TShock.Config.LogonDiscardThreshold)
 			{
 			//Player is probably trying to sneak items onto the server in their hands!!!
 				Log.ConsoleInfo(string.Format("Player {0} tried to sneak {1} onto the server!", args.Player.Name, item.name));
@@ -2752,6 +2752,31 @@ namespace TShockAPI
 				return true;
 			
 			}
+            if (args.Player.InTrade)
+            {
+                if (args.Player.TradeItem != null && args.Player.TradeItemStack != 0)
+                {
+                    args.Player.GiveItem(args.Player.TradeItem.type, args.Player.TradeItem.name, args.Player.TradeItem.width, args.Player.TradeItem.height, args.Player.TradeItemStack, args.Player.TradeItemPrefix);
+                    args.Player.TradeItem = item;
+                    args.Player.TradeItemStack = stacks;
+                    args.Player.TradeItemPrefix = prefix;
+                    args.Player.SendMessage(string.Format("[Trade] You changed offer to : {0} x {1}", item.name, stacks), Color.Magenta);
+                    args.Player.TradeMan.SendMessage(string.Format("[Trade] Offer of <{2}> was changed to: {0} x {1}", item.name, stacks, args.Player.Name), Color.Magenta);
+                    Log.ConsoleInfo(string.Format("[Trade] {0} changed offer to {1} x {2}", args.Player.Name, args.Player.TradeItem.name, args.Player.TradeItemStack));
+                    args.Player.TradeAccept = false;
+                    args.Player.TradeMan.TradeAccept = false;
+                    args.Player.SendData(PacketTypes.ItemDrop, "", id);
+                    return true;
+                }
+                args.Player.TradeItem = item;
+                args.Player.TradeItemStack = stacks;
+                args.Player.TradeItemPrefix = prefix;
+                args.Player.SendMessage(string.Format("[Trade] Your offer for trade is: {0} x {1}", item.name, stacks), Color.NavajoWhite);
+                args.Player.TradeMan.SendMessage(string.Format("[Trade] Offer of <{2}> for trade is: {0} x {1}", item.name, stacks, args.Player.Name), Color.NavajoWhite);
+                Log.ConsoleInfo(string.Format("[Trade] {0} offer {1} x {2}", args.Player.Name, args.Player.TradeItem.name, args.Player.TradeItemStack));
+                args.Player.SendData(PacketTypes.ItemDrop, "", id);
+                return true;
+            }
 			if (TShock.CheckIgnores(args.Player))
 			{
 				args.Player.SendData(PacketTypes.ItemDrop, "", id);

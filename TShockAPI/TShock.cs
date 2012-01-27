@@ -714,7 +714,29 @@ namespace TShockAPI
                             TShock.Utils.Broadcast(player.Name + " Not logged in.", Color.Yellow);
                             TShock.Utils.Kick(player, "Not logged in.");
                         }
+                    }
 
+                    if (player.TradeMan == null && player.TradeRequestedByMan != null)
+                    {
+                        var players = TShock.Utils.FindPlayer(player.TradeRequestedByMan.Name);
+                        if (players.Count == 0)
+                        {
+                            player.SendMessage(string.Format("[Trade] Player <0> left the game. Trade is canceled.", player.TradeRequestedByMan.Name), Color.Red);
+                            player.TradeRequestedByMan = null;
+                            break;
+                        }
+                        if ((DateTime.UtcNow - player.Interval).TotalMilliseconds > 5000)
+                        {
+                            player.SendMessage(string.Format("[Trade] Type /trade [accept/decline] to accept or decline trading with <{0}>", player.TradeRequestedByMan.Name), Color.LimeGreen);
+                            player.Interval = DateTime.UtcNow;
+                        }
+                        if ((DateTime.UtcNow - player.TradeTime).TotalSeconds >= 20)
+                        {
+                            player.SendMessage(string.Format("[Trade] Trade with <{0}> is canceled", player.TradeRequestedByMan.Name), Color.Red);
+                            player.TradeRequestedByMan.SendMessage(string.Format("[Trade] Trade with <{0}> is canceled", player.Name), Color.Red);
+                            player.TradeRequestedByMan.TradeMan = null;
+                            player.TradeRequestedByMan = null;
+                        }
                     }
 				}
 			}
@@ -777,6 +799,7 @@ namespace TShockAPI
 			}
 			Players[ply] = player;
             player.LoginTime = DateTime.UtcNow;
+            player.MainLoginTime = DateTime.UtcNow;
 		}
 
 		private void OnJoin(int ply, HandledEventArgs handler)

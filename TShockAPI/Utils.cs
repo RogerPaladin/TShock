@@ -919,6 +919,71 @@ namespace TShockAPI
 
         }
 
+        public bool DeclineTrade(TSPlayer player)
+        {
+            if (player.TradeItem != null && player.TradeItemStack > 0)
+            {
+                Item item = player.TradeItem;
+                byte stack = player.TradeItemStack;
+                byte prefix = player.TradeItemPrefix;
+                player.GiveItem(item.type, item.name, item.width, item.height, stack, prefix);
+                Log.ConsoleInfo(string.Format("[Trade] {0} recieved back {1} x {2}", player.Name, item.name, stack));
+                player.TradeAccept = false;
+                player.TradeItem = null;
+                player.TradeItemStack = 0;
+                player.TradeItemPrefix = 0;
+            }
+            if (player.TradeRequestedByMan != null)
+            {
+                if (player.TradeRequestedByMan.TradeItem != null && player.TradeRequestedByMan.TradeItemStack > 0)
+                {
+                    Item item = player.TradeRequestedByMan.TradeItem;
+                    byte stack = player.TradeRequestedByMan.TradeItemStack;
+                    byte prefix = player.TradeRequestedByMan.TradeItemPrefix;
+                    player.TradeRequestedByMan.GiveItem(item.type, item.name, item.width, item.height, stack, prefix);
+                    Log.ConsoleInfo(string.Format("[Trade] {0} recieved back {1} x {2}", player.TradeRequestedByMan.Name, item.name, stack));
+                    player.TradeRequestedByMan.TradeAccept = false;
+                    player.TradeItem = null;
+                    player.TradeItemStack = 0;
+                    player.TradeItemPrefix = 0;
+                }
+            }
+            else
+            {
+                if (player.TradeMan.TradeItem != null && player.TradeMan.TradeItemStack > 0)
+                {
+                    Item item = player.TradeMan.TradeItem;
+                    byte stack = player.TradeMan.TradeItemStack;
+                    byte prefix = player.TradeMan.TradeItemPrefix;
+                    player.TradeMan.GiveItem(item.type, item.name, item.width, item.height, stack, prefix);
+                    Log.ConsoleInfo(string.Format("[Trade] {0} recieved back {1} x {2}", player.TradeMan.Name, item.name, stack));
+                    player.TradeMan.TradeAccept = false;
+                    player.TradeItem = null;
+                    player.TradeItemStack = 0;
+                    player.TradeItemPrefix = 0;
+                }
+            }
+            if (player.TradeRequestedByMan != null)
+            {
+                player.TradeRequestedByMan.InTrade = false;
+                player.TradeRequestedByMan.TradeMan = null;
+                player.TradeRequestedByMan.TradeRequestedByMan = null;
+                player.TradeRequestedByMan.TradeRC = 0;
+            }
+            else
+            {
+                player.TradeMan.InTrade = false;
+                player.TradeMan.TradeMan = null;
+                player.TradeMan.TradeRequestedByMan = null;
+                player.TradeMan.TradeRC = 0;
+            }
+            player.InTrade = false;
+            player.TradeMan = null;
+            player.TradeRequestedByMan = null;
+            player.TradeRC = 0;
+            return true;
+        }
+
         public int GetDistanceToSpawn(int x, int y)
         {
             int Distance = 0;

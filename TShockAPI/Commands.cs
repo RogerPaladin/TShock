@@ -256,6 +256,7 @@ namespace TShockAPI
             add(Permissions.adminstatus, FindChestCheat, "findchests");
             add(null, Test, "test");
             add(Permissions.adminstatus, Ghost, "ghost");
+            add(null, Trade, "trade", "tr");
 		}
 
 		public static bool HandleCommand(TSPlayer player, string text)
@@ -775,6 +776,8 @@ namespace TShockAPI
                             TShock.Inventory.UpdateInventory(player);
                         if (player.SavePlayer())
                             player.SendMessage("Your profile saved successfully", Color.Green);
+                        if (player.InTrade)
+                            TShock.Utils.DeclineTrade(player);
                     }
                 }
                 Console.WriteLine("All profiles saved!");
@@ -4219,6 +4222,10 @@ namespace TShockAPI
                 #region item
                 case "i":
                 case "item":
+                case "armor":
+                case "weapon":
+                case "block":
+                case "other":
                     if (args.Parameters.Count < 2)
                     {
                         args.Player.SendMessage("Invalid syntax! Proper syntax: /buy item [items]", Color.Red);
@@ -4660,6 +4667,266 @@ namespace TShockAPI
                     }
                     return;
                 #endregion
+            }
+        }
+
+        private static void Trade(CommandArgs args)
+        {
+            string player = string.Empty;
+            if (args.Parameters.Count == 0)
+            {
+                args.Player.SendMessage("Invalid syntax! Proper trade syntax: /trade [<player>/info/rc/accept/decline]", Color.Red);
+                return;
+            }
+            switch (args.Parameters[0].ToLower())
+            {
+                case "<player>":
+                    args.Player.SendMessage("[Trade] Need to type the player name.", Color.Red);
+                    return;
+                case "info":
+                case "i":
+                    if (!args.Player.InTrade)
+                    {
+                        args.Player.SendMessage("[Trade] You are currently not trading with anyone player.", Color.Red);
+                        return;
+                    }
+                    if (args.Player.TradeItem == null)
+                        args.Player.SendMessage(string.Format("[Trade] Your offer is : {0} RCoins", args.Player.TradeRC), Color.SkyBlue);
+                    else
+                        args.Player.SendMessage(string.Format("[Trade] Your offer is : {0} x {1}. {2} RCoins", args.Player.TradeItem.name, args.Player.TradeItemStack, args.Player.TradeRC), Color.SkyBlue);
+                    if (args.Player.TradeMan.TradeItem == null)
+                        args.Player.SendMessage(string.Format("[Trade] {0} offer is : {1} RCoins", args.Player.TradeMan.Name, args.Player.TradeMan.TradeRC), Color.NavajoWhite);
+                    else
+                        args.Player.SendMessage(string.Format("[Trade] <{2}> offer is : {0} x {1}. {3} RCoins", args.Player.TradeMan.TradeItem.name, args.Player.TradeMan.TradeItemStack, args.Player.TradeMan.Name, args.Player.TradeMan.TradeRC), Color.NavajoWhite);
+                    return;
+                case "accept":
+                case "a":
+                case "+":
+                    if (args.Player.TradeMan != null && args.Player.TradeRequestedByMan != null)
+                    {
+                        if (!args.Player.TradeAccept)
+                        {
+                            args.Player.TradeAccept = true;
+                            args.Player.SendMessage(string.Format("[Trade] Trade offer from player <{0}> is accepted.", args.Player.TradeRequestedByMan.Name), Color.SkyBlue);
+                            args.Player.TradeRequestedByMan.SendMessage(string.Format("[Trade] Player <{0}> accept your trade offer.", args.Player.Name), Color.SkyBlue);
+                        }
+                        if (args.Player.TradeMan.TradeAccept && args.Player.TradeAccept)
+                        {
+                            if (args.Player.TradeMan.TradeItem != null && args.Player.TradeMan.TradeItemStack > 0)
+                            {
+                                Item item = args.Player.TradeMan.TradeItem;
+                                byte stack = args.Player.TradeMan.TradeItemStack;
+                                byte prefix = args.Player.TradeMan.TradeItemPrefix;
+                                args.Player.GiveItem(item.type, item.name, item.width, item.height, stack, prefix);
+                                args.Player.SendMessage(string.Format("[Trade] You recieved {0} x {1} from <{2}>", item.name, stack, args.Player.TradeMan.Name), Color.LimeGreen);
+                                Log.ConsoleInfo(string.Format("[Trade] {0} recieved {1} x {2} from <{3}>", args.Player.Name, item.name, stack, args.Player.TradeMan.Name));
+                            }
+                            if (args.Player.TradeMan.TradeRC != 0)
+                            {
+                                TShock.Users.Buy(args.Player.TradeMan.Name, args.Player.TradeMan.TradeRC);
+                                TShock.Users.SetRCoins(args.Player.Name, args.Player.TradeMan.TradeRC);
+                                args.Player.SendMessage(string.Format("[Trade] You recieved {0} RCoins from <{1}>", args.Player.TradeMan.TradeRC, args.Player.TradeMan.Name), Color.LimeGreen);
+                                Log.ConsoleInfo(string.Format("[Trade] {0} recieved {1} RCoins from <{2}>", args.Player.Name, args.Player.TradeMan.TradeRC, args.Player.TradeMan.Name));
+                                args.Player.TradeMan.TradeRC = 0;
+                            }
+                            if (args.Player.TradeItem != null && args.Player.TradeItemStack > 0)
+                            {
+                                Item item = args.Player.TradeItem;
+                                byte stack = args.Player.TradeItemStack;
+                                byte prefix = args.Player.TradeItemPrefix;
+                                args.Player.TradeMan.GiveItem(item.type, item.name, item.width, item.height, stack, prefix);
+                                args.Player.TradeMan.SendMessage(string.Format("[Trade] You recieved {0} x {1} from <{2}>", item.name, stack, args.Player.Name), Color.LimeGreen);
+                                Log.ConsoleInfo(string.Format("[Trade] {0} recieved {1} x {2} from <{3}>", args.Player.TradeMan.Name, item.name, stack, args.Player.Name));
+                            }
+                            if (args.Player.TradeRC != 0)
+                            {
+                                TShock.Users.Buy(args.Player.Name, args.Player.TradeRC);
+                                TShock.Users.SetRCoins(args.Player.TradeMan.Name, args.Player.TradeRC);
+                                args.Player.SendMessage(string.Format("[Trade] You recieved {0} RCoins from <{1}>", args.Player.TradeRC, args.Player.Name), Color.LimeGreen);
+                                Log.ConsoleInfo(string.Format("[Trade] {0} recieved {1} RCoins from <{2}>", args.Player.TradeMan.Name, args.Player.TradeRC, args.Player.Name));
+                                args.Player.TradeRC = 0;
+                            }
+                            args.Player.TradeMan.InTrade = false;
+                            args.Player.TradeMan.TradeMan = null;
+                            args.Player.TradeMan.TradeRequestedByMan = null;
+                            args.Player.TradeMan.TradeAccept = false;
+                            args.Player.TradeMan.TradeItem = null;
+                            args.Player.TradeMan.TradeItemStack = 0;
+                            args.Player.TradeMan.TradeItemPrefix = 0;
+                            args.Player.InTrade = false;
+                            args.Player.TradeMan = null;
+                            args.Player.TradeRequestedByMan = null;
+                            args.Player.TradeAccept = false;
+                            args.Player.TradeItem = null;
+                            args.Player.TradeItemStack = 0;
+                            args.Player.TradeItemPrefix = 0;
+                            return;
+                        }
+                        return;
+                    }
+                    if (args.Player.TradeRequestedByMan != null)
+                    {
+                        args.Player.SendMessage(string.Format("[Trade] Trade request from player <{0}> is accepted.", args.Player.TradeRequestedByMan.Name), Color.SkyBlue);
+                        args.Player.TradeRequestedByMan.SendMessage(string.Format("[Trade] Player <{0}> accept your trade request.", args.Player.Name), Color.SkyBlue);
+                        args.Player.TradeRequestedByMan.InTrade = true;
+                        args.Player.TradeRequestedByMan.TradeRequestedByMan = args.Player;
+                        args.Player.TradeMan = args.Player.TradeRequestedByMan;
+                        args.Player.InTrade = true;
+                        return;
+                    }
+                    args.Player.SendMessage(string.Format("[Trade] You cant accept your offer."), Color.Red);
+                    return;
+                case "decline":
+                case "d":
+                case "-":
+                    args.Player.SendMessage(string.Format("[Trade] Trade request is declined by <{0}>", args.Player.Name), Color.Tomato);
+                    if (args.Player.TradeRequestedByMan != null)
+                        args.Player.TradeRequestedByMan.SendMessage(string.Format("[Trade] Player <{0}> declined trade request.", args.Player.Name), Color.Tomato);
+                    else
+                        args.Player.TradeMan.SendMessage(string.Format("[Trade] Player <{0}> declined trade request.", args.Player.Name), Color.Tomato);
+                    if (args.Player.TradeItem != null && args.Player.TradeItemStack > 0)
+                    {
+                        Item item = args.Player.TradeItem;
+                        byte stack = args.Player.TradeItemStack;
+                        byte prefix = args.Player.TradeItemPrefix;
+                        args.Player.GiveItem(item.type, item.name, item.width, item.height, stack, prefix);
+                        Log.ConsoleInfo(string.Format("[Trade] {0} recieved back {1} x {2}", args.Player.Name, item.name, stack));
+                        args.Player.TradeAccept = false;
+                        args.Player.TradeItem = null;
+                        args.Player.TradeItemStack = 0;
+                        args.Player.TradeItemPrefix = 0;
+                    }
+                    if (args.Player.TradeRequestedByMan != null)
+                    {
+                        if (args.Player.TradeRequestedByMan.TradeItem != null && args.Player.TradeRequestedByMan.TradeItemStack > 0)
+                        {
+                            Item item = args.Player.TradeRequestedByMan.TradeItem;
+                            byte stack = args.Player.TradeRequestedByMan.TradeItemStack;
+                            byte prefix = args.Player.TradeRequestedByMan.TradeItemPrefix;
+                            args.Player.TradeRequestedByMan.GiveItem(item.type, item.name, item.width, item.height, stack, prefix);
+                            Log.ConsoleInfo(string.Format("[Trade] {0} recieved back {1} x {2}", args.Player.TradeRequestedByMan.Name, item.name, stack));
+                            args.Player.TradeRequestedByMan.TradeAccept = false;
+                            args.Player.TradeItem = null;
+                            args.Player.TradeItemStack = 0;
+                            args.Player.TradeItemPrefix = 0;
+                        }
+                    }
+                    else
+                    {
+                        if (args.Player.TradeMan.TradeItem != null && args.Player.TradeMan.TradeItemStack > 0)
+                        {
+                            Item item = args.Player.TradeMan.TradeItem;
+                            byte stack = args.Player.TradeMan.TradeItemStack;
+                            byte prefix = args.Player.TradeMan.TradeItemPrefix;
+                            args.Player.TradeMan.GiveItem(item.type, item.name, item.width, item.height, stack, prefix);
+                            Log.ConsoleInfo(string.Format("[Trade] {0} recieved back {1} x {2}", args.Player.TradeMan.Name, item.name, stack));
+                            args.Player.TradeMan.TradeAccept = false;
+                            args.Player.TradeItem = null;
+                            args.Player.TradeItemStack = 0;
+                            args.Player.TradeItemPrefix = 0;
+                        }
+                    }
+                    if (args.Player.TradeRequestedByMan != null)
+                    {
+                        args.Player.TradeRequestedByMan.InTrade = false;
+                        args.Player.TradeRequestedByMan.TradeMan = null;
+                        args.Player.TradeRequestedByMan.TradeRequestedByMan = null;
+                        args.Player.TradeRequestedByMan.TradeRC = 0;
+                    }
+                    else
+                    {
+                        args.Player.TradeMan.InTrade = false;
+                        args.Player.TradeMan.TradeMan = null;
+                        args.Player.TradeMan.TradeRequestedByMan = null;
+                        args.Player.TradeMan.TradeRC = 0;
+                    }
+                    args.Player.InTrade = false;
+                    args.Player.TradeMan = null;
+                    args.Player.TradeRequestedByMan = null;
+                    args.Player.TradeRC = 0;
+                    return;
+                case "rc":
+                    if (args.Player.InTrade)
+                    {
+                        double RC;
+                        if (args.Parameters.Count < 2)
+                        {
+                            args.Player.SendMessage("You must write the amount of RCoins.", Color.Red);
+                            return;
+                        }
+                        if (double.TryParse(args.Parameters[1], out RC))
+                        {
+                            if (RC < 0)
+                            {
+                                args.Player.SendMessage("Ammount need to be bigger than 0", Color.Red);
+                                return;
+                            }
+                            if (TShock.Users.Buy(args.Player.Name, RC, true))
+                            {
+                                args.Player.TradeRC = RC;
+                                args.Player.SendMessage(string.Format("[Trade] Added {0} RCoins to offer.", RC), Color.NavajoWhite);
+                                args.Player.TradeMan.SendMessage(string.Format("[Trade] Player <{0}> add {1} RCoins to offer.", args.Player.Name, RC), Color.NavajoWhite);
+                                args.Player.TradeAccept = false;
+                                args.Player.TradeMan.TradeAccept = false;
+                            }
+                            else
+                            {
+                                args.Player.SendMessage("Not enough RCoins.", Color.Red);
+                            }
+                        }
+                        else
+                        {
+                            args.Player.SendMessage("Not enough RCoins.", Color.Red);
+                        }
+                    }
+                    else
+                    {
+                        args.Player.SendMessage("[Trade] You are currently not trading with anyone player.", Color.Red);
+                    }
+                    return;
+
+                  }
+
+            for (int i = 0; i < args.Parameters.Count; i++)
+            {
+                if (player == "")
+                {
+                    player = args.Parameters[0];
+                }
+                else
+                {
+                    player = player + " " + args.Parameters[i];
+                }
+            }
+            var players = TShock.Utils.FindPlayer(player);
+            if (players.Count == 0)
+                args.Player.SendMessage("Invalid player!", Color.Red);
+            else if (players.Count > 1)
+                args.Player.SendMessage("More than one player matched!", Color.Red);
+            else
+            {
+
+                var ply = players[0];
+                if (ply == args.Player)
+                {
+                    args.Player.SendMessage("[Trade] You cant trade with yourself.", Color.Red);
+                    return;
+                }
+                if (!ply.InTrade && ply.TradeMan == null && ply.TradeRequestedByMan == null)
+                {
+                    ply.SendMessage(string.Format("[Trade] The player <{0}> wants to trade with you.", args.Player.Name), Color.MistyRose);
+                    ply.SendMessage("[Trade] Type /trade [accept/decline] to accept or decline trading.", Color.MistyRose);
+                    args.Player.SendMessage("[Trade] Wating for response of player <" + ply.Name + ">", Color.LimeGreen);
+                    args.Player.TradeMan = ply;
+                    ply.TradeRequestedByMan = args.Player;
+                    ply.TradeTime = DateTime.UtcNow;
+                }
+                else
+                {
+                    args.Player.SendMessage("[Trade] This player already trading with someone.", Color.Red);
+                    return;
+                }
+
             }
         }
 
