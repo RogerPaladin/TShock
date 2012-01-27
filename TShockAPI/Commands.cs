@@ -160,6 +160,7 @@ namespace TShockAPI
 			add(Permissions.managegroup, AddGroup, "addgroup");
 			add(Permissions.managegroup, DeleteGroup, "delgroup");
 			add(Permissions.managegroup, ModifyGroup, "modgroup");
+            add(Permissions.managegroup, ViewGroups, "group");
 			add(Permissions.manageitem, AddItem, "additem", "banitem");
 			add(Permissions.manageitem, DeleteItem, "delitem", "unbanitem");
 			add(Permissions.manageitem, ListItems, "listitems", "listbanneditems");
@@ -210,6 +211,7 @@ namespace TShockAPI
 			add(Permissions.hardmode, StartHardMode, "hardmode");
 			add(Permissions.hardmode, DisableHardMode, "stophardmode", "disablehardmode");
 			add(Permissions.cfg, ServerInfo, "stats");
+            add(Permissions.cfg, WorldInfo, "world");
 			add(Permissions.converthardmode, ConvertCorruption, "convertcorruption");
 			add(Permissions.converthardmode, ConvertHallow, "converthallow");
             add(null, SetHome, "sethome");
@@ -703,6 +705,12 @@ namespace TShockAPI
 			args.Player.SendMessage("Proc count: " + Environment.ProcessorCount);
 			args.Player.SendMessage("Machine name: " + Environment.MachineName);
 		}
+
+        public static void WorldInfo(CommandArgs args)
+        {
+            args.Player.SendMessage("World Name: " + Main.worldName);
+            args.Player.SendMessage("World ID: " + Main.worldID);
+        }
 
 		#endregion
 
@@ -1938,6 +1946,80 @@ namespace TShockAPI
 			}
 			args.Player.SendMessage("Incorrect format: /modGroup add|del <group name> <permission to add or remove>", Color.Red);
 		}
+
+        private static void ViewGroups(CommandArgs args)
+        {
+            if (args.Parameters.Count > 0)
+            {
+                String com = args.Parameters[0];
+
+                if( com == "list" )
+                {
+                    string ret = "Groups: ";
+                    foreach( Group g in TShock.Groups.groups )
+                    {
+                        if (ret.Length > 50)
+                        {
+                            args.Player.SendMessage(ret, Color.Green);
+                            ret = "";
+                        }
+
+                        if( ret != "" )
+                        {
+                            ret += ", ";
+                        }
+                        
+                        ret += g.Name;
+                    }
+
+                    if (ret.Length > 0)
+                    {
+                        args.Player.SendMessage(ret, Color.Green);
+                    }
+                    return;
+                }
+                else if( com == "perm")
+                {
+                    if (args.Parameters.Count > 1)
+                    {
+                        String groupname = args.Parameters[1];
+
+                        if( TShock.Groups.GroupExists( groupname ) )
+                        {
+                            string ret = String.Format("Permissions for {0}: ", groupname);
+                            foreach (string p in TShock.Utils.GetGroup( groupname ).permissions)
+                            {
+                                if (ret.Length > 50)
+                                {
+                                    args.Player.SendMessage(ret, Color.Green);
+                                    ret = "";
+                                }
+
+                                if (ret != "")
+                                {
+                                    ret += ", ";
+                                }
+
+                                ret += p;
+                            }
+                            if (ret.Length > 0)
+                            {
+                                args.Player.SendMessage(ret, Color.Green);
+                            }
+
+                            return;
+                        }
+                        else
+                        {
+                            args.Player.SendMessage("Group does not exist.", Color.Red);
+                            return;
+                        }
+                    }
+                }
+            }
+            args.Player.SendMessage("Incorrect format: /group list", Color.Red);
+            args.Player.SendMessage("                  /group perm <group name>", Color.Red);
+        }
 
 		#endregion Group Management
 
