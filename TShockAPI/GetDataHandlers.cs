@@ -2716,6 +2716,7 @@ namespace TShockAPI
 			var prefix = args.Data.ReadInt8();
 			var type = args.Data.ReadInt16();
             string regionname = string.Empty;
+            double price = 0;
 
 			if (OnItemDrop(id, pos, vel, stacks, prefix, type))
 				return true;
@@ -2816,11 +2817,97 @@ namespace TShockAPI
                                             !item.name.Contains("Seeds") && !item.name.Equals("Torch") && !item.name.Equals("Shuriken") &&
                                             !item.name.Equals("Glowstick") && !item.name.Equals("Throwing Knife") && !item.name.Equals("Spiky Ball"))
                 {
-                    args.Player.SendMessage("You sold " + stacks + " " + item.name + " for " + stacks * 0.01 + " RCoins.");
-                    Log.ConsoleInfo("[Sell] " + args.Player.Name + " sold " + stacks + " " + item.name);
-                    TShock.Users.SetRCoins(args.Player.Name, stacks * 0.01);
-                    args.Player.SendData(PacketTypes.ItemDrop, "", id);
-                    return true;
+                    if (item.value > 10000)
+                    {
+                        if (item.maxStack == 1)
+                        {
+                            price = stacks * item.value * 0.0001 * 2;
+                            if (item.rare > 0)
+                            {
+                                price = price * 1.5;
+                            }
+                            args.Player.SendMessage("You sold " + stacks + " " + item.name + " for " + price + " RCoins.");
+                            Log.ConsoleInfo("[Sell] " + args.Player.Name + " sold " + stacks + " " + item.name);
+                            TShock.Users.SetRCoins(args.Player.Name, price);
+                            args.Player.SendData(PacketTypes.ItemDrop, "", id);
+                            return true;
+                        }
+                        else
+                        {
+                            price = stacks * item.value * 0.00001;
+                            args.Player.SendMessage("You sold " + stacks + " " + item.name + " for " + price + " RCoins.");
+                            Log.ConsoleInfo("[Sell] " + args.Player.Name + " sold " + stacks + " " + item.name);
+                            TShock.Users.SetRCoins(args.Player.Name, price);
+                            args.Player.SendData(PacketTypes.ItemDrop, "", id);
+                            return true;
+                        }
+                    }
+                    if (item.value > 999)
+                    {
+                        if (item.maxStack == 1)
+                        {
+                            price = stacks * item.value * 0.001 / 2;
+                            args.Player.SendMessage("You sold " + stacks + " " + item.name + " for " + price + " RCoins.");
+                            Log.ConsoleInfo("[Sell] " + args.Player.Name + " sold " + stacks + " " + item.name);
+                            TShock.Users.SetRCoins(args.Player.Name, price);
+                            args.Player.SendData(PacketTypes.ItemDrop, "", id);
+                            return true;
+                        }
+                        else
+                        {
+                            price = stacks * item.value * 0.0001 / 2;
+                            args.Player.SendMessage("You sold " + stacks + " " + item.name + " for " + price + " RCoins.");
+                            Log.ConsoleInfo("[Sell] " + args.Player.Name + " sold " + stacks + " " + item.name);
+                            TShock.Users.SetRCoins(args.Player.Name, price);
+                            args.Player.SendData(PacketTypes.ItemDrop, "", id);
+                            return true;
+                        }
+                    }
+                    if (item.value > 99)
+                    {
+                        price = stacks * item.value * 0.001 / 2;
+                        args.Player.SendMessage("You sold " + stacks + " " + item.name + " for " + price + " RCoins.");
+                        Log.ConsoleInfo("[Sell] " + args.Player.Name + " sold " + stacks + " " + item.name);
+                        TShock.Users.SetRCoins(args.Player.Name, price);
+                        args.Player.SendData(PacketTypes.ItemDrop, "", id);
+                        return true;
+                    }
+                    if (item.value > 10)
+                    {
+                        price = stacks * item.value * 0.01;
+                        args.Player.SendMessage("You sold " + stacks + " " + item.name + " for " + price + " RCoins.");
+                        Log.ConsoleInfo("[Sell] " + args.Player.Name + " sold " + stacks + " " + item.name);
+                        TShock.Users.SetRCoins(args.Player.Name, price);
+                        args.Player.SendData(PacketTypes.ItemDrop, "", id);
+                        return true;
+                    }
+                    if (item.value > 0)
+                    {
+                        price = stacks * item.value * 0.01;
+                        args.Player.SendMessage("You sold " + stacks + " " + item.name + " for " + price + " RCoins.");
+                        Log.ConsoleInfo("[Sell] " + args.Player.Name + " sold " + stacks + " " + item.name);
+                        TShock.Users.SetRCoins(args.Player.Name, price);
+                        args.Player.SendData(PacketTypes.ItemDrop, "", id);
+                        return true;
+                    }
+                    if (item.value == 0)
+                    {
+                        if (item.rare != 0)
+                        {
+                            price = stacks * 0.01 * 4;
+                            args.Player.SendMessage("You sold " + stacks + " " + item.name + " for " + price + " RCoins.");
+                            Log.ConsoleInfo("[Sell] " + args.Player.Name + " sold " + stacks + " " + item.name);
+                            TShock.Users.SetRCoins(args.Player.Name, price);
+                            args.Player.SendData(PacketTypes.ItemDrop, "", id);
+                            return true;
+                        }
+                        price = stacks * 0.01;
+                        args.Player.SendMessage("You sold " + stacks + " " + item.name + " for " + price + " RCoins.");
+                        Log.ConsoleInfo("[Sell] " + args.Player.Name + " sold " + stacks + " " + item.name);
+                        TShock.Users.SetRCoins(args.Player.Name, price);
+                        args.Player.SendData(PacketTypes.ItemDrop, "", id);
+                        return true;
+                    }
                 }
             }
 
