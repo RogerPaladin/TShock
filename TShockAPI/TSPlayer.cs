@@ -572,24 +572,47 @@ namespace TShockAPI
         }
 		
         public virtual bool SendTileSquare(int x, int y, int size = 10)
-		{
-			try
-			{
-				int num = (size - 1)/2;
-				SendData(PacketTypes.TileSendSquare, "", size, (x - num), (y - num));
-				return true;
-			}
-			catch (IndexOutOfRangeException)
+        {
+            try
             {
-                // This is expected if square exceeds array.
+                int num = (size - 1)/2;
+		int m_x=0;
+		int m_y=0;
 
+		if (x - num <0){
+		   m_x=0;
+		   }else{
+		   m_x = x - num;
+		   }
+
+		if (y - num <0){
+		   m_y=0;
+		   }else{
+		   m_y = y - num;
+		   }
+
+		if (m_x + size > Main.maxTilesX){
+		   m_x=Main.maxTilesX - size;
+		   }
+
+		if (m_y + size > Main.maxTilesY){
+		   m_y=Main.maxTilesY - size;
+		   }
+
+                SendData(PacketTypes.TileSendSquare, "", size, m_x, m_y);
+                return true;
             }
-			catch (Exception ex)
-			{
-				Log.Error(ex.ToString());
-			}
-			return false;
-		}
+            catch (IndexOutOfRangeException)
+            {
+
+                // This is expected if square exceeds array.
+            }
+            catch (Exception ex)
+            {
+                Log.Error(ex.ToString());
+            }
+            return false;
+        }
 
 		public virtual void GiveItem(int type, string name, int width, int height, int stack, int prefix = 0)
 		{
