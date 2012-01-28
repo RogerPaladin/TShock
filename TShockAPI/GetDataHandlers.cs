@@ -1728,6 +1728,13 @@ namespace TShockAPI
                     args.Player.SendTileSquare(tileX, tileY);
                     return true;
                 }
+                if (type == 1 && tiletype == 128)
+                {
+                    args.Player.SendMessage("You do not have permission to place mannequins.", Color.Red);
+                    TShock.Utils.SendLogs(string.Format("{0} tried to place mannequins", args.Player.Name), Color.Red);
+                    args.Player.SendTileSquare(tileX, tileY);
+                    return true;
+                }
                 if (tiletype == 23 /*Corrupt Seeds*/ && !args.Player.Group.HasPermission(Permissions.cancorruption) || tiletype == 109 /*Hallowed Seeds*/ && !args.Player.Group.HasPermission(Permissions.cancorruption))
                 {
                     args.Player.SendMessage("You do not have permission to place corruptions.", Color.Red);

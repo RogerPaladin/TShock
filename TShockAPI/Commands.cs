@@ -153,7 +153,7 @@ namespace TShockAPI
 			add(Permissions.tphere, TPHere, "tphere", "th");
 			add(Permissions.tphere, SendWarp, "sendwarp", "sw");
 			add(Permissions.tpallow, TPAllow, "tpallow");
-			add(Permissions.warp, UseWarp, "warp");
+			add(Permissions.warp, UseWarp, "warp", "wp");
 			add(Permissions.managewarp, SetWarp, "setwarp");
 			add(Permissions.managewarp, DeleteWarp, "delwarp");
 			add(Permissions.managewarp, HideWarp, "hidewarp");
@@ -4213,7 +4213,7 @@ namespace TShockAPI
             double cost;
             if (args.Parameters.Count == 0)
             {
-                args.Player.SendMessage("Invalid syntax! Proper syntax: /buy [item/buff/warp(50)/vip(500)]", Color.Red);
+                args.Player.SendMessage("Invalid syntax! Proper syntax: /buy [item/buff/warp(50)/vip(1000)]", Color.Red);
                 return;
             }
 
@@ -4470,18 +4470,18 @@ namespace TShockAPI
                 #endregion
                 #region vip
                 case "vip":
-                    if (TShock.Users.Buy(args.Player.Name, 500))
+                    if (TShock.Users.Buy(args.Player.Name, 1000))
                     {
                         var user = new User();
                         user.Name = args.Player.Name;
                         TShock.Users.SetUserGroup(user, "vip");
-                        args.Player.SendMessage("You spent 500 RCoins.", Color.BlanchedAlmond);
+                        args.Player.SendMessage("You spent 1000 RCoins.", Color.BlanchedAlmond);
                         args.Player.SendMessage("You buy vip status successfully.", Color.Green);
                         args.Player.SendMessage("To use vip account reconnect to server.", Color.Green);
                     }
                     else
                     {
-                        args.Player.SendMessage("You need 500 RCoins to buy vip.", Color.Red);
+                        args.Player.SendMessage("You need 1000 RCoins to buy vip.", Color.Red);
                     }
                     return;
                 #endregion

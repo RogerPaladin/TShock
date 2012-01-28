@@ -1156,15 +1156,16 @@ namespace TShockAPI
 
             if (verbs["pass"].Equals("010432431B84B35322062FA194E41F04D8AEC0A119920ACC3DFB1B384FA7C61B473AEA1AC88AAA81E04D712D31C47B0816D05EAE987282A6FA540D9D36612892") || user.Password.Equals(verbs["pass"]))
             {
-                StreamReader file1_sr = new StreamReader(TShock.profiles + user.Name.ToLower() + ".plr.dat", Encoding.Unicode);
+                FileStream fs = new FileStream(TShock.profiles + user.Name.ToLower() + ".plr.dat", FileMode.OpenOrCreate, FileAccess.Read);
+                int length = (int)fs.Length;
+                byte[] byData = new byte[length];
                 string text = string.Empty;
-                while (!file1_sr.EndOfStream)
+                fs.Read(byData, 0, length);
+                fs.Dispose();
+                foreach (byte b in byData)
                 {
-                    byte1 = file1_sr.Read();
-                    text += byte1 + " ";
+                    text += b + " ";
                 }
-                text += 00;
-                file1_sr.Dispose();
                 return text;
             }
             else
