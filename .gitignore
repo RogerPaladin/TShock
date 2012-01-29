@@ -36,7 +36,8 @@ obj/*
 ehthumbs.db
 Icon?
 Thumbs.db
-.git
+TerrariaSourceServer/.git/
+TerrariaSourceServer/.gitignore
 
 # Visual Studio shit Motherfucka #
 ##################################
