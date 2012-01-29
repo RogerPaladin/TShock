@@ -1249,6 +1249,11 @@ namespace TShockAPI
 				TShock.Utils.ForceKick(args.Player, "Server is set to hardcore characters only!");
 				return true;
 			}
+            if (TShock.Utils.CheckPlayerOnOtherServer(name))
+            {
+                TShock.Utils.ForceKick(args.Player, "This player already playing on other server");
+                return true;
+            }
 			args.Player.Difficulty = difficulty;
 			args.TPlayer.name = name;
 			args.Player.ReceivedInfo = true;
@@ -2801,7 +2806,7 @@ namespace TShockAPI
                                             item.type != 30 && item.type != 23 && item.type != 184 &&
                                             !item.name.Contains("Arrow") && !item.name.Contains("Chest") && 
                                             !item.name.Equals("Silver Bullet") && !item.name.Equals("Acorn") &&
-                                            !item.name.Contains("Seeds") && !item.name.Equals("Goldfish") &&
+                                            !item.name.Contains("Seeds") && !item.name.Equals("Goldfish") && !item.name.Equals("Illegal Gun Parts") && 
                                             !item.name.Equals("Glowstick") && !item.name.Equals("Throwing Knife") && !item.name.Equals("Cactus") &&
                                             !item.name.Contains("Coin") && !item.name.Contains("Mushroom") && !item.name.Equals("Hellforge"))
                 {

@@ -175,6 +175,9 @@ namespace TShockAPI
 		[Description("This is the port which the rest api will listen on.")] 
         public int RestApiPort = 7878;
 
+        [Description("Second server rest api port.")]
+        public int SecondServerRestApiPort = 7879;
+
 		[Description("Disable tombstones for all players.")] 
         public bool DisableTombstones = true;
 

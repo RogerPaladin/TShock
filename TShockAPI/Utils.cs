@@ -1002,6 +1002,28 @@ namespace TShockAPI
                 return false;
         }
 
+        public bool CheckPlayerOnOtherServer(string name)
+        {
+            string text = new WebClient().DownloadString("http://rogerpaladin.dyndns.org:" + TShock.Config.SecondServerRestApiPort + "/status/");
+            string[] split1 = text.Remove(0 , 1).Split('/');
+            if (split1[0].Contains(","))
+            {
+                string[] split2 = split1[0].Split(',');
+                foreach (string s in split2)
+                {
+                    if (name.Equals(s.Remove(0, 1)))
+                        return true;
+                }
+            }
+            if (split1[0] != "")
+            {
+                if (name.Equals(split1[0].Remove(0, 1)))
+                    return true; 
+            }
+
+            return false;
+        }
+
         public double RegionPrice(int RegionX, int RegionY, int RegionWidth, int RegionHeight, out double tilecost)
         {
             double price = 0;

@@ -670,7 +670,7 @@ namespace TShockAPI
 
 		public virtual void Disable(string reason = "")
 		{
-			LastThreat = DateTime.UtcNow;
+			/*LastThreat = DateTime.UtcNow;
 			SetBuff(33, 330, true); //Weak
 			SetBuff(32, 330, true); //Slow
 			SetBuff(23, 330, true); //Cursed
@@ -682,7 +682,9 @@ namespace TShockAPI
 			frame = trace.GetFrame(1);
 			if (frame != null && frame.GetMethod().DeclaringType != null)
 				Log.Debug(frame.GetMethod().DeclaringType.Name + " called Disable()");
-		}
+		
+             */
+        }
 
 		public virtual void Whoopie(object time)
 		{
