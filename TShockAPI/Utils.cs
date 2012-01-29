@@ -24,6 +24,7 @@ using System.Net.Sockets;
 using System.Security.Cryptography;
 using System.Text;
 using Terraria;
+using System.Text.RegularExpressions;
 
 namespace TShockAPI
 {
@@ -990,6 +991,15 @@ namespace TShockAPI
             Point Spawn = new Point(Main.spawnTileX, Main.spawnTileY);
             Distance = Math.Abs(x - Spawn.X) + Math.Abs(y - Spawn.Y);
             return Distance;
+        }
+
+        public bool Cyrillic(string name)
+        {
+            Regex reg = new Regex(@"^([^à-ÿÀ-ß]+)$");
+            if (!reg.IsMatch(name))
+                return true;
+            else
+                return false;
         }
 
         public double RegionPrice(int RegionX, int RegionY, int RegionWidth, int RegionHeight, out double tilecost)

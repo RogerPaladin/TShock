@@ -1,0 +1,3 @@
+[submodule "TerrariaSourceServer"]
+	path = TerrariaSourceServer
+	url = https://github.com/Deathmax/TerrariaAPI-Server.git

@@ -254,7 +254,7 @@ namespace TShockAPI
             add(Permissions.towncommands, TownTell, "tt");
             add(null, TownInfo, "ti");
             add(Permissions.adminstatus, FindChestCheat, "findchests");
-            add(null, Test, "test");
+            add(Permissions.adminstatus, Test, "test");
             add(Permissions.adminstatus, Ghost, "ghost");
             add(null, Trade, "trade", "tr");
 		}
@@ -4294,7 +4294,7 @@ namespace TShockAPI
                     {
                         Ammount = Convert.ToInt32(Name.Split(':')[1]);
                         Name = Name.Split(':')[0];
-                        cost = ((double)Price / Ammount) * quantity;
+                        cost = Math.Round(((double)Price / Ammount) * quantity, 2);
                         if (TShock.Users.Buy(args.Player.Name, cost))
                         {
                             var items = TShock.Utils.GetItemByIdOrName(Contains);
@@ -4314,7 +4314,7 @@ namespace TShockAPI
                     {
                         Ammount = Convert.ToInt32(Name.Split(':')[1]);
                         Name = Name.Split(':')[0];
-                        cost = ((double)Price / Ammount) * quantity;
+                        cost = Math.Round(((double)Price / Ammount) * quantity, 2);
                         if (TShock.Users.Buy(args.Player.Name, cost))
                         {
                             var items = TShock.Utils.GetItemByIdOrName(Contains);
@@ -5530,7 +5530,122 @@ namespace TShockAPI
 
         private static void Test(CommandArgs args)
         {
-            args.Player.SendMessage(TShock.proc.PagedMemorySize64.ToString());
+            double price = 0;
+            for (int i = 1; i < Main.maxItemTypes; i++)
+			{
+				Item item = new Item();
+				item.SetDefaults(i);
+                for (int s = 0; s < 10; s++)
+                {
+                    Chest chest = Main.shop[s];
+                    foreach (Item citem in Main.shop[s].item)
+                    {
+                        if (citem == null || citem.name == null)
+                        {
+                            break;
+                        }
+                        Console.WriteLine(citem.name);
+                        if (citem.name == item.name)
+                        {
+                            return;
+                        }
+                    }
+                }
+                    if (item.value > 999999)
+                    {
+                        if (item.maxStack == 1)
+                        {
+                            price = Math.Round(item.value * 0.00001 * 2, 2);
+                            Log.Info("[Sell] " + args.Player.Name + " sold " + item.name + " for " + price + " value is " + item.value);
+                            continue;
+                        }
+                        else
+                        {
+                            price = Math.Round(item.value * 0.00001 / 2, 2);
+                            Log.Info("[Sell] " + args.Player.Name + " sold " + item.name + " for " + price + " value is " + item.value);
+                            continue;
+                        }
+                    }
+                if (item.value > 99999)
+                {
+                    if (item.maxStack == 1)
+                    {
+                        price = Math.Round(item.value * 0.0001, 2);
+                        Log.Info("[Sell] " + args.Player.Name + " sold " + item.name + " for " + price + " value is " + item.value);
+                        continue;
+                    }
+                    else
+                    {
+                        price = Math.Round(item.value * 0.00001 / 2, 2);
+                        Log.Info("[Sell] " + args.Player.Name + " sold " + item.name + " for " + price + " value is " + item.value);
+                        continue;
+                    }
+                }
+                if (item.value > 9999)
+                {
+                    if (item.maxStack == 1)
+                    {
+                        price = Math.Round(item.value * 0.0001 * 2, 2);
+                        if (item.rare > 0)
+                        {
+                            price = price * 1.5;
+                        }
+                        Log.Info("[Sell] " + args.Player.Name + " sold " + item.name + " for " + price + " value is " + item.value);
+                        continue;
+                    }
+                    else
+                    {
+                        price = Math.Round(item.value * 0.00001 / 2, 2);
+                        Log.Info("[Sell] " + args.Player.Name + " sold " + item.name + " for " + price + " value is " + item.value);
+                        continue;
+                    }
+                }
+                if (item.value > 999)
+                {
+                    if (item.maxStack == 1)
+                    {
+                        price = Math.Round(item.value * 0.001 / 2.5, 2);
+                        Log.Info("[Sell] " + args.Player.Name + " sold " + item.name + " for " + price + " value is " + item.value);
+                        continue;
+                    }
+                    else
+                    {
+                        price = Math.Round(item.value * 0.0001 * 1.5, 2);
+                        Log.Info("[Sell] " + args.Player.Name + " sold " + item.name + " for " + price + " value is " + item.value);
+                        continue;
+                    }
+                }
+                if (item.value > 99)
+                {
+                    price = Math.Round(item.value * 0.0001 * 2, 2);
+                    Log.Info("[Sell] " + args.Player.Name + " sold " + item.name + " for " + price + " value is " + item.value);
+                    continue;
+                }
+                if (item.value > 10)
+                {
+                    price = Math.Round(item.value * 0.001, 2);
+                    Log.Info("[Sell] " + args.Player.Name + " sold " + item.name + " for " + price + " value is " + item.value);
+                    continue;
+                }
+                if (item.value > 0)
+                {
+                    price = Math.Round(item.value * 0.01, 2);
+                    Log.Info("[Sell] " + args.Player.Name + " sold " + item.name + " for " + price + " value is " + item.value);
+                    continue;
+                }
+                if (item.value == 0)
+                {
+                    if (item.rare != 0)
+                    {
+                        price = 0.01 * 4;
+                        Log.Info("[Sell] " + args.Player.Name + " sold " + item.name + " for " + price + " value is " + item.value);
+                        continue;
+                    }
+                    price = 0.01;
+                    Log.Info("[Sell] " + args.Player.Name + " sold " + item.name + " for " + price + " value is " + item.value);
+                    continue;
+                }
+            }
         }
 	}
 }
