@@ -5544,10 +5544,10 @@ namespace TShockAPI
                         {
                             break;
                         }
-                        Console.WriteLine(citem.name);
+                        //Console.WriteLine(citem.name);
                         if (citem.name == item.name)
                         {
-                            return;
+                            break;
                         }
                     }
                 }
