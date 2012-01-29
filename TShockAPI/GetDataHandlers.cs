@@ -2863,7 +2863,7 @@ namespace TShockAPI
                     {
                         if (item.maxStack == 1)
                         {
-                            price = Math.Round(item.value * 0.00001 * 2, 2);
+                            price = Math.Round(stacks * item.value * 0.00001 * 2, 2);
                             args.Player.SendMessage("You sold " + stacks + " " + item.name + " for " + price + " RCoins.");
                             Log.ConsoleInfo("[Sell] " + args.Player.Name + " sold " + stacks + " " + item.name);
                             TShock.Users.SetRCoins(args.Player.Name, price);
@@ -2872,7 +2872,7 @@ namespace TShockAPI
                         }
                         else
                         {
-                            price = Math.Round(item.value * 0.00001 / 2, 2);
+                            price = Math.Round(stacks * item.value * 0.00001 / 2, 2);
                             args.Player.SendMessage("You sold " + stacks + " " + item.name + " for " + price + " RCoins.");
                             Log.ConsoleInfo("[Sell] " + args.Player.Name + " sold " + stacks + " " + item.name);
                             TShock.Users.SetRCoins(args.Player.Name, price);
@@ -2884,7 +2884,7 @@ namespace TShockAPI
                     {
                         if (item.maxStack == 1)
                         {
-                            price = Math.Round(item.value * 0.0001, 2);
+                            price = Math.Round(stacks * item.value * 0.0001, 2);
                             args.Player.SendMessage("You sold " + stacks + " " + item.name + " for " + price + " RCoins.");
                             Log.ConsoleInfo("[Sell] " + args.Player.Name + " sold " + stacks + " " + item.name);
                             TShock.Users.SetRCoins(args.Player.Name, price);
@@ -2893,7 +2893,7 @@ namespace TShockAPI
                         }
                         else
                         {
-                            price = Math.Round(item.value * 0.00001 / 2, 2);
+                            price = Math.Round(stacks * item.value * 0.00001 / 2, 2);
                             args.Player.SendMessage("You sold " + stacks + " " + item.name + " for " + price + " RCoins.");
                             Log.ConsoleInfo("[Sell] " + args.Player.Name + " sold " + stacks + " " + item.name);
                             TShock.Users.SetRCoins(args.Player.Name, price);
@@ -2905,7 +2905,7 @@ namespace TShockAPI
                     {
                         if (item.maxStack == 1)
                         {
-                            price = Math.Round(item.value * 0.0001 * 2, 2);
+                            price = Math.Round(stacks * item.value * 0.0001 * 2, 2);
                             if (item.rare > 0)
                             {
                                 price = price * 1.5;
@@ -2918,7 +2918,7 @@ namespace TShockAPI
                         }
                         else
                         {
-                            price = Math.Round(item.value * 0.00001 / 2, 2);
+                            price = Math.Round(stacks * item.value * 0.00001 / 2, 2);
                             args.Player.SendMessage("You sold " + stacks + " " + item.name + " for " + price + " RCoins.");
                             Log.ConsoleInfo("[Sell] " + args.Player.Name + " sold " + stacks + " " + item.name);
                             TShock.Users.SetRCoins(args.Player.Name, price);
@@ -2930,7 +2930,7 @@ namespace TShockAPI
                     {
                         if (item.maxStack == 1)
                         {
-                            price = Math.Round(item.value * 0.001 / 2.5, 2);
+                            price = Math.Round(stacks * item.value * 0.001 / 2.5, 2);
                             args.Player.SendMessage("You sold " + stacks + " " + item.name + " for " + price + " RCoins.");
                             Log.ConsoleInfo("[Sell] " + args.Player.Name + " sold " + stacks + " " + item.name);
                             TShock.Users.SetRCoins(args.Player.Name, price);
@@ -2939,7 +2939,7 @@ namespace TShockAPI
                         }
                         else
                         {
-                            price = Math.Round(item.value * 0.0001 * 1.5, 2);
+                            price = Math.Round(stacks * item.value * 0.0001 * 1.5, 2);
                             args.Player.SendMessage("You sold " + stacks + " " + item.name + " for " + price + " RCoins.");
                             Log.ConsoleInfo("[Sell] " + args.Player.Name + " sold " + stacks + " " + item.name);
                             TShock.Users.SetRCoins(args.Player.Name, price);
@@ -2949,7 +2949,7 @@ namespace TShockAPI
                     }
                     if (item.value > 99)
                     {
-                        price = Math.Round(item.value * 0.0001 * 2, 2);
+                        price = Math.Round(stacks * item.value * 0.0001 * 2, 2);
                         args.Player.SendMessage("You sold " + stacks + " " + item.name + " for " + price + " RCoins.");
                         Log.ConsoleInfo("[Sell] " + args.Player.Name + " sold " + stacks + " " + item.name);
                         TShock.Users.SetRCoins(args.Player.Name, price);
@@ -2958,7 +2958,7 @@ namespace TShockAPI
                     }
                     if (item.value > 10)
                     {
-                        price = Math.Round(item.value * 0.001, 2);
+                        price = Math.Round(stacks * item.value * 0.001, 2);
                         args.Player.SendMessage("You sold " + stacks + " " + item.name + " for " + price + " RCoins.");
                         Log.ConsoleInfo("[Sell] " + args.Player.Name + " sold " + stacks + " " + item.name);
                         TShock.Users.SetRCoins(args.Player.Name, price);
