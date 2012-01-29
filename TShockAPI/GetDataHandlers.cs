@@ -1091,7 +1091,7 @@ namespace TShockAPI
 
         public static bool HandleConnectRequest(GetDataHandlerArgs args)
         {
-            string version = args.Data.ReadString();
+            string version = Encoding.UTF8.GetString(args.Data.ReadBytes((int)(args.Data.Length - args.Data.Position - 1)));
             if (version.Contains("39R"))
             {
                 return false;

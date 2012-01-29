@@ -119,7 +119,7 @@ namespace Terraria
                     {
                         if (Netplay.serverSock[this.whoAmI].state != 0)
                             return;
-                        if (Encoding.UTF8.GetString(this.readBuffer, start + 1, length - 1) == "Terraria" + (object) Main.curRelease)
+                        if (Encoding.UTF8.GetString(this.readBuffer, start + 1, length - 1) == "Terraria39R")
                         {
                             if (Netplay.password == null || Netplay.password == "")
                             {
