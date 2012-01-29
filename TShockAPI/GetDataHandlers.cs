@@ -1133,26 +1133,6 @@ namespace TShockAPI
 			{
 				if (TShock.Config.StoreInventory)
                     TShock.Inventory.UpdateInventory(args.Player);
-                
-                if (user.PlayingTime < 60)
-                {
-                    if (user.PlayingTime < 10)
-                    {
-                        if (item.maxStack == 250 && stack == 250 && item.type != 2)
-                        {
-                            Log.ConsoleInfo("[CheatDetector] " + args.Player.Name + " drop " + stack + " " + item.name);
-                            TShock.Utils.Ban(args.Player, "Cheater");
-                            return true;
-                        }
-                    }
-
-                    if (item.type == 368 || item.type == 533 || item.name.Contains("Hallowed") && !item.name.Contains("Seeds") || item.name.Contains("Soul") && stack > 200)
-                    {
-                        Log.ConsoleInfo("[CheatDetector] " + args.Player.Name + " drop " + stack + " " + item.name);
-                        TShock.Utils.Ban(args.Player, "Cheater");
-                        return true;
-                    }
-                }
 			}
 
 			return false;
@@ -2813,26 +2793,6 @@ namespace TShockAPI
 			}
 
             var user = TShock.Users.GetUserByName(args.Player.Name);
-
-            if (user.PlayingTime < 60)
-            {
-                if (user.PlayingTime < 10)
-                {
-                    if (item.maxStack == 250 && stacks == 250 && item.type != 2)
-                    {
-                        Log.ConsoleInfo("[CheatDetector] " + args.Player.Name + " drop " + stacks + " " + item.name);
-                        TShock.Utils.Ban(args.Player, "Cheater");
-                        return true;
-                    }
-                }
-
-                if (item.type == 368 || item.type == 533 || item.name.Contains("Hallowed") && !item.name.Contains("Seeds") || item.name.Contains("Soul") && stacks > 200)
-                {
-                    Log.ConsoleInfo("[CheatDetector] " + args.Player.Name + " drop " + stacks + " " + item.name);
-                    TShock.Utils.Ban(args.Player, "Cheater");
-                    return true;
-                }
-            }
             
             if (TShock.Regions.InArea((int)(pos.X / 16f), (int)(pos.Y / 16f), out regionname))
             {
@@ -2841,9 +2801,9 @@ namespace TShockAPI
                                             item.type != 30 && item.type != 23 && item.type != 184 &&
                                             !item.name.Contains("Arrow") && !item.name.Contains("Chest") && 
                                             !item.name.Equals("Silver Bullet") && !item.name.Equals("Acorn") &&
-                                            !item.name.Contains("Seeds") && !item.name.Equals("Goldfish") && 
-                                            !item.name.Equals("Glowstick") && !item.name.Equals("Throwing Knife") &&
-                                            !item.name.Contains("Coin") && !item.name.Contains("Mushroom"))
+                                            !item.name.Contains("Seeds") && !item.name.Equals("Goldfish") &&
+                                            !item.name.Equals("Glowstick") && !item.name.Equals("Throwing Knife") && !item.name.Equals("Cactus") &&
+                                            !item.name.Contains("Coin") && !item.name.Contains("Mushroom") && !item.name.Equals("Hellforge"))
                 {
                     for (int s = 0; s < 10; s++)
                     {
@@ -2858,6 +2818,15 @@ namespace TShockAPI
                                 return false;
                             }
                         }
+                    }
+                    if (item.name.Equals("Crystal Shard"))
+                    {
+                        price = Math.Round(stacks * item.value * 0.0001 / 8, 2);
+                        args.Player.SendMessage("You sold " + stacks + " " + item.name + " for " + price + " RCoins.");
+                        Log.ConsoleInfo("[Sell] " + args.Player.Name + " sold " + stacks + " " + item.name);
+                        TShock.Users.SetRCoins(args.Player.Name, price);
+                        args.Player.SendData(PacketTypes.ItemDrop, "", id);
+                        return true;
                     }
                     if (item.name.Equals("Meteorite Bar") || item.name.Equals("Hellforge") || item.name.Equals("Life Crystal") || item.name.Equals("Adamantite Ore") || item.name.Equals("Demonite Ore"))
                     {
@@ -2976,7 +2945,7 @@ namespace TShockAPI
                     }
                     if (item.value > 0)
                     {
-                        price = Math.Round(item.value * 0.01, 2);
+                        price = Math.Round(stacks * item.value * 0.01, 2);
                         args.Player.SendMessage("You sold " + stacks + " " + item.name + " for " + price + " RCoins.");
                         Log.ConsoleInfo("[Sell] " + args.Player.Name + " sold " + stacks + " " + item.name);
                         TShock.Users.SetRCoins(args.Player.Name, price);
