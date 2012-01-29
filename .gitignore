@@ -36,6 +36,7 @@ obj/*
 ehthumbs.db
 Icon?
 Thumbs.db
+.git
 
 # Visual Studio shit Motherfucka #
 ##################################
