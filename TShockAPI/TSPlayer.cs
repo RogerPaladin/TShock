@@ -30,7 +30,7 @@ namespace TShockAPI
 	{
 		public static readonly TSServerPlayer Server = new TSServerPlayer();
 		public static readonly TSPlayer All = new TSPlayer("All");
-		public int TileKillThreshold { get; set; }
+        public int TileKillThreshold { get; set; }
 		public int TilePlaceThreshold { get; set; }
 		public int TileLiquidThreshold { get; set; }
 		public int ProjectileThreshold { get; set; }

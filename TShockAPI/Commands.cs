@@ -33,7 +33,7 @@ namespace TShockAPI
 
 	public class CommandArgs : EventArgs
 	{
-		public string Message { get; private set; }
+        public string Message { get; private set; }
 		public TSPlayer Player { get; private set; }
 
 		/// <summary>
