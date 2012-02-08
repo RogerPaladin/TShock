@@ -273,8 +273,8 @@ namespace TShockAPI
         [Description("The maximum square per region which the player can placed.")]
         public int MaximumSquarePerRegion = 200;
 
-        [Description("Andy Server?")]
-        public bool AndyServer = false;
+        [Description("Hardmode Server?")]
+        public bool Hardmode = false;
 
         [Description("The maximum damage a player/npc can inflict")] public int MaxDamage = 175;
         

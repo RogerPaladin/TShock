@@ -92,7 +92,9 @@ namespace TShockAPI.DB
 
 		public bool ItemIsBanned(string name)
 		{
-			if (ItemBans.Contains(new ItemBan(name)))
+            if (TShock.Config.Hardmode)
+                return false;
+            if (ItemBans.Contains(new ItemBan(name)))
 			{
 				return true;
 			}
@@ -101,7 +103,9 @@ namespace TShockAPI.DB
 
 		public bool ItemIsBanned(string name, TSPlayer ply)
 		{
-			if (ItemBans.Contains(new ItemBan(name)))
+            if (TShock.Config.Hardmode)
+                return false;
+            if (ItemBans.Contains(new ItemBan(name)))
 			{
 				ItemBan b = GetItemBanByName(name);
 				return !b.HasPermissionToUseItem(ply);
@@ -162,7 +166,9 @@ namespace TShockAPI.DB
 
 		public ItemBan GetItemBanByName(String name)
 		{
-			foreach (ItemBan b in ItemBans)
+            if (TShock.Config.Hardmode)
+                return null;
+            foreach (ItemBan b in ItemBans)
 			{
 				if (b.Name == name)
 				{

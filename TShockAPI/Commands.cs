@@ -5166,73 +5166,80 @@ namespace TShockAPI
             Item heart = TShock.Utils.GetItemById(58);
             Item star = TShock.Utils.GetItemById(184);
 
-			if (args.Parameters.Count > 0)
-			{
-                if (args.Parameters[0] == "all")
+            if (args.Parameters.Count > 0)
+            {
+                if (!TShock.Config.Hardmode && args.Player.Group.HasPermission(Permissions.adminstatus))
                 {
-                    if (args.Player.Group.HasPermission("canhealall"))
+                    if (args.Parameters[0] == "all")
                     {
-                        foreach (TSPlayer player in TShock.Players)
+                        if (args.Player.Group.HasPermission("canhealall"))
                         {
-                            if (player != null && player.Active)
+                            foreach (TSPlayer player in TShock.Players)
                             {
-                                for (int i = 0; i < 20; i++)
-                                    player.GiveItem(heart.type, heart.name, heart.width, heart.height, heart.maxStack);
-                                for (int i = 0; i < 10; i++)
-                                    player.GiveItem(star.type, star.name, star.width, star.height, star.maxStack);
-                                player.SendMessage(string.Format("{0} just healed you!", args.Player.Name));
+                                if (player != null && player.Active)
+                                {
+                                    for (int i = 0; i < 20; i++)
+                                        player.GiveItem(heart.type, heart.name, heart.width, heart.height, heart.maxStack);
+                                    for (int i = 0; i < 10; i++)
+                                        player.GiveItem(star.type, star.name, star.width, star.height, star.maxStack);
+                                    player.SendMessage(string.Format("{0} just healed you!", args.Player.Name));
+                                }
                             }
+                            args.Player.SendMessage("You heal all players");
+                            return;
                         }
-                        args.Player.SendMessage("You heal all players");
+                        else
+                        {
+                            args.Player.SendMessage("You do not have permission to use heall all command.");
+                            return;
+                        }
+                    }
+
+                    string plStr = String.Join(" ", args.Parameters);
+                    var players = TShock.Utils.FindPlayer(plStr);
+                    if (players.Count == 0)
+                    {
+                        args.Player.SendMessage("Invalid player!", Color.Red);
+                        return;
+                    }
+                    else if (players.Count > 1)
+                    {
+                        args.Player.SendMessage("More than one player matched!", Color.Red);
                         return;
                     }
                     else
                     {
-                        args.Player.SendMessage("You do not have permission to use heall all command.");
-                        return;
+                        playerToHeal = players[0];
                     }
                 }
+                else if (!args.Player.RealPlayer)
+                {
+                    args.Player.SendMessage("You cant heal yourself!");
+                    return;
+                }
+                else
+                {
+                    playerToHeal = args.Player;
+                }
 
-                string plStr = String.Join(" ", args.Parameters);
-				var players = TShock.Utils.FindPlayer(plStr);
-				if (players.Count == 0)
-				{
-					args.Player.SendMessage("Invalid player!", Color.Red);
-					return;
-				}
-				else if (players.Count > 1)
-				{
-					args.Player.SendMessage("More than one player matched!", Color.Red);
-					return;
-				}
-				else
-				{
-					playerToHeal = players[0];
-				}
-			}
-			else if (!args.Player.RealPlayer)
-			{
-				args.Player.SendMessage("You cant heal yourself!");
-				return;
-			}
-			else
-			{
-				playerToHeal = args.Player;
-			}
-
-			for (int i = 0; i < 20; i++)
-				playerToHeal.GiveItem(heart.type, heart.name, heart.width, heart.height, heart.maxStack);
-			for (int i = 0; i < 10; i++)
-				playerToHeal.GiveItem(star.type, star.name, star.width, star.height, star.maxStack);
-			if (playerToHeal == args.Player)
-			{
-				args.Player.SendMessage("You just got healed!");
-			}
-			else
-			{
-				args.Player.SendMessage(string.Format("You just healed {0}", playerToHeal.Name));
-				playerToHeal.SendMessage(string.Format("{0} just healed you!", args.Player.Name));
-			}
+                for (int i = 0; i < 20; i++)
+                    playerToHeal.GiveItem(heart.type, heart.name, heart.width, heart.height, heart.maxStack);
+                for (int i = 0; i < 10; i++)
+                    playerToHeal.GiveItem(star.type, star.name, star.width, star.height, star.maxStack);
+                if (playerToHeal == args.Player)
+                {
+                    args.Player.SendMessage("You just got healed!");
+                }
+                else
+                {
+                    args.Player.SendMessage(string.Format("You just healed {0}", playerToHeal.Name));
+                    playerToHeal.SendMessage(string.Format("{0} just healed you!", args.Player.Name));
+                }
+            }
+            else
+            {
+                args.Player.SendMessage(string.Format("Hardmode!!! :D"));
+            }
 		}
 
 		private static void Buff(CommandArgs args)

@@ -240,7 +240,9 @@ namespace TShockAPI
 				if (Config.BufferPackets)
 					PacketBuffer = new PacketBufferer();
                
-                Users.DeletePlayersAfterMinutes(TShock.Config.DeleteUserAfterMinutes);
+                Users.DeletePlayersAfterMinutes(TShock.Config.DeleteUserAfterMinutes, 30, false);
+                Users.DeletePlayersAfterMinutes(TShock.Config.DeleteUserAfterMinutes * 2, 100, false);
+                Users.DeletePlayersAfterMinutes(TShock.Config.DeleteUserAfterMinutes * 3, 10000, true);
 
 				Log.ConsoleInfo("AutoSave " + (Config.AutoSave ? "Enabled" : "Disabled"));
 				Log.ConsoleInfo("Backups " + (Backups.Interval > 0 ? "Enabled" : "Disabled"));
@@ -1166,13 +1168,16 @@ namespace TShockAPI
 
 		private void OnNpcSetDefaults(SetDefaultsEventArgs<NPC, int> e)
 		{
-			if (Itembans.ItemIsBanned(e.Object.name, null))
-			{
-				e.Object.SetDefaults(0);
-			}
-            if (e.Object.name.Contains("Giant Worm") || e.Object.name.Contains("Digger") || e.Object.name.Equals("Voodoo Demon"))
+            if (!Config.Hardmode)
             {
-                 e.Object.SetDefaults(0);
+                if (Itembans.ItemIsBanned(e.Object.name, null))
+                {
+                    e.Object.SetDefaults(0);
+                }
+                if (e.Object.name.Contains("Giant Worm") || e.Object.name.Contains("Digger") || e.Object.name.Equals("Voodoo Demon"))
+                {
+                    e.Object.SetDefaults(0);
+                }
             }
 		}
 

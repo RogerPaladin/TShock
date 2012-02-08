@@ -148,14 +148,14 @@ namespace TShockAPI.DB
         /// Removes a user from database if last login time bigger than x days (x*24*60)
         /// </summary>
         /// <param name="time">int time</param>
-        public void DeletePlayersAfterMinutes(int time)
+        public void DeletePlayersAfterMinutes(int time, double rc, bool delvips)
         {
             string MergedIDs = string.Empty;
             string PlayerName = string.Empty;
             string PlayerGroup = string.Empty;
             DateTime LastLogin = DateTime.UtcNow;
-            
-            using (var reader = database.QueryReader("SELECT * FROM Users WHERE LastLogin < @0;", DateTime.UtcNow.AddMinutes(-time).ToFileTime()))
+
+            using (var reader = database.QueryReader("SELECT * FROM Users WHERE LastLogin < @0 AND RCoins < @1;", DateTime.UtcNow.AddMinutes(-time).ToFileTime(), rc))
            {
                 while (reader.Read())
                 {
@@ -165,6 +165,8 @@ namespace TShockAPI.DB
                     LastLogin = DateTime.FromFileTime(reader.Get<long>("LastLogin"));
                     if (!PlayerGroup.Equals("admin") && !PlayerGroup.Equals("trustedadmin") && !PlayerGroup.Equals("superadmin"))
                     {
+                        if (!delvips && PlayerGroup.Equals("vip"))
+                            continue;
                         TShock.Regions.DeleteRegionAfterMinutes(PlayerName);
                         TShock.Regions.DeleteCoOwnersAfterMinutes(PlayerName);
                         TShock.Inventory.DelInventory(PlayerName);
@@ -175,6 +177,7 @@ namespace TShockAPI.DB
                         database.Query("DELETE FROM Users WHERE LOWER (Username) = @0;", PlayerName.ToLower());
                         Log.ConsoleInfo(string.Format("Player <{0}> [{1}] deleted - lastlogin {2}", PlayerName, PlayerGroup, LastLogin));
                     }
+
                  }
             }
         }
