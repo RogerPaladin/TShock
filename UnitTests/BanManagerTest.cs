@@ -1,6 +1,6 @@
 ﻿/*
 TShock, a server mod for Terraria
-Copyright (C) 2011 The TShock Team
+Copyright (C) 2011-2012 The TShock Team
 
 This program is free software: you can redistribute it and/or modify
 it under the terms of the GNU General Public License as published by
@@ -54,17 +54,15 @@ namespace UnitTests
         [TestMethod]
         public void AddBanTest()
         {
-            Assert.IsTrue(Bans.AddBan("127.0.0.1", "BanTest", "Ban Testing"));
+            Assert.IsTrue(Bans.AddBan("127.0.0.1", "BanTest", "BanTest2", "Ban Testing"));
         }
 
         [TestMethod]
         public void FindBanTest()
         {
             Assert.IsNotNull(Bans.GetBanByIp("127.0.0.1"));
-            TShock.Config.EnableBanOnUsernames = true;
             Assert.IsNotNull(Bans.GetBanByName("BanTest"));
-            TShock.Config.EnableBanOnUsernames = false;
-            Assert.IsNull(Bans.GetBanByName("BanTest"));
+			Assert.IsNotNull(Bans.GetBanByUUID("BanTest2"));
         }
     }
 }
